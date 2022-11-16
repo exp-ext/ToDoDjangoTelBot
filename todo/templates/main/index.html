@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+
+{% block header %}    
+  <h1>Сегодня {{ date_today }}</h1>
+{% endblock %}
+     
+{% block content %}
+
+    <div class="container">
+
+      {{ page_obj }}
+
+    </div>   
+
+{% endblock %}

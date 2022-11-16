@@ -1,0 +1,133 @@
+.hover-effects .button.dark {
+  --background: #2F3545;
+  --shadow: 0 2px 8px -1px rgba(21, 25, 36, 0.32);
+  --shadow-hover: 0 4px 20px -2px rgba(21, 25, 36, 0.5);
+}
+.hover-effects .button.white {
+  --background: #fff;
+  --text: #275efe;
+  --shadow: 0 2px 8px -1px rgba(18, 22, 33, 0.04);
+  --shadow-hover: 0 4px 20px -2px rgba(18, 22, 33, 0.12);
+}
+.hover-effects .button.fast {
+  --duration: .32s;
+}
+
+.hover-effects .button {
+  --background: #275efe;
+  --text: #fff;
+  --font-size: 16px;
+  --duration: .44s;
+  --move-hover: -4px;
+  --shadow: 0 2px 8px -1px rgba(39, 94, 254, 0.32);
+  --shadow-hover: 0 4px 20px -2px rgba(39, 94, 254, 0.5);
+  --font-shadow: var(--font-size);
+  padding: 16px 32px;
+  font-family: "Roboto";
+  font-weight: 500;
+  line-height: var(--font-size);
+  border-radius: 24px;
+  display: block;
+  outline: none;
+  text-decoration: none;
+  font-size: var(--font-size);
+  letter-spacing: 0.5px;
+  background: var(--background);
+  color: var(--text);
+  box-shadow: var(--shadow);
+  transform: translateY(var(--y)) translateZ(0);
+  transition: transform var(--duration) ease, box-shadow var(--duration) ease;
+}
+.hover-effects .button div {
+  display: flex;
+  overflow: hidden;
+  text-shadow: 0 var(--font-shadow) 0 var(--text);
+}
+.hover-effects .button div span {
+  display: block;
+  -webkit-backface-visibility: hidden;
+          backface-visibility: hidden;
+  font-style: normal;
+  transition: transform var(--duration) ease;
+  transform: translateY(var(--m)) translateZ(0);
+}
+.hover-effects .button div span:nth-child(1) {
+  transition-delay: 0.05s;
+}
+.hover-effects .button div span:nth-child(2) {
+  transition-delay: 0.1s;
+}
+.hover-effects .button div span:nth-child(3) {
+  transition-delay: 0.15s;
+}
+.hover-effects .button div span:nth-child(4) {
+  transition-delay: 0.2s;
+}
+.hover-effects .button div span:nth-child(5) {
+  transition-delay: 0.25s;
+}
+.hover-effects .button div span:nth-child(6) {
+  transition-delay: 0.3s;
+}
+.hover-effects .button div span:nth-child(7) {
+  transition-delay: 0.35s;
+}
+.hover-effects .button div span:nth-child(8) {
+  transition-delay: 0.4s;
+}
+.hover-effects .button div span:nth-child(9) {
+  transition-delay: 0.45s;
+}
+.hover-effects .button div span:nth-child(10) {
+  transition-delay: 0.5s;
+}
+.hover-effects .button div span:nth-child(11) {
+  transition-delay: 0.55s;
+}
+.hover-effects .button:hover {
+  --y: var(--move-hover);
+  --shadow: var(--shadow-hover);
+}
+.hover-effects .button:hover span {
+  --m: calc(var(--font-size) * -1);
+}
+.hover-effects .button.reverse {
+  --font-shadow: calc(var(--font-size) * -1);
+}
+.hover-effects .button.reverse:hover span {
+  --m: calc(var(--font-size));
+}
+
+.hover-effects html {
+  box-sizing: border-box;
+  -webkit-font-smoothing: antialiased;
+}
+
+.hover-effects * {
+  box-sizing: inherit;
+}
+.hover-effects *:before, *:after {
+  box-sizing: inherit;
+}
+
+.hover-effects body {
+  min-height: 100vh;
+  display: flex;
+  font-family: "Roboto", Arial;
+  justify-content: center;
+  align-items: center;
+  background: #E4ECFA;
+}
+.hover-effects body .button {
+  margin: 0 12px;
+}
+.hover-effects body .dribbble {
+  position: fixed;
+  display: block;
+  right: 20px;
+  bottom: 20px;
+}
+.hover-effects body .dribbble img {
+  display: block;
+  height: 28px;
+}

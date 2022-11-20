@@ -11,6 +11,7 @@ from users.models import Group, GroupConnections
 from users.views import register, set_coordinates
 
 from .cleaner import delete_messages_by_time
+from .service_message import send_service_message
 
 User = get_user_model()
 
@@ -55,36 +56,45 @@ def build_menu(buttons: Iterable[Any], n_cols: int,
 def main_menu(update: Update, context: CallbackContext) -> None:
     """Кнопки основного меню на экран."""
     chat = update.effective_chat
-    button_list = [
-        InlineKeyboardButton('💬 добавить запись',
-                             callback_data='add'),
-        InlineKeyboardButton('❌ удалить запись',
-                             callback_data='del'),
-        InlineKeyboardButton('🚼 календарь рождений',
-                             callback_data='birthdays'),
-        InlineKeyboardButton('📅 планы на дату',
-                             callback_data='show'),
-        InlineKeyboardButton('📝 все планы',
-                             callback_data='show_all'),
-        InlineKeyboardButton('🎭 анекдот',
-                             callback_data='show_joke'),
-        InlineKeyboardButton('😼 картинки с котиками',
-                             callback_data='get_cat_image'),
-    ]
-    reply_markup = InlineKeyboardMarkup(build_menu(button_list, n_cols=2))
+    user_id = update.effective_user.id
 
-    menu_text = (
-        "* 💡  ГЛАВНОЕ МЕНЮ  💡 *".center(26, "~")
-        + "\nдля пользователя\n".center(26, "~")
-        + f"{update.message.from_user.first_name}".center(26, "~")
-    )
-    context.bot.send_message(
-        chat.id,
-        menu_text,
-        reply_markup=reply_markup,
-        parse_mode='Markdown'
-    )
-    assign_group(update)
+    if User.objects.filter(username=user_id).exists():
+        button_list = [
+            InlineKeyboardButton('💬 добавить запись',
+                                 callback_data='first_step_add'),
+            InlineKeyboardButton('❌ удалить запись',
+                                 callback_data='first_step_del'),
+            InlineKeyboardButton('🚼 календарь рождений',
+                                 callback_data='show_birthday'),
+            InlineKeyboardButton('📅 планы на дату',
+                                 callback_data='first_step_show'),
+            InlineKeyboardButton('📝 все планы',
+                                 callback_data='show_all_notes'),
+            InlineKeyboardButton('🎭 анекдот',
+                                 callback_data='show_joke'),
+            InlineKeyboardButton('😼 картинки с котиками',
+                                 callback_data='get_cat_image'),
+        ]
+        reply_markup = InlineKeyboardMarkup(build_menu(button_list, n_cols=2))
+
+        menu_text = (
+            "* 💡  ГЛАВНОЕ МЕНЮ  💡 *".center(26, "~")
+            + "\nдля пользователя\n".center(26, "~")
+            + f"{update.message.from_user.first_name}".center(26, "~")
+        )
+        context.bot.send_message(
+            chat.id,
+            menu_text,
+            reply_markup=reply_markup,
+            parse_mode='Markdown'
+        )
+        assign_group(update)
+    else:
+        reply_text = (
+            f'{update.effective_user.first_name}, пожалуйста пройдите '
+            'процедуру регистрации 🔆'
+        )
+        send_service_message(chat.id, reply_text)
 
 
 def private_menu(update: Update, context: CallbackContext) -> None:

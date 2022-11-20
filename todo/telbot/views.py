@@ -10,7 +10,7 @@ from todo.settings import DEBUG
 
 from .cleaner import clear_commands
 from .dispatcher import dispatcher
-from .start import bot
+from .loader import bot
 
 
 @app.task(ignore_result=True)

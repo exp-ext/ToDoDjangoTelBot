@@ -2,7 +2,7 @@ from typing import Mapping
 
 from telegram import Bot, BotCommand
 
-from .start import bot
+from .loader import bot
 
 COMMANDS: Mapping[str, Mapping[str, str]] = {
     'en': {
@@ -17,6 +17,7 @@ COMMANDS: Mapping[str, Mapping[str, str]] = {
 
 
 def set_up_commands(bot_instance: Bot) -> None:
+    """Переназначение команд бота."""
     bot_instance.delete_my_commands()
     for lang_code in COMMANDS:
         bot_instance.set_my_commands(

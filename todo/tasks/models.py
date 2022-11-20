@@ -67,7 +67,7 @@ class CelebratoryFriend(Create):
         return f'#{self.user} следит за {self.friend}'
 
 
-class Task(Create):
+class Task(models.Model):
 
     class Repeat(models.TextChoices):
         NEVER = 'N', _('Никогда')
@@ -76,6 +76,10 @@ class Task(Create):
         EVERY_MONTH = 'M', _('Каждый месяц')
         EVERY_YEAR = 'Y', _('Каждый год')
 
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        db_index=True
+    )
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
@@ -88,19 +92,22 @@ class Task(Create):
         blank=True,
         null=True
     )
-    datetime = models.DateTimeField(
-        verbose_name='Дата и время мероприятия'
+    server_datetime = models.DateTimeField(
+        verbose_name='Дата и время для хранения на сервере'
+    )
+    user_date = models.DateField(
+        verbose_name='Дата мероприятия'
     )
     text = models.TextField(
         verbose_name='Текст напоминания',
         help_text='Введите текст напоминания.'
     )
-    remind_in = models.IntegerField(
+    remind_min = models.IntegerField(
         default=120,
         verbose_name='Оповестить за ... минут',
         help_text='Оповестить за ... минут до наступления события.'
     )
-    remind_at = models.TimeField(
+    remind_at = models.DateTimeField(
         verbose_name='Время срабатывания оповещения'
     )
     reminder_period = models.CharField(
@@ -109,15 +116,19 @@ class Task(Create):
         default=Repeat.NEVER,
         verbose_name='Периодичность напоминания'
     )
+    it_birthday = models.BooleanField(default=False)
 
     class Meta:
         verbose_name = 'Напоминание'
         verbose_name_plural = 'Напоминания'
+        ordering = ('server_datetime',)
 
     def __str__(self):
-        return f'#{self.user} создал напоминание на {self.date}'
+        return f'#{self.user} создал напоминание на {self.user_date}'
 
     def save(self, *args, **kwargs):
         if not self.remind_at:
-            self.remind_at = self.datetime - timedelta(minutes=self.remind_in)
+            self.remind_at = (
+                self.server_datetime - timedelta(minutes=self.remind_min)
+            )
         super().save(*args, **kwargs)

@@ -1,13 +1,11 @@
-from multiprocessing import Process
-
 from core.views import get_password
 from django.conf import settings
 from django.contrib.auth import authenticate, get_user_model
 from django.db.models.query import QuerySet
 from django.http import HttpRequest, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, redirect
-from telbot.cleaner import delete_messages_by_time
-from telbot.system_commands import set_up_commands
+from telbot.cleaner import process_to_delete_message
+from telbot.commands import set_up_commands
 from telegram import Update
 from telegram.ext import CallbackContext
 from tzwhere import tzwhere
@@ -36,11 +34,16 @@ def register(update: Update, context: CallbackContext) -> None:
             user.set_password(password)
             user.save()
         else:
-            User.objects.create_user(
+            user = User.objects.create_user(
                 first_name=first_name,
                 last_name=last_name,
                 username=user_id,
                 password=password
+            )
+            Location.objects.create(
+                user=user,
+                latitude=59.799,
+                longitude=30.274
             )
         reply_text = (
             'Вы успешно зарегистрированы в проекте Your ToDo.\n'
@@ -50,11 +53,12 @@ def register(update: Update, context: CallbackContext) -> None:
             f'{user_id}\n'
             'пароль:\n'
             f'{password}\n'
-            'Но сейчас, для входа, можно просто пройти по по адресу:'
-            f'{domen}/auth/login/{user_id}/{password}/'
+            'А сейчас, можно просто нажать на '
+            f'[ВХОД🕋]({domen}/auth/login/{user_id}/{password}/)'
             )
         update.message.reply_text(
                 text=reply_text,
+                parse_mode='Markdown'
             )
         set_up_commands(context.bot)
     else:
@@ -63,8 +67,7 @@ def register(update: Update, context: CallbackContext) -> None:
             f'{first_name}, эта функция доступна только в "private"'
         ).message_id
         *params, = user_id, message_id, 20
-        p1 = Process(target=delete_messages_by_time, args=(params,))
-        p1.start()
+        process_to_delete_message(params)
 
 
 def login(request: HttpRequest, user_id: int = None,

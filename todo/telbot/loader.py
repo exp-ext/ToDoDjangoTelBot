@@ -2,16 +2,19 @@ from typing import Any, Dict
 
 import requests
 from django.conf import settings
-from telbot.processor import ScheduleProcess
 from telegram import Bot
+
+DOMEN_URL = settings.DOMEN
+TOKEN = settings.TOKEN
+WEBHOOK_URL = f'{DOMEN_URL}/bot/{TOKEN}/webhooks/'
 
 
 def check_tokens():
     """Проверка доступности переменных среды.."""
     env_vars = {
-        'TOKEN': settings.TOKEN,
+        'TOKEN': TOKEN,
         'OW_API_ID': settings.OW_API_ID,
-        'DOMEN': settings.DOMEN,
+        'DOMEN': DOMEN_URL,
         # 'DATABASE_URL': DATABASE_URL,
     }
     for key, value in env_vars.items():
@@ -22,9 +25,9 @@ def check_tokens():
 
 def set_webhook() -> Dict[str, Any]:
     """Назначение webhook для бота."""
-    url = f'https://api.telegram.org/bot{settings.TOKEN}/setWebhook'
+    url = f'https://api.telegram.org/bot{TOKEN}/setWebhook'
     params = {
-        "url": f'{settings.DOMEN}/bot/{settings.TOKEN}/webhooks/',
+        "url": WEBHOOK_URL,
     }
     try:
         response = requests.get(url, params=params)
@@ -35,7 +38,4 @@ def set_webhook() -> Dict[str, Any]:
 
 # start bot
 if check_tokens() and set_webhook().get('ok'):
-    bot = Bot(token=settings.TOKEN)
-
-# start another process
-# ScheduleProcess.threading_process()
+    bot = Bot(token=TOKEN)

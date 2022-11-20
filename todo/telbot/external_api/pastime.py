@@ -5,22 +5,6 @@ from telegram.ext import CallbackContext
 from ..cleaner import remove_keyboard
 
 
-def get_forismatic_quotes() -> str:
-    """Возвращает случайную цитату дня от АПИ forismatic."""
-    try:
-        response = requests.get(
-            'http://api.forismatic.com/api/1.0/',
-            {
-                'method': 'getQuote',
-                'format': 'text',
-                'lang': 'ru',
-            }
-        )
-    except Exception as error:
-        raise KeyError(error)
-    return response.text
-
-
 def new_cat() -> str:
     """Возвращает случайную ссылку на картинку от АПИ thecatapi."""
     url = 'https://api.thecatapi.com/v1/images/search'

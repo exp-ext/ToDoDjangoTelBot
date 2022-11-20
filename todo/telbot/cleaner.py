@@ -1,12 +1,13 @@
 import re
+import threading
 import time
 from typing import Sequence
 
 from telegram import Update
 from telegram.ext import CallbackContext
 
-from .start import bot
-from .system_commands import COMMANDS
+from .commands import COMMANDS
+from .loader import bot
 
 
 def clear_commands(update: Update) -> None:
@@ -34,7 +35,12 @@ def clear_commands(update: Update) -> None:
 
 
 def remove_keyboard(update: Update, context: CallbackContext) -> None:
-    """Удаление клавиатуры после нажатия."""
+    """
+    Удаление клавиатуры после нажатия.
+        Принимает:
+    - update (:obj:`Update`)
+    - context (:obj:`CallbackContext`)
+    """
     chat = update.effective_chat
     del_menu_id = update.effective_message.message_id
     context.bot.delete_message(chat.id, del_menu_id)
@@ -43,7 +49,10 @@ def remove_keyboard(update: Update, context: CallbackContext) -> None:
 def delete_messages_by_time(params: Sequence[int]) -> None:
     """
     Удаление сообщения по таймеру.
-    Параметры: [chat id, message id, seconds before deletion]
+    Параметры:
+    - chat id (:obj:`int` | :obj:`str`)
+    - message id (:obj:`int` | :obj:`str`)
+    - seconds before deletion (:obj:`int`)
     """
     chat_id: int
     message_id: int
@@ -51,3 +60,12 @@ def delete_messages_by_time(params: Sequence[int]) -> None:
     chat_id, message_id, seconds = params
     time.sleep(seconds)
     bot.delete_message(chat_id, message_id)
+
+
+def process_to_delete_message(params):
+    """
+    Запускает дополнительный процесс для функции
+    :obj:`delete_messages_by_time`.
+    """
+    thread = threading.Thread(target=delete_messages_by_time, args=(params,))
+    thread.start()

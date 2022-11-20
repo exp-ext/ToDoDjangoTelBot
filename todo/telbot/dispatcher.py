@@ -1,5 +1,6 @@
-from telegram.ext import (CallbackQueryHandler, CommandHandler, Dispatcher,
-                          Filters, MessageHandler)
+from telegram.ext import (CallbackQueryHandler, CommandHandler,
+                          ConversationHandler, Dispatcher, Filters,
+                          MessageHandler)
 
 from todo.settings import DEBUG
 
@@ -7,11 +8,15 @@ from .external_api.kudago import where_to_go
 from .external_api.pastime import get_new_image
 from .geoservis.positions import my_current_geoposition
 from .geoservis.weather import current_weather, weather_forecast
+from .loader import bot
 from .menus import ask_registration, main_menu, private_menu
-# from .text_handlers.echo import do_echo
-from .message.handling import add_notes
+from .message.add_notes import add_notes, first_step_add
+from .message.del_notes import del_notes, first_step_dell
+from .message.show_notes import (first_step_show, show_all_notes, show_at_date,
+                                 show_birthday)
 from .parse.jokes import show_joke
-from .start import bot
+from .service_message import cancel
+from .text_handlers.echo import do_echo
 
 
 def setup_dispatcher(dp: Dispatcher):
@@ -26,6 +31,51 @@ def setup_dispatcher(dp: Dispatcher):
     # основное меню и его Handler's
     dp.add_handler(
         CommandHandler('main_menu', main_menu)
+    )
+    dp.add_handler(
+        ConversationHandler(
+            entry_points=[CallbackQueryHandler(first_step_add,
+                                               pattern='^first_step_add$')],
+            states={
+                'user_note': [MessageHandler(Filters.text, add_notes)]
+            },
+            fallbacks=[MessageHandler(
+                Filters.regex('^(end)$'),
+                cancel
+            )]
+        )
+    )
+    dp.add_handler(
+        ConversationHandler(
+            entry_points=[CallbackQueryHandler(first_step_show,
+                                               pattern='^first_step_show$')],
+            states={
+                'show_note': [MessageHandler(Filters.text, show_at_date)]
+            },
+            fallbacks=[MessageHandler(
+                Filters.regex('^(end)$'),
+                cancel
+            )]
+        )
+    )
+    dp.add_handler(
+        ConversationHandler(
+            entry_points=[CallbackQueryHandler(first_step_dell,
+                                               pattern='^first_step_del$')],
+            states={
+                'user_del_note': [MessageHandler(Filters.text, del_notes)]
+            },
+            fallbacks=[MessageHandler(
+                Filters.regex('^(end)$'),
+                cancel
+            )]
+        )
+    )
+    dp.add_handler(
+        CallbackQueryHandler(show_all_notes, pattern='^show_all_notes$')
+    )
+    dp.add_handler(
+        CallbackQueryHandler(show_birthday, pattern='^show_birthday$')
     )
     dp.add_handler(
         CallbackQueryHandler(get_new_image, pattern='^get_cat_image$')
@@ -52,54 +102,8 @@ def setup_dispatcher(dp: Dispatcher):
 
     # эхо
     dp.add_handler(
-        MessageHandler(Filters.text, add_notes)
+        MessageHandler(Filters.text, do_echo)
     )
-
-    # # admin commands
-    # dp.add_handler(CommandHandler("admin", admin_handlers.admin))
-    # dp.add_handler(
-    #   CommandHandler("stats", admin_handlers.stats)
-    # )
-    # dp.add_handler(
-    #   CommandHandler('export_users', admin_handlers.export_users)
-    # )
-
-    # # location
-    # dp.add_handler(
-    #   CommandHandler("ask_location", location_handlers.ask_for_location)
-    # )
-    # dp.add_handler(
-    #   MessageHandler(Filters.location, location_handlers.location_handler)
-    # )
-
-    # # files
-    # dp.add_handler(MessageHandler(
-    #     Filters.animation, files.show_file_id,
-    # ))
-
-    # # handling errors
-    # dp.add_error_handler(error.send_stacktrace_to_tg_chat)
-
-    # EXAMPLES FOR HANDLERS
-
-    # dp.add_handler(
-    #    MessageHandler(Filters.text, <function_handler>)
-    # )
-
-    # dp.add_handler(
-    #    MessageHandler(Filters.document, <function_handler>)
-    # )
-
-    # dp.add_handler(
-    #    CallbackQueryHandler(<function_handler>, pattern="^r\d+_\d+")
-    # )
-
-    # dp.add_handler(MessageHandler(
-    #     Filters.chat(chat_id=int(TELEGRAM_FILESTORAGE_ID)),
-    #       & Filters.forwarded
-    #       & (Filters.photo | Filters.video | Filters.animation),
-    #     <function_handler>,
-    # ))
 
     return dp
 

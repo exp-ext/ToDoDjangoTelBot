@@ -16,7 +16,8 @@ from .message.show_notes import (first_step_show, show_all_notes, show_at_date,
                                  show_birthday)
 from .parse.jokes import show_joke
 from .service_message import cancel
-from .text_handlers.echo import do_echo
+
+# from .text_handlers.echo import do_echo
 
 
 def setup_dispatcher(dp: Dispatcher):
@@ -100,10 +101,10 @@ def setup_dispatcher(dp: Dispatcher):
         CallbackQueryHandler(where_to_go, pattern='^show_festivals$')
     )
 
-    # эхо
-    dp.add_handler(
-        MessageHandler(Filters.text, do_echo)
-    )
+    # # эхо
+    # dp.add_handler(
+    #     MessageHandler(Filters.text, do_echo)
+    # )
 
     return dp
 

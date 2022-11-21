@@ -78,9 +78,11 @@ def main_menu(update: Update, context: CallbackContext) -> None:
         reply_markup = InlineKeyboardMarkup(build_menu(button_list, n_cols=2))
 
         menu_text = (
-            "* 💡  ГЛАВНОЕ МЕНЮ  💡 *".center(26, "~")
-            + "\nдля пользователя\n".center(26, "~")
-            + f"{update.message.from_user.first_name}".center(26, "~")
+            "* 💡  ГЛАВНОЕ МЕНЮ  💡 *".center(25, " ")
+            + "\n"
+            + "для пользователя".center(25, " ")
+            + "\n"
+            + f"{update.message.from_user.first_name}".center(25, " ")
         )
         context.bot.send_message(
             chat.id,

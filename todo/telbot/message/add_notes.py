@@ -100,6 +100,7 @@ def add_notes(update: Update, context: CallbackContext):
             text = (
                 f'на время: *{datetime.strftime(pars.user_date, "%H:%M")}*\n'
             )
+            remind_at = None
 
         Task.objects.create(
             user=user,

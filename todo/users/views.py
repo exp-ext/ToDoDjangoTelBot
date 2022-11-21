@@ -81,7 +81,16 @@ def login(request: HttpRequest, user_id: int = None,
 
 
 def get_coordinates(username: int) -> QuerySet[Location]:
-    """Получение последних координат пользователя."""
+    """
+    Получение последних координат пользователя.
+
+    Принимает username=user_id (:obj:`int`)
+
+    Возвращает :obj:`QuerySet[Location]`:
+    - latitude (:obj:`float`)
+    - longitude (:obj:`float`)
+    - timezone (:obj:`str`)
+    """
     user = get_object_or_404(User, username=username)
     return user.locations.first()
 

@@ -120,10 +120,12 @@ def show(update: Update, context: CallbackContext,
             user_date = utc_date.astimezone(user_tz)
             utc_remind = item.remind_at
             remind = utc_remind.astimezone(user_tz)
+            user_time = datetime.strftime(user_date, "%H:%M")
+            user_time = '' if user_time == '00:00' else f' в {user_time} '
             notes.append(
-                f'{datetime.strftime(user_date, "%d.%m.%Y в %H:%M")} '
+                f'{datetime.strftime(user_date, "%d.%m.%Y")} {user_time}'
                 f'- {item.text}\n'
-                f'[c напоминанием в {datetime.strftime(remind, "%H:%M")}ч]'
+                f'_напомню в {datetime.strftime(remind, "%H:%M")}ч_'
             )
 
     if tasks:

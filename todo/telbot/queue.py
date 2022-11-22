@@ -1,4 +1,5 @@
 import time
+from datetime import datetime
 from threading import Thread
 
 from .qu_events import main_process_distributor, send_forismatic_quotes
@@ -9,20 +10,17 @@ class ScheduleProcess:
 
     def functions_queue():
         while True:
-            time.sleep(1)
-            cur_time = int(time.time())
-            localtime = time.localtime()
+            time.sleep(60)
+            this_datetime = datetime.utcnow().replace(second=0, microsecond=0)
 
-            if cur_time % 60 == 0:
-                t1 = Thread(
-                    group=None,
-                    target=main_process_distributor,
-                    args=(cur_time,)
-                )
-                t1.start()
+            t1 = Thread(
+                group=None,
+                target=main_process_distributor,
+                args=(this_datetime,)
+            )
+            t1.start()
 
-            if (localtime.tm_hour == 10 and localtime.tm_min == 0
-                    and localtime.tm_sec == 0):
+            if this_datetime.hour == 10 and this_datetime.minute == 30:
                 t2 = Thread(
                     group=None,
                     target=send_forismatic_quotes,

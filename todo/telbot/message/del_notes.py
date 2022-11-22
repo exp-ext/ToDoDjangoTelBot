@@ -28,7 +28,7 @@ def first_step_dell(update: Update, context: CallbackContext):
     ).message_id
     context.user_data['del_message'] = message_id
     remove_keyboard(update, context)
-    return 'user_del_note'
+    return 'del_note'
 
 
 @app.task(ignore_result=True)
@@ -54,7 +54,7 @@ def del_notes(update: Update, context: CallbackContext):
         date_search = pars.user_date.date()
         tasks = user.tasks.filter(
             user_date=date_search,
-            text__icontains=pars.only_message
+            text__contains=pars.only_message[1:]
         )
         count = len(tasks)
 

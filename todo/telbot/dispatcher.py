@@ -36,47 +36,38 @@ def setup_dispatcher(dp: Dispatcher):
     dp.add_handler(
         ConversationHandler(
             entry_points=[CallbackQueryHandler(first_step_add,
-                                               pattern='^first_step_add$')],
+                                               pattern='^add_first_step$')],
             states={
-                'user_note': [MessageHandler(Filters.text, add_notes)]
+                'add_note': [MessageHandler(Filters.text, add_notes)]
             },
-            fallbacks=[MessageHandler(
-                Filters.regex('^(end)$'),
-                cancel
-            )]
+            fallbacks=[MessageHandler(Filters.regex('^(end)$'), cancel)]
         )
     )
     dp.add_handler(
         ConversationHandler(
             entry_points=[CallbackQueryHandler(first_step_show,
-                                               pattern='^first_step_show$')],
+                                               pattern='^show_first_step$')],
             states={
                 'show_note': [MessageHandler(Filters.text, show_at_date)]
             },
-            fallbacks=[MessageHandler(
-                Filters.regex('^(end)$'),
-                cancel
-            )]
+            fallbacks=[MessageHandler(Filters.regex('^(end)$'), cancel)]
         )
     )
     dp.add_handler(
         ConversationHandler(
             entry_points=[CallbackQueryHandler(first_step_dell,
-                                               pattern='^first_step_del$')],
+                                               pattern='^del_first_step$')],
             states={
-                'user_del_note': [MessageHandler(Filters.text, del_notes)]
+                'del_note': [MessageHandler(Filters.text, del_notes)]
             },
-            fallbacks=[MessageHandler(
-                Filters.regex('^(end)$'),
-                cancel
-            )]
+            fallbacks=[MessageHandler(Filters.regex('^(end)$'), cancel)]
         )
     )
     dp.add_handler(
         CallbackQueryHandler(show_all_notes, pattern='^show_all_notes$')
     )
     dp.add_handler(
-        CallbackQueryHandler(show_birthday, pattern='^show_birthday$')
+       CallbackQueryHandler(show_birthday, pattern='^show_birthday$')
     )
     dp.add_handler(
         CallbackQueryHandler(get_new_image, pattern='^get_cat_image$')

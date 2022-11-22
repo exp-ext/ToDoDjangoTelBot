@@ -36,7 +36,7 @@ def first_step_add(update: Update, context: CallbackContext):
     req_text = (
             f'*{update.effective_user.first_name}*, '
             'введите текст заметки с датой и временем,\n'
-            'или del для отмены операции'
+            'или *end* для отмены операции'
         )
     message_id = context.bot.send_message(
         chat.id,
@@ -45,7 +45,7 @@ def first_step_add(update: Update, context: CallbackContext):
     ).message_id
     context.user_data['del_message'] = message_id
     remove_keyboard(update, context)
-    return 'user_note'
+    return 'add_note'
 
 
 @app.task(ignore_result=True)
@@ -88,7 +88,7 @@ def add_notes(update: Update, context: CallbackContext):
                     'Запись отклонена.'
                 )
                 send_service_message(chat.id, reply_text)
-                return '!fault'
+                return {"ok": True}
 
         birthday = pars.it_birthday()
         repeat = 'Y' if birthday else pars.period_repeat

@@ -4,7 +4,7 @@ import pytz
 from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
 from telegram import Update
-from telegram.ext import CallbackContext
+from telegram.ext import CallbackContext, ConversationHandler
 from users.models import Group
 
 from todo.celery import app
@@ -20,7 +20,7 @@ def first_step_show(update: Update, context: CallbackContext):
     req_text = (
             f'*{update.effective_user.first_name}*, '
             'введите дату, на которую хотите вывести заметки\n'
-            'или del для отмены операции'
+            'или *end* для отмены операции'
         )
     message_id = context.bot.send_message(
         chat.id,
@@ -46,17 +46,18 @@ def show_at_date(update: Update, context: CallbackContext):
     user_locally = user.locations.first()
 
     pars = TaskParse(update.message.text, user_locally.timezone)
-    pars.parse_with_parameters()
+    pars.parse_without_parameters()
 
     del_id = (context.user_data['del_message'], update.message.message_id)
     for id in del_id:
         context.bot.delete_message(chat.id, id)
-
     show(update, context, pars.user_date.date())
+    return ConversationHandler.END
 
 
 def show_all_notes(update: Update, context: CallbackContext):
     """Выводит весь список записей в чат в зависимости от private или group."""
+    remove_keyboard(update, context)
     show(update, context)
 
 
@@ -64,6 +65,7 @@ def show_birthday(update: Update, context: CallbackContext):
     """
     Выводит весь список дней рождения в чат в зависимости от private или group.
     """
+    remove_keyboard(update, context)
     show(update, context, it_birthday=True)
 
 
@@ -94,7 +96,10 @@ def show(update: Update, context: CallbackContext,
 
     if chat.type == 'private':
         if at_date:
-            tasks = user.tasks.filter(user_date__startswith=at_date)
+            tasks = user.tasks.filter(
+                user_date__day=at_date.day,
+                user_date__month=at_date.month
+            )
         else:
             tasks = user.tasks.filter(it_birthday=it_birthday)
     else:
@@ -103,7 +108,10 @@ def show(update: Update, context: CallbackContext,
             chat_id=chat.id
         )
         if at_date:
-            tasks = group.tasks.filter(user_date__startswith=at_date)
+            tasks = group.tasks.filter(
+                user_date__day=at_date.day,
+                user_date__month=at_date.month
+            )
         else:
             tasks = group.tasks.filter(it_birthday=it_birthday)
 
@@ -116,23 +124,29 @@ def show(update: Update, context: CallbackContext,
                 f'- {item.text}'
             )
         else:
-            utc_date = item.server_datetime
-            user_date = utc_date.astimezone(user_tz)
-            utc_remind = item.remind_at
-            remind = utc_remind.astimezone(user_tz)
-            user_time = datetime.strftime(user_date, "%H:%M")
-            user_time = '' if user_time == '00:00' else f' в {user_time} '
-            notes.append(
-                f'{datetime.strftime(user_date, "%d.%m.%Y")} {user_time}'
-                f'- {item.text}\n'
-                f'_напомню в {datetime.strftime(remind, "%H:%M")}ч_'
-            )
-
+            if not at_date or item.server_datetime.year == at_date.year:
+                utc_date = item.server_datetime
+                user_date = utc_date.astimezone(user_tz)
+                utc_remind = item.remind_at
+                remind = utc_remind.astimezone(user_tz)
+                user_time = datetime.strftime(user_date, "%H:%M")
+                user_time = '' if user_time == '00:00' else f' в {user_time} '
+                notes.append(
+                    f'{datetime.strftime(user_date, "%d.%m.%Y")} {user_time}'
+                    f'- {item.text}\n'
+                    f'_напомню в {datetime.strftime(remind, "%H:%M")}ч_'
+                )
     if tasks:
-        note_sort = (
-            f'*{update.effective_user.first_name}, '
-            'в планах с учётом вашего часового пояса есть записи 📜:*\n'
-        )
+        if it_birthday:
+            note_sort = (
+                f'*{update.effective_user.first_name}, '
+                'найдены записи Дней Рождений 🎉:*\n'
+            )
+        else:
+            note_sort = (
+                f'*{update.effective_user.first_name}, '
+                'в планах, с учётом вашего часового пояса,\nесть записи 📜:*\n'
+            )
     else:
         note_sort = (
             f'*{update.effective_user.first_name}, '
@@ -142,6 +156,3 @@ def show(update: Update, context: CallbackContext,
         note_sort = note_sort + f'{n}\n'
 
     context.bot.send_message(chat.id, note_sort, parse_mode='Markdown')
-
-    if not at_date:
-        remove_keyboard(update, context)

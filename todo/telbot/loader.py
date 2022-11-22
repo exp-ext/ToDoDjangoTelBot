@@ -1,6 +1,3 @@
-from typing import Any, Dict
-
-import requests
 from django.conf import settings
 from telegram import Bot
 
@@ -15,7 +12,6 @@ def check_tokens():
         'TOKEN': TOKEN,
         'OW_API_ID': settings.OW_API_ID,
         'DOMEN': DOMEN_URL,
-        # 'DATABASE_URL': DATABASE_URL,
     }
     for key, value in env_vars.items():
         if not value or value == '':
@@ -23,19 +19,8 @@ def check_tokens():
     return True
 
 
-def set_webhook() -> Dict[str, Any]:
-    """Назначение webhook для бота."""
-    url = f'https://api.telegram.org/bot{TOKEN}/setWebhook'
-    params = {
-        "url": WEBHOOK_URL,
-    }
-    try:
-        response = requests.get(url, params=params)
-        return response.json()
-    except Exception as error:
-        SystemExit(f'Ошибка при назначении WEBHOOK: {error}')
-
-
-# start bot
-if check_tokens() and set_webhook().get('ok'):
+# start bot  and set_webhook().get('ok')
+if check_tokens():
     bot = Bot(token=TOKEN)
+    bot.delete_webhook()
+    bot.set_webhook(url=WEBHOOK_URL)

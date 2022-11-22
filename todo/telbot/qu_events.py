@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import pytz
 import requests
@@ -11,39 +11,33 @@ from .loader import bot
 
 User = get_user_model()
 
-LAST_TIME: int = 1
+LAST_DATETIME: datetime = datetime.utcnow().replace(second=0, microsecond=0)
 
 
-def main_process_distributor(cur_time_tup: int):
+def main_process_distributor(this_datetime: datetime):
     """Основной модуль оповещающий о событиях в чатах."""
     # проверка на пропуск минут
-    global LAST_TIME
-    last_time_to_check = LAST_TIME
+    global LAST_DATETIME
+    last_datetime = LAST_DATETIME
 
-    if cur_time_tup - 60 > last_time_to_check:
-        hour_start = datetime.fromtimestamp(
-            last_time_to_check
-        ).strftime('%H:%M')
-        hour_end = datetime.fromtimestamp(
-            cur_time_tup
-        ).strftime('%H:%M')
+    if this_datetime != last_datetime + timedelta(minutes=1):
+        dt_tup = (last_datetime, this_datetime)
+        times_str = tuple(x.strftime("%H:%M") for x in dt_tup)
 
         bot.send_message(
             225429268,
-            f"пропуск времени с {hour_start} до {hour_end}"
+            f"пропуск времени с {times_str[0]} до {times_str[1]}"
         )
-    LAST_TIME = cur_time_tup
+    LAST_DATETIME = this_datetime
 
     # поиск в базе событий для вывода в текущую минуту
-    this_time = datetime.utcnow().replace(second=0, microsecond=0)
-
     tasks = Task.objects.filter(
-        remind_at__startswith=this_time
+        remind_at__startswith=this_datetime
     ).select_related('user', 'group').order_by('user', 'group')
 
     id_users = (
         Task.objects.filter(
-            remind_at__startswith=this_time
+            remind_at__startswith=this_datetime
         ).order_by().values('user', 'group').distinct()
     )
 
@@ -66,7 +60,6 @@ def main_process_distributor(cur_time_tup: int):
                     task.delete()
 
         target = task.group.chat_id if id_user['group'] else task.user.username
-
         bot.send_message(target, reply_text, parse_mode='Markdown')
 
 

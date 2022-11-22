@@ -67,34 +67,41 @@ class TaskParse:
     def _parse(self, message: str) -> None:
         """Дифференцирует текст определяя значения атрибутов класса."""
         pattern = r'(\d+)[\.](\d+)[\.]?'
-        match = re.search(pattern, message)
-        if match:
-            date_ru = match[0]
-            date_parser = date_ru.replace('.', '-')
-            message = message.replace(date_ru, date_parser)
+        try:
+            match = re.search(pattern, message)
+            if match:
+                date_ru = match[0]
+                date_parser = date_ru.replace('.', '-')
+                message = message.replace(date_ru, date_parser)
 
-        settings = {
-            'TIMEZONE': self.time_zone,
-            'DATE_ORDER': 'DMY',
-            'DEFAULT_LANGUAGES': ["ru"],
-            'PREFER_DATES_FROM': 'future'
-        }
-        pars_tup = search_dates(
-            message,
-            add_detected_language=True,
-            settings=settings
-        )
-        first_match = pars_tup[0] if pars_tup else None
+            settings = {
+                'TIMEZONE': self.time_zone,
+                'DATE_ORDER': 'DMY',
+                'DEFAULT_LANGUAGES': ["ru"],
+                'PREFER_DATES_FROM': 'future'
+            }
+            pars_tup = search_dates(
+                message,
+                add_detected_language=True,
+                settings=settings
+            )
+            first_match = pars_tup[0] if pars_tup else None
 
-        if first_match:
-            date = first_match[1]
-            user_tz = pytz.timezone(self.time_zone)
-            self.user_date = user_tz.localize(date)
+            if first_match:
+                date = first_match[1]
+                user_tz = pytz.timezone(self.time_zone)
+                self.user_date = user_tz.localize(date)
 
-            utc = pytz.utc
-            self.server_date = date.astimezone(utc)
-            message = message.replace(first_match[0], '').strip()
-            self.only_message = message[:1].upper() + message[1:]
+                utc = pytz.utc
+                self.server_date = date.astimezone(utc)
+                message = message.replace(first_match[0], '').strip()
+                if message == '':
+                    self.only_message = ''
+                else:
+                    self.only_message = message[:1].upper() + message[1:]
+                print('Распарсил, всё ок.')
+        except Exception as error:
+            print(f'Не распарсил. Ошибка: {error}')
 
     def parse_with_parameters(self) -> None:
         """Распарсит сообщение с параметрами."""

@@ -19,8 +19,9 @@ PyJWT
 django-debug-toolbar
 
 # Distributed async tasks
-celery
+Celery
 redis
+celery[redis]
 django-celery-beat
 
 # Django async requirements

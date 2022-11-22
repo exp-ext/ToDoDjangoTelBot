@@ -57,17 +57,18 @@ def main_menu(update: Update, context: CallbackContext) -> None:
     """Кнопки основного меню на экран."""
     chat = update.effective_chat
     user_id = update.effective_user.id
+    user_name = update.effective_user.first_name
 
     if User.objects.filter(username=user_id).exists():
         button_list = [
             InlineKeyboardButton('💬 добавить запись',
-                                 callback_data='first_step_add'),
+                                 callback_data='add_first_step'),
             InlineKeyboardButton('❌ удалить запись',
-                                 callback_data='first_step_del'),
+                                 callback_data='del_first_step'),
             InlineKeyboardButton('🚼 календарь рождений',
                                  callback_data='show_birthday'),
             InlineKeyboardButton('📅 планы на дату',
-                                 callback_data='first_step_show'),
+                                 callback_data='show_first_step'),
             InlineKeyboardButton('📝 все планы',
                                  callback_data='show_all_notes'),
             InlineKeyboardButton('🎭 анекдот',
@@ -80,9 +81,7 @@ def main_menu(update: Update, context: CallbackContext) -> None:
         menu_text = (
             "* 💡  ГЛАВНОЕ МЕНЮ  💡 *".center(25, " ")
             + "\n"
-            + "для пользователя".center(25, " ")
-            + "\n"
-            + f"{update.message.from_user.first_name}".center(25, " ")
+            + f"для пользователя {user_name}".center(25, " ")
         )
         context.bot.send_message(
             chat.id,

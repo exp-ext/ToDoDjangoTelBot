@@ -30,6 +30,13 @@ DOMEN = os.getenv('DOMEN')
 
 DATABASE_URL = os.getenv('DATABASE_URL')
 
+# mail service
+EMAIL_USE_TLS = True
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
+EMAIL_PORT = 587
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -42,12 +49,15 @@ SECRET_KEY = os.getenv('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = [
-    'localhost',
-    '127.0.0.1',
-    '.ngrok.io',
-    '[::1]',
-]
+if DEBUG is True:
+    ALLOWED_HOSTS = [
+        'localhost',
+        '127.0.0.1',
+        '.ngrok.io',
+        '[::1]',
+    ]
+else:
+    ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS')
 
 # Application definition
 

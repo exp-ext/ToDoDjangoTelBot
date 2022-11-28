@@ -2,7 +2,7 @@ import time
 from datetime import datetime
 from threading import Thread
 
-from .qu_events import main_process_distributor, send_forismatic_quotes
+from telbot.qu_events import main_process_distributor, send_forismatic_quotes
 
 
 class ScheduleProcess:
@@ -29,7 +29,6 @@ class ScheduleProcess:
                 t2.start()
 
     def threading_process():
-
         main_thread = Thread(
             target=ScheduleProcess.functions_queue, args=()
         )

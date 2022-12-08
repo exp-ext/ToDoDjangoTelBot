@@ -4,4 +4,4 @@
 <img src="https://github.com/exp-ext/GitProjects/blob/main/pythons.png" width="700">
 </p>
 
-В разработке
+В разработке...........

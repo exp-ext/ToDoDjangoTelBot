@@ -1,5 +1,6 @@
 import random
-
+import secrets
+import string
 from django.shortcuts import render
 
 
@@ -24,10 +25,6 @@ def get_password(length):
     Password Generator:
     length - password length
     """
-    chars = ('+-*!$=@abcdefghijklnopqrstuvwxyz'
-             'ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890')
-    length = int(length)
-    password = ''
-    for i in range(length):
-        password += random.choice(chars)
+    character_set = string.digits + string.ascii_letters
+    code = ''.join(secrets.choice(character_set) for i in range(length))
     return password

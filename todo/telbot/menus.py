@@ -1,4 +1,3 @@
-
 from multiprocessing import Process
 from typing import Any, Iterable
 
@@ -8,7 +7,7 @@ from telegram import (InlineKeyboardButton, InlineKeyboardMarkup,
                       KeyboardButton, ReplyKeyboardMarkup, Update)
 from telegram.ext import CallbackContext
 from users.models import Group, GroupConnections
-from users.views import register, set_coordinates
+from users.views import Signup, set_coordinates
 
 from .cleaner import delete_messages_by_time
 from .service_message import send_service_message
@@ -160,4 +159,4 @@ def ask_registration(update: Update, context: CallbackContext) -> None:
             menu_text,
             reply_markup=reply_markup
         )
-        register(update, context)
+        Signup().register(update, context)

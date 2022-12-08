@@ -2,14 +2,15 @@ from datetime import datetime, timedelta
 
 import pytz
 import requests
+from django.apps import apps as django_apps
 from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
-from tasks.models import Task
-from users.models import Group
 
 from .loader import bot
 
 User = get_user_model()
+Group = django_apps.get_model(app_label='users', model_name='Group')
+Task = django_apps.get_model(app_label='tasks', model_name='Task')
 
 LAST_DATETIME: datetime = datetime.utcnow().replace(second=0, microsecond=0)
 

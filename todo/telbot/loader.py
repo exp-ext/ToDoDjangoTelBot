@@ -1,6 +1,8 @@
 from django.conf import settings
 from telegram import Bot
 
+# from telegram.ext import Updater
+
 DOMEN_URL = settings.DOMEN
 TOKEN = settings.TOKEN
 WEBHOOK_URL = f'{DOMEN_URL}/bot/{TOKEN}/webhooks/'
@@ -24,3 +26,11 @@ if check_tokens():
     bot = Bot(token=TOKEN)
     bot.delete_webhook()
     bot.set_webhook(url=WEBHOOK_URL)
+
+    # updater = Updater(TOKEN)
+    # updater.start_webhook(
+    #     listen='0.0.0.0',
+    #     port='8443',
+    #     url_path=TOKEN,
+    #     webhook_url=WEBHOOK_URL
+    # )

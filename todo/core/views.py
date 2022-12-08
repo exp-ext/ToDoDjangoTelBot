@@ -1,5 +1,3 @@
-import random
-
 from django.shortcuts import render
 
 
@@ -17,17 +15,3 @@ def permission_denied(request, exception):
 
 def csrf_failure(request, reason=''):
     return render(request, 'core/403csrf.html')
-
-
-def get_password(length):
-    """
-    Password Generator:
-    length - password length
-    """
-    chars = ('+-*!$=@abcdefghijklnopqrstuvwxyz'
-             'ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890')
-    length = int(length)
-    password = ''
-    for i in range(length):
-        password += random.choice(chars)
-    return password

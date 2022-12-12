@@ -8,8 +8,6 @@ from telegram import Update
 from telegram.ext import CallbackContext, ConversationHandler
 from users.models import Group
 
-from todo.celery import app
-
 from ..cleaner import remove_keyboard
 from ..service_message import send_service_message
 from .parse_message import TaskParse
@@ -48,7 +46,6 @@ def first_step_add(update: Update, context: CallbackContext):
     return 'add_note'
 
 
-@app.task(ignore_result=True)
 def add_notes(update: Update, context: CallbackContext):
     """Добавление записи в модель Task."""
     chat = update.effective_chat

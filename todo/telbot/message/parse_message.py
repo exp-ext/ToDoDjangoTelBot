@@ -93,13 +93,13 @@ class TaskParse:
                 self.user_date = user_tz.localize(date)
 
                 utc = pytz.utc
-                self.server_date = date.astimezone(utc)
+                self.server_date = self.user_date.astimezone(utc)
                 message = message.replace(first_match[0], '').strip()
                 if message == '':
                     self.only_message = ''
                 else:
                     self.only_message = message[:1].upper() + message[1:]
-                print('Распарсил, всё ок.')
+
         except Exception as error:
             print(f'Не распарсил. Ошибка: {error}')
 

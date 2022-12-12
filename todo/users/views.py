@@ -13,8 +13,6 @@ from telegram import Update
 from telegram.ext import CallbackContext
 from tzwhere import tzwhere
 
-from todo.celery import app
-
 from .models import Location
 
 User = get_user_model()
@@ -42,7 +40,7 @@ class Signup:
 
         password = self.get_password(length=15)
 
-        user = User.objects.get_or_create(username=tel_user.id)[0]
+        user, _ = User.objects.get_or_create(username=tel_user.id)
         user.first_name = tel_user.first_name
         user.last_name = tel_user.last_name
         user.set_password(password)
@@ -107,7 +105,6 @@ def get_coordinates(username: int) -> QuerySet[Location]:
     return user.locations.first()
 
 
-@app.task(ignore_result=True)
 def set_coordinates(update: Update, _: CallbackContext) -> None:
     """Получение часового пояса и запись в данных в БД."""
     chat = update.effective_chat

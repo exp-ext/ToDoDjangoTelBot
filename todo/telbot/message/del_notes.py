@@ -5,8 +5,6 @@ from django.shortcuts import get_object_or_404
 from telegram import Update
 from telegram.ext import CallbackContext, ConversationHandler
 
-from todo.celery import app
-
 from ..cleaner import remove_keyboard
 from ..service_message import send_service_message
 from .parse_message import TaskParse
@@ -31,7 +29,6 @@ def first_step_dell(update: Update, context: CallbackContext):
     return 'del_note'
 
 
-@app.task(ignore_result=True)
 def del_notes(update: Update, context: CallbackContext):
     """Удаление записи в модели Task."""
     chat = update.effective_chat

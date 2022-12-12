@@ -47,17 +47,15 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.getenv('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
-if DEBUG is True:
-    ALLOWED_HOSTS = [
-        'localhost',
-        '127.0.0.1',
-        '.ngrok.io',
-        '[::1]',
-    ]
-else:
-    ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS')
+ALLOWED_HOSTS = [
+    'localhost',
+    '127.0.0.1',
+    '.ngrok.io',
+    '[::1]',
+]
+
 
 # Application definition
 
@@ -214,7 +212,7 @@ FILE_URL = '/files/'
 FILE_ROOT = os.path.join(BASE_DIR, 'files')
 
 # CELERY
-REDIS_URL = os.getenv('REDIS_URL', 'redis://redis:6379')
+REDIS_URL = os.getenv('REDIS_URL', 'redis://127.0.0.1:6379')
 BROKER_URL = REDIS_URL
 CELERY_BROKER_URL = REDIS_URL
 CELERY_RESULT_BACKEND = REDIS_URL
@@ -223,3 +221,6 @@ CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = TIME_ZONE
 CELERY_TASK_DEFAULT_QUEUE = 'default'
+
+# CELERY BEAT
+CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'

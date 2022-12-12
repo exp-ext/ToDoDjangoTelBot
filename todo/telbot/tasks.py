@@ -1,7 +1,8 @@
-from datetime import datetime, timedelta
+from datetime import datetime
 
 import pytz
 import requests
+from celery import Celery
 from django.apps import apps as django_apps
 from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
@@ -12,24 +13,13 @@ User = get_user_model()
 Group = django_apps.get_model(app_label='users', model_name='Group')
 Task = django_apps.get_model(app_label='tasks', model_name='Task')
 
-LAST_DATETIME: datetime = datetime.utcnow().replace(second=0, microsecond=0)
+app = Celery()
 
 
-def main_process_distributor(this_datetime: datetime):
+@app.task
+def main_process_distributor() -> str:
     """Основной модуль оповещающий о событиях в чатах."""
-    # проверка на пропуск минут
-    global LAST_DATETIME
-    last_datetime = LAST_DATETIME
-
-    if this_datetime != last_datetime + timedelta(minutes=1):
-        dt_tup = (last_datetime, this_datetime)
-        times_str = tuple(x.strftime("%H:%M") for x in dt_tup)
-
-        bot.send_message(
-            225429268,
-            f"пропуск времени с {times_str[0]} до {times_str[1]}"
-        )
-    LAST_DATETIME = this_datetime
+    this_datetime = datetime.utcnow().replace(second=0, microsecond=0)
 
     # поиск в базе событий для вывода в текущую минуту
     tasks = Task.objects.filter(
@@ -62,19 +52,22 @@ def main_process_distributor(this_datetime: datetime):
 
         target = task.group.chat_id if id_user['group'] else task.user.username
         bot.send_message(target, reply_text, parse_mode='Markdown')
+    return 'Done'
 
 
-def send_forismatic_quotes() -> None:
+@app.task
+def send_forismatic_quotes() -> str:
     """Рассылка цитат великих людей на русском языке от АПИ forismatic."""
     try:
-        response = requests.get(
+        request = [
             'http://api.forismatic.com/api/1.0/',
             {
                 'method': 'getQuote',
                 'format': 'text',
                 'lang': 'ru',
             }
-        )
+        ]
+        response = requests.get(*request)
     except Exception as error:
         raise KeyError(error)
 
@@ -83,3 +76,4 @@ def send_forismatic_quotes() -> None:
 
     for id in groups:
         bot.send_message(id.chat_id, msg, parse_mode='Markdown')
+    return 'Done'

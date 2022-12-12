@@ -7,8 +7,6 @@ from telegram import Update
 from telegram.ext import CallbackContext, ConversationHandler
 from users.models import Group
 
-from todo.celery import app
-
 from ..cleaner import remove_keyboard
 from .parse_message import TaskParse
 
@@ -69,7 +67,6 @@ def show_birthday(update: Update, context: CallbackContext):
     show(update, context, it_birthday=True)
 
 
-@app.task(ignore_result=True)
 def show(update: Update, context: CallbackContext,
          at_date: datetime = None, it_birthday: bool = False):
     """

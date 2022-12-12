@@ -39,18 +39,6 @@ class Group(models.Model):
 
 
 class User(AbstractUser):
-    first_name = models.CharField(
-        verbose_name='Имя',
-        max_length=256,
-        null=True,
-        blank=True
-    )
-    last_name = models.CharField(
-        verbose_name='Фамилия',
-        max_length=256,
-        null=True,
-        blank=True
-    )
     birthday = models.DateField(
         verbose_name='Дата рождения',
         null=True
@@ -99,8 +87,10 @@ class Location(Create):
     )
 
     def __str__(self):
-        return (f"user: {self.user}, updated at "
-                f"{self.created_at.strftime('(%H:%M, %d %B %Y)')}")
+        return (
+            f"user: {self.user}, updated at "
+            f"{self.created_at.strftime('(%H:%M, %d %B %Y)')}"
+        )
 
 
 class GroupConnections(models.Model):
@@ -112,7 +102,7 @@ class GroupConnections(models.Model):
     group = models.ForeignKey(
         Group,
         on_delete=models.CASCADE,
-        related_name='users_connections'
+        related_name='groups_connections'
     )
 
     class Meta:

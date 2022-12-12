@@ -2,7 +2,7 @@ import time
 from datetime import datetime
 from threading import Thread
 
-from telbot.qu_events import main_process_distributor, send_forismatic_quotes
+from telbot.tasks import main_process_distributor, send_forismatic_quotes
 
 
 class ScheduleProcess:
@@ -16,7 +16,7 @@ class ScheduleProcess:
             t1 = Thread(
                 group=None,
                 target=main_process_distributor,
-                args=(this_datetime,)
+                args=()
             )
             t1.start()
 

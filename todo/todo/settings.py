@@ -19,15 +19,10 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # bots settings
-
 TOKEN = os.getenv('TOKEN')
-
 OW_API_ID = os.getenv('OW_API_ID')
-
 YANDEX_GEO_API = os.getenv('YANDEX_GEO_API')
-
 DOMEN = os.getenv('DOMEN')
-
 DATABASE_URL = os.getenv('DATABASE_URL')
 
 # mail service
@@ -58,7 +53,6 @@ ALLOWED_HOSTS = [
 
 
 # Application definition
-
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',

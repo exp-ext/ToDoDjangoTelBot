@@ -12,7 +12,7 @@ services:
         dockerfile: LocalDockerfile
       container_name: todo_django
       restart: always
-      command: bash -c "python3 todo/manage.py migrate && python3 todo/manage.py runserver 0.0.0.0:8000"
+      command: bash -c "python3 todo/manage.py migrate && python3 todo/manage.py set_webhook && python3 todo/manage.py runserver 0.0.0.0:8000"
       volumes:
         - .:/app
       ports:

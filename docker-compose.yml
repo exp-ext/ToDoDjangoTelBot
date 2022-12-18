@@ -1,28 +1,53 @@
 version: "3.11"
 
 services:
+  # db:
+  #   image: postgres:alpine
+  #   container_name: todo_postgres
+  #   restart: always
+  #   volumes:
+  #     - postgres_data:/var/lib/postgresql/data/
+  #   environment:
+  #     - POSTGRES_USER=postgres_user
+  #     - POSTGRES_PASSWORD=postgres_pass
+  #     - POSTGRES_DB=todo_db
+  #   env_file:
+  #     - ./.env
+  #   networks:
+  #     - database_network
   redis:
     image: redis:alpine
-    container_name: todo_redis
-    restart: always
-
+    container_name: todo_redis  
   web:
-      build:
-        context: .
-        dockerfile: LocalDockerfile
-      container_name: todo_django
-      restart: always
-      command: bash -c "python3 todo/manage.py migrate && python3 todo/manage.py set_webhook && python3 todo/manage.py runserver 0.0.0.0:8000"
-      volumes:
-        - .:/app
-      ports:
-        - "8000:8000"
-      env_file:
-        - ./.env
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: todo_django
+    restart: always
+    command: ./entrypoint.sh
+    volumes:
+      - static_volume:/app/web/static
+      - media_volume:/app/web/media
+    expose:
+      - 8000
+    env_file:
+      - ./.env
+    # depends_on:
+    #   - db
+  nginx:
+    image: nginx:alpine
+    volumes:
+      - ./nginx/:/etc/nginx/conf.d
+      - static_volume:/app/web/static
+      - media_volume:/app/web/media
+    ports:
+      - 8080:80
+    depends_on:
+      - web
   celery:
     build:
       context: .
-      dockerfile: LocalDockerfile
+      dockerfile: Dockerfile
     container_name: todo_celery
     restart: always
     command: bash -c "cd todo && celery -A todo worker --loglevel=INFO"
@@ -36,7 +61,7 @@ services:
   celery-beat:
     build:
       context: .
-      dockerfile: LocalDockerfile
+      dockerfile: Dockerfile
     container_name: todo_beat
     restart: always
     command: bash -c "cd todo && celery -A todo beat -l info --scheduler django_celery_beat.schedulers.DatabaseScheduler"
@@ -47,4 +72,8 @@ services:
     depends_on:
       - redis
       - celery
-      - web
+      - web  
+volumes:
+  static_volume:
+  media_volume:
+#   postgres_data:

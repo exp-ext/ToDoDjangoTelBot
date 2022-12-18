@@ -8,6 +8,14 @@ pytils
 Pillow
 sorl-thumbnail
 python-dotenv
+django-cors-headers
+
+whitenoise
+gunicorn
+uvicorn
+
+# Databases
+psycopg2-binary
 
 # API
 djoser

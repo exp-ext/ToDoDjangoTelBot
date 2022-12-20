@@ -23,6 +23,6 @@ app.conf.beat_schedule = {
     },
     'send-forismatic': {
         'task': 'telbot.tasks.send_forismatic_quotes',
-        'schedule': crontab(hour=10, minute=0),
+        'schedule': crontab(hour=7, minute=0),
     },
 }

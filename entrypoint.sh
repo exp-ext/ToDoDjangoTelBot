@@ -1,11 +1,20 @@
-#!/bin/bash
+#!/bin/sh
 
-cd todo
+until cd /app/todo/
+do
+    echo "Waiting for server volume..."
+done
 
-python3 manage.py set_webhook
+until python manage.py makemigrations
+do
+    echo "Waiting for db to be ready..."
+    sleep 2
+done
 
-python3 manage.py makemigrations
-
-python3 manage.py migrate
+until python manage.py migrate
+do
+    echo "Waiting for db to be ready..."
+    sleep 2
+done
 
 gunicorn -c config/gunicorn/dev.py

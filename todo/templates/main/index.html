@@ -9,7 +9,9 @@
 
     <div class="container">
 
-      {{ page_obj }}
+      {{ page_obj|safe }}
+
+      {% include 'includes/hello.html' %}
 
     </div>   
 

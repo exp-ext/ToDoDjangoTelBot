@@ -1,9 +1,13 @@
+from django.contrib.auth import get_user_model
+from django.shortcuts import get_object_or_404
 from telegram import Update
 from telegram.ext import CallbackContext
 from users.views import get_coordinates
 
 from ..cleaner import remove_keyboard
 from .support import get_address_from_coords
+
+User = get_user_model()
 
 
 def my_current_geoposition(update: Update, context: CallbackContext):
@@ -13,6 +17,11 @@ def my_current_geoposition(update: Update, context: CallbackContext):
     coordinates = get_coordinates(user_id)
 
     geo = f"{coordinates.longitude},{coordinates.latitude}"
+
+    user = get_object_or_404(User, username=user_id)
+
+    if user.favorite_group:
+        user_id = user.favorite_group.chat_id
 
     send_text = (
         'Согласно полученных геокоординат, '

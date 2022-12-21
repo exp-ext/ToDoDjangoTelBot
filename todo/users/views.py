@@ -11,7 +11,7 @@ from telbot.cleaner import process_to_delete_message
 from telbot.commands import set_up_commands
 from telegram import Update
 from telegram.ext import CallbackContext
-from tzwhere import tzwhere
+from timezonefinder import TimezoneFinder
 
 from .models import Location
 
@@ -61,7 +61,7 @@ class Signup:
             'пароль:\n'
             f'{password}\n'
             'А сейчас, можно просто нажать на '
-            f'[ВХОД🕋]({settings.DOMEN}'    #  /auth/login/{tel_user.id}/{password}/)'
+            f'[ВХОД🕋](https://{settings.DOMEN}'    #  /auth/login/{tel_user.id}/{password}/)'
             )
         update.message.reply_text(
                 text=reply_text,
@@ -113,8 +113,8 @@ def set_coordinates(update: Update, _: CallbackContext) -> None:
     longitude = update.message.location.longitude
     user = get_object_or_404(User, username=user_id)
 
-    user_tz = tzwhere.tzwhere()
-    timezone_str = user_tz.tzNameAt(latitude, longitude)
+    tf = TimezoneFinder()
+    timezone_str = tf.timezone_at(lng=longitude, lat=latitude)
 
     Location.objects.create(
         user=user,

@@ -1,5 +1,5 @@
 # pull official base image
-FROM python:3.11.0
+FROM python:3.11-slim-bullseye
 
 RUN apt-get update && apt-get upgrade -y
 
@@ -28,6 +28,9 @@ WORKDIR $APP_HOME
 
 # upgrade pip
 RUN pip install --upgrade pip
+
+# psycopg2 for arm64
+RUN pip install psycopg2-binary --no-binary psycopg2-binary
 
 # install dependencies
 COPY requirements.txt $APP_HOME

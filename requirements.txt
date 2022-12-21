@@ -14,8 +14,8 @@ whitenoise
 gunicorn
 uvicorn
 
-# Databases
-psycopg2-binary
+# Databases for amd64
+# psycopg2-binary
 
 # API
 djoser
@@ -50,4 +50,4 @@ BeautifulSoup4
 python-dateutil
 dateparser
 tzlocal
-tzwhere
+timezonefinder

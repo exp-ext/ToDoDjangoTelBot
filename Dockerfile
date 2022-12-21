@@ -36,6 +36,6 @@ RUN pip install -r requirements.txt
 # copy project
 COPY . $APP_HOME
 
-RUN chmod +x $APP_HOME/entrypoint.sh
+RUN chmod +x $APP_HOME/web_entrypoint.sh
 
 RUN python todo/manage.py collectstatic --no-input

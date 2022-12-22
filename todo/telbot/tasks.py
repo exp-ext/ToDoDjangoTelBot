@@ -5,6 +5,7 @@ import requests
 from celery import Celery
 from django.apps import apps as django_apps
 from django.contrib.auth import get_user_model
+from django.db.models.query import QuerySet
 from django.shortcuts import get_object_or_404
 
 from .loader import bot
@@ -16,25 +17,12 @@ Task = django_apps.get_model(app_label='tasks', model_name='Task')
 app = Celery()
 
 
-@app.task
-def main_process_distributor() -> str:
-    """Основной модуль оповещающий о событиях в чатах."""
-    this_datetime = datetime.utcnow().replace(second=0, microsecond=0)
-
-    # поиск в базе событий для вывода в текущую минуту
-    tasks = Task.objects.filter(
-        remind_at__startswith=this_datetime
-    ).select_related('user', 'group').order_by('user', 'group')
-
-    id_users = (
-        Task.objects.filter(
-            remind_at__startswith=this_datetime
-        ).order_by().values('user', 'group').distinct()
-    )
-
+def process_task_data(id_users: QuerySet[User],
+                      tasks: QuerySet[Task],
+                      event_text: str) -> str:
+    """Общий блок перебора записей по юзерам."""
     for id_user in id_users:
-        reply_text = 'Напоминаю, о предстоящих событиях:\n'
-
+        reply_text = event_text
         user = get_object_or_404(User, pk=id_user['user'])
         user_locally = user.locations.first()
         user_tz = pytz.timezone(user_locally.timezone)
@@ -53,6 +41,44 @@ def main_process_distributor() -> str:
         target = task.group.chat_id if id_user['group'] else task.user.username
         bot.send_message(target, reply_text, parse_mode='Markdown')
     return 'Done'
+
+
+@app.task
+def minute_by_minute_check() -> str:
+    """Основной модуль оповещающий о событиях в чатах."""
+    this_datetime = datetime.utcnow().replace(second=0, microsecond=0)
+
+    tasks = Task.objects.filter(
+        remind_at__startswith=this_datetime
+    ).select_related('user', 'group').order_by('user', 'group')
+
+    id_users = (
+        Task.objects.filter(
+            remind_at__startswith=this_datetime
+        ).order_by().values('user', 'group').distinct()
+    )
+
+    reply_text = 'Напоминаю, о предстоящих событиях:\n'
+    return process_task_data(id_users, tasks, reply_text)
+
+
+@app.task
+def check_birthdays() -> str:
+    """Модуль оповещающий о Днях рождения."""
+    this_date = datetime.today().date()
+
+    tasks = Task.objects.filter(
+       remind_at__day=this_date.day, remind_at__month=this_date.month
+    ).select_related('user', 'group').order_by('user', 'group')
+
+    id_users = (
+        Task.objects.filter(
+            remind_at__day=this_date.day, remind_at__month=this_date.month
+        ).order_by().values('user', 'group').distinct()
+    )
+
+    reply_text = 'Напоминаю, сегодня День рождения у\n'
+    return process_task_data(id_users, tasks, reply_text)
 
 
 @app.task

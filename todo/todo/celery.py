@@ -21,12 +21,12 @@ app.conf.beat_schedule = {
         'task': 'telbot.tasks.minute_by_minute_check',
         'schedule': crontab(),
     },
-    'send-forismatic': {
-        'task': 'telbot.tasks.send_forismatic_quotes',
-        'schedule': crontab(hour=7, minute=0),
-    },
     'send-birthdays': {
         'task': 'telbot.tasks.check_birthdays',
         'schedule': crontab(hour=4, minute=30),
+    },
+    'send-forismatic': {
+        'task': 'telbot.tasks.send_forismatic_quotes',
+        'schedule': crontab(hour=7, minute=0),
     },
 }

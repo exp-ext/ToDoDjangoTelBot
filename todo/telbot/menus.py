@@ -94,7 +94,7 @@ def main_menu(update: Update, context: CallbackContext) -> None:
             f'{update.effective_user.first_name}, пожалуйста пройдите '
             f'[процедуру регистрации]({context.bot.link}) 🔆'
         )
-        send_service_message(chat.id, reply_text)
+        send_service_message(chat.id, reply_text, parse_mode='Markdown')
 
 
 def private_menu(update: Update, context: CallbackContext) -> None:
@@ -129,7 +129,11 @@ def private_menu(update: Update, context: CallbackContext) -> None:
             f'{update.message.from_user.first_name}, функции геолокации '
             f'работают только в [private chat]({context.bot.link}) с ботом.'
         )
-        message_id = context.bot.send_message(chat.id, raise_text).message_id
+        message_id = context.bot.send_message(
+            chat.id,
+            raise_text,
+            parse_mode='Markdown'
+        ).message_id
         *params, = user_id, message_id, 20
         p1 = Process(target=delete_messages_by_time, args=(params,))
         p1.start()

@@ -52,12 +52,9 @@ def minute_by_minute_check() -> str:
         remind_at__startswith=this_datetime
     ).select_related('user', 'group').order_by('user', 'group')
 
-    id_users = (
-        Task.objects.filter(
-            remind_at__startswith=this_datetime
-        ).order_by().values('user', 'group').distinct()
-    )
-
+    id_users = Task.objects.filter(
+        remind_at__startswith=this_datetime
+    ).order_by().values('user', 'group').distinct()
     reply_text = 'Напоминаю, о предстоящих событиях:\n'
     return process_task_data(id_users, tasks, reply_text)
 
@@ -68,14 +65,16 @@ def check_birthdays() -> str:
     this_date = datetime.today().date()
 
     tasks = Task.objects.filter(
-       remind_at__day=this_date.day, remind_at__month=this_date.month
+       remind_at__day=this_date.day,
+       remind_at__month=this_date.month,
+       it_birthday=True
     ).select_related('user', 'group').order_by('user', 'group')
 
-    id_users = (
-        Task.objects.filter(
-            remind_at__day=this_date.day, remind_at__month=this_date.month
-        ).order_by().values('user', 'group').distinct()
-    )
+    id_users = Task.objects.filter(
+        remind_at__day=this_date.day,
+        remind_at__month=this_date.month,
+        it_birthday=True
+    ).order_by().values('user', 'group').distinct()
 
     reply_text = 'Напоминаю, сегодня День рождения у\n'
     return process_task_data(id_users, tasks, reply_text)

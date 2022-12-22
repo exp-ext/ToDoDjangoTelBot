@@ -61,7 +61,7 @@ class Signup:
             'пароль:\n'
             f'{password}\n'
             'А сейчас, можно просто нажать на '
-            f'[ВХОД🕋](https://{settings.DOMEN}'    #  /auth/login/{tel_user.id}/{password}/)'
+            f'[ВХОД🕋](https://{settings.DOMEN}'
             )
         update.message.reply_text(
                 text=reply_text,

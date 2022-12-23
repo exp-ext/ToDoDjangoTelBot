@@ -76,7 +76,7 @@ def check_birthdays() -> str:
         it_birthday=True
     ).order_by().values('user', 'group').distinct()
 
-    reply_text = 'Напоминаю, сегодня День рождения у\n'
+    reply_text = 'Напоминаю, что ежегодно в этот день:\n'
     return process_task_data(id_users, tasks, reply_text)
 
 

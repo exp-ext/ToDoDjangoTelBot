@@ -80,14 +80,14 @@ class Signup:
         return ''.join(secrets.choice(character_set) for i in range(length))
 
 
-def login(request: HttpRequest, user_id: int = None,
-          password: str = None) -> HttpResponseRedirect:
+def login_token(request: HttpRequest, user_id: int = None,
+                password: str = None) -> HttpResponseRedirect:
     """Аутентификация пользователя через Телеграмм."""
     user = authenticate(request, username=user_id, password=password)
     if not user:
         return redirect('users:login')
-    login(request, user)
-    return redirect('index')
+    login_token(request, user)
+    return redirect('todo:index')
 
 
 def get_coordinates(username: int) -> QuerySet[Location]:

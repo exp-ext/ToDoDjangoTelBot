@@ -26,6 +26,7 @@ urlpatterns = [
     path('auth/', include(('users.urls', 'users'))),
     path('auth/', include('django.contrib.auth.urls')),
     path('bot/', include(('telbot.urls', 'telbot'))),
+    path('tasks/', include(('tasks.urls', 'tasks'))),
 ]
 
 if settings.DEBUG:

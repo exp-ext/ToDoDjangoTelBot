@@ -13,7 +13,7 @@ class UserAdmin(admin.ModelAdmin):
         'username',
         'first_name',
         'last_name',
-        'is_admin',
+        'role',
         'favorite_group'
     )
     search_fields = ('last_name',)

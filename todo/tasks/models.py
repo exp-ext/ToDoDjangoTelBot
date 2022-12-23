@@ -124,7 +124,7 @@ class Task(models.Model):
         ordering = ('server_datetime',)
 
     def __str__(self):
-        return f'#{self.user} создал напоминание на {self.user_date}'
+        return f'#{self.user} - напоминание на {self.user_date}'
 
     def save(self, *args, **kwargs):
         if not self.remind_at:

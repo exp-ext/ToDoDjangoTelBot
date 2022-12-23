@@ -8,14 +8,11 @@ pytils
 Pillow
 sorl-thumbnail
 python-dotenv
-django-cors-headers
 
-whitenoise
 gunicorn
+django-cors-headers
+whitenoise
 uvicorn
-
-# Databases
-psycopg2-binary
 
 # API
 djoser
@@ -50,4 +47,4 @@ BeautifulSoup4
 python-dateutil
 dateparser
 tzlocal
-tzwhere
+timezonefinder

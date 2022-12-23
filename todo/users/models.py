@@ -2,7 +2,9 @@ import pytz
 from core.models import Create
 from django.contrib.auth.models import AbstractUser
 from django.db import models
+from django.utils.translation import gettext_lazy as _
 from pytils.translit import slugify
+from sorl.thumbnail import ImageField
 
 
 class Group(models.Model):
@@ -19,9 +21,9 @@ class Group(models.Model):
         unique=True,
         db_index=True
     )
-    image = models.ImageField(
+    image = ImageField(
         verbose_name='Логотип_группы',
-        upload_to='group/',
+        upload_to='group',
         blank=True
     )
 
@@ -39,13 +41,17 @@ class Group(models.Model):
 
 
 class User(AbstractUser):
+    class Role(models.TextChoices):
+        ADMIN = 'admin', _('Администратор')
+        USER = 'user', _('Пользователь')
+
     birthday = models.DateField(
         verbose_name='Дата рождения',
         null=True
     )
-    image = models.ImageField(
+    image = ImageField(
         verbose_name='Аватар',
-        upload_to='users/',
+        upload_to='users',
         blank=True
     )
     favorite_group = models.ForeignKey(
@@ -55,18 +61,32 @@ class User(AbstractUser):
         null=True,
         related_name='users'
     )
+    role = models.CharField(
+        verbose_name='Пользовательская роль',
+        max_length=10,
+        choices=Role.choices,
+        default=Role.USER
+    )
 
     is_blocked_bot = models.BooleanField(default=False)
-
-    is_admin = models.BooleanField(default=False)
 
     created_at = models.DateTimeField(auto_now_add=True, db_index=True)
 
     class Meta:
         ordering = ('-created_at',)
+        verbose_name = 'Пользователь'
+        verbose_name_plural = 'Пользователи'
 
     def __str__(self):
         return f'@{self.username}'
+
+    @property
+    def is_admin(self):
+        return (
+            self.Role == 'admin'
+            or self.is_superuser
+            or self.is_staff
+        )
 
 
 class Location(Create):

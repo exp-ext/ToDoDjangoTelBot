@@ -51,6 +51,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    # images
+    'sorl.thumbnail',
     # celery
     'django_celery_beat',
     # debugger
@@ -113,12 +115,23 @@ ASGI_APPLICATION = 'todo.asgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': os.environ.get('POSTGRES_ENGINE', 'django.db.backends.sqlite3'),
-        'NAME': os.environ.get('POSTGRES_DB', BASE_DIR / 'db.sqlite3'),
-        'USER': os.environ.get('POSTGRES_USER', 'user'),
-        'PASSWORD': os.environ.get('POSTGRES_PASSWORD', 'password'),
-        'HOST': os.environ.get('POSTGRES_HOST', 'localhost'),
-        'PORT': os.environ.get('POSTGRES_PORT', '5432'),
+        'ENGINE': os.environ.get(
+            'POSTGRES_ENGINE', 'django.db.backends.sqlite3'
+        ),
+        'NAME': os.environ.get(
+            'POSTGRES_DB', BASE_DIR / 'db.sqlite3'),
+        'USER': os.environ.get(
+            'POSTGRES_USER', 'user'
+        ),
+        'PASSWORD': os.environ.get(
+            'POSTGRES_PASSWORD', 'password'
+            ),
+        'HOST': os.environ.get(
+            'POSTGRES_HOST', 'localhost'
+            ),
+        'PORT': os.environ.get(
+            'POSTGRES_PORT', '5432'
+        ),
     }
 }
 
@@ -153,6 +166,11 @@ AUTH_USER_MODEL = 'users.User'
 
 CSRF_FAILURE_VIEW = 'core.views.csrf_failure'
 
+# LOGOUT_REDIRECT_URL = 'posts:index'
+LOGIN_URL = 'users:login'
+LOGIN_REDIRECT_URL = 'index'
+
+
 # Internationalization
 # https://docs.djangoproject.com/en/4.1/topics/i18n/
 
@@ -163,6 +181,9 @@ TIME_ZONE = 'UTC'
 USE_I18N = True
 
 USE_TZ = True
+
+# Для корректной работы виджета в форме профиля
+USE_L10N = False
 
 
 # Static files (CSS, JavaScript, Images)
@@ -181,12 +202,12 @@ STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
 )
 
-
 # MEDIA
 MEDIA_URL = '/media/'
 
 MEDIA_ROOT = 'web/media'   # os.path.join(BASE_DIR, 'media')
 
+THUMBNAIL_FORCE_OVERWRITE = True
 
 # API
 REST_FRAMEWORK = {

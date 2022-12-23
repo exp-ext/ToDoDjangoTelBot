@@ -18,8 +18,12 @@ app.autodiscover_tasks()
 # Celery Beat Settings
 app.conf.beat_schedule = {
     'check-db-every-minute': {
-        'task': 'telbot.tasks.main_process_distributor',
+        'task': 'telbot.tasks.minute_by_minute_check',
         'schedule': crontab(),
+    },
+    'send-birthdays': {
+        'task': 'telbot.tasks.check_birthdays',
+        'schedule': crontab(hour=4, minute=30),
     },
     'send-forismatic': {
         'task': 'telbot.tasks.send_forismatic_quotes',

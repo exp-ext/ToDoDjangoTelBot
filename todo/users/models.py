@@ -4,6 +4,7 @@ from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 from pytils.translit import slugify
+from sorl.thumbnail import ImageField
 
 
 class Group(models.Model):
@@ -20,9 +21,9 @@ class Group(models.Model):
         unique=True,
         db_index=True
     )
-    image = models.ImageField(
+    image = ImageField(
         verbose_name='Логотип_группы',
-        upload_to='group/',
+        upload_to='group',
         blank=True
     )
 
@@ -48,9 +49,9 @@ class User(AbstractUser):
         verbose_name='Дата рождения',
         null=True
     )
-    image = models.ImageField(
+    image = ImageField(
         verbose_name='Аватар',
-        upload_to='users/',
+        upload_to='users',
         blank=True
     )
     favorite_group = models.ForeignKey(

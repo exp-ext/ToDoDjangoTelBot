@@ -202,12 +202,12 @@ STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
 )
 
-
 # MEDIA
 MEDIA_URL = '/media/'
 
 MEDIA_ROOT = 'web/media'   # os.path.join(BASE_DIR, 'media')
 
+THUMBNAIL_FORCE_OVERWRITE = True
 
 # API
 REST_FRAMEWORK = {

@@ -1,6 +1,5 @@
 from django import forms
 from django.contrib.auth import get_user_model
-from django.contrib.auth.forms import UserCreationForm
 
 User = get_user_model()
 
@@ -10,8 +9,7 @@ class MyDateInput(forms.DateInput):
     format = '%Y-%m-%d'
 
 
-class ProfileForm(UserCreationForm):
-    password = None
+class ProfileForm(forms.ModelForm):
     email = forms.EmailField(
         widget=forms.TextInput(
             attrs={
@@ -46,5 +44,3 @@ class ProfileForm(UserCreationForm):
         self.fields['username'].help_text = (
             'Ваш телеграмм ID. Получить его можно в чате с ботом.'
         )
-        del self.fields['password2']
-        self.fields['password1'].help_text = None

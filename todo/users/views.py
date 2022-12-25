@@ -60,8 +60,8 @@ class Signup:
             f'{tel_user.id}\n'
             'пароль:\n'
             f'{password}\n'
-            'А сейчас, можно просто нажать на '
-            f'[ВХОД🕋](https://{settings.DOMEN}'
+            # 'А сейчас, можно просто нажать на [ВХОД🕋]'
+            # f'(https://{settings.DOMEN}/auth/login/{tel_user.id}/{password}/'
             )
         update.message.reply_text(
                 text=reply_text,
@@ -87,7 +87,7 @@ def login_token(request: HttpRequest, user_id: int = None,
     if not user:
         return redirect('users:login')
     login_token(request, user)
-    return redirect('todo:index')
+    return redirect('index')
 
 
 def get_coordinates(username: int) -> QuerySet[Location]:

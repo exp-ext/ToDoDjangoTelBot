@@ -90,7 +90,9 @@ class Task(models.Model):
         on_delete=models.CASCADE,
         related_name='tasks',
         blank=True,
-        null=True
+        null=True,
+        verbose_name='Группа фаворит',
+        help_text='Если выбрать группу, то оповещения будут в ней.'
     )
     server_datetime = models.DateTimeField(
         verbose_name='Дата и время для хранения на сервере'
@@ -114,7 +116,8 @@ class Task(models.Model):
         max_length=1,
         choices=Repeat.choices,
         default=Repeat.NEVER,
-        verbose_name='Периодичность напоминания'
+        verbose_name='Периодичность напоминания',
+        help_text='Выберите период повторения напоминания.'
     )
     it_birthday = models.BooleanField(default=False)
 

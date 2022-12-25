@@ -42,13 +42,23 @@
 
             {% if request.user.is_authenticated %}
 
-              {% comment %} <li class="nav-item">
-                <a class="nav-link {% if view_name  == 'posts:post_create' %}active{% endif %}"
-                href="{% url 'posts:post_create' %}">Новая запись</a>
-              </li> {% endcomment %}
+              <li class="nav-item">
+                <a class="nav-link {% if view_name  == 'tasks:task_create' %}active{% endif %}"
+                href="{% url 'tasks:task_create' %}">Создать запись</a>
+              </li>
+
+              <li class="nav-item">
+                <a class="nav-link {% if view_name  == 'tasks:notes' %}active{% endif %}"
+                href="{% url 'tasks:notes' %}">Напоминания</a>
+              </li>
+
+              <li class="nav-item">
+                <a class="nav-link {% if view_name  == 'tasks:birthdays' %}active{% endif %}"
+                href="{% url 'tasks:birthdays' %}">Дни рождения</a>
+              </li>
 
               <li class="nav-item"> 
-                <a class="nav-link {% if view_name  == 'users:user_profile' %}active{% endif %}" 
+                <a class="nav-link {% if view_name  == 'tasks:accounts_profile' %}active{% endif %}" 
                   href="{% url 'tasks:accounts_profile' request.user.username %}">Профиль</a>
               </li>
 

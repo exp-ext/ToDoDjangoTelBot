@@ -14,7 +14,8 @@
     
     <form method="post"
     enctype="multipart/form-data"
-    action="{% url 'tasks:accounts_profile' user.username %}">
+    action="{% url 'tasks:accounts_profile' user.username %}"
+    >
         
       {% csrf_token %}
 
@@ -27,20 +28,15 @@
               <span class="reqired text-danger">*</span>
             {% endif %}
 
-            {% if field.name == 'image' %}
+            {% if field.name == 'image' %} 
               <div class="row">
                 <div class="col-md-2">
                   {% thumbnail user.image "200x200" crop="center" upscale=True as im %}
                     <img src="{{ im.url }}" width="{{ im.width }}" height="{{ im.height }}">
                   {% endthumbnail %}
-                </div>
-                <div class="mx-4 col-xl-7">
+                </div>                
+                <div class="mx-5 col-xl-6">
                   {{ field|addclass:"form-control" }}
-                </div>
-                <div class="col-md-6 offset-md-4">
-                  <button type="submit" class="btn btn-primary">
-                    Обновить
-                  </button>
                 </div>
               </div>
             {% else %}
@@ -74,5 +70,9 @@
 {% endblock content %}
 
 {% block javascript %}
-
+{% comment %} <script>
+  document.getElementById("id_image").onchange = function() {
+    document.getElementById("form").submit();
+  };
+</script> {% endcomment %}
 {% endblock %}

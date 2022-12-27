@@ -47,6 +47,7 @@ class User(AbstractUser):
 
     birthday = models.DateField(
         verbose_name='Дата рождения',
+        blank=True,
         null=True
     )
     image = ImageField(

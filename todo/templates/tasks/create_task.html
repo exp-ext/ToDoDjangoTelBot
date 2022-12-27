@@ -43,11 +43,17 @@
                   {% if field.field.required %}
                     <span class="reqired text-danger">*</span>
                   {% endif %}
+
+                  {% if field.name == 'it_birthday' %}  
                   
+                    {{ field }} 
 
-                  {{ field|addclass:"form-control" }}
+                  {% else %}
 
+                    {{ field|addclass:"form-control" }}                    
 
+                  {% endif %}
+                  
                   {% if field.help_text %}
                     <small id="{{ field.text.id_for_label }}-help" class="form-text text-muted"> 
                       {{ field.help_text|safe }}
@@ -58,7 +64,7 @@
                   
                 </label>
               </div>
-            {% endfor %}            
+            {% endfor %}
 
             <div class="d-flex justify-content-end">              
               <button type="submit" class="btn btn-primary">
@@ -69,11 +75,12 @@
                 {% endif %}
               </button>
             </div>
-
           </div>
         </form>
       </div>
     </div>
   </div>
+
+
 
 {% endblock %}

@@ -97,9 +97,6 @@ class Task(models.Model):
     server_datetime = models.DateTimeField(
         verbose_name='Дата и время для хранения на сервере'
     )
-    user_date = models.DateField(
-        verbose_name='Дата мероприятия'
-    )
     text = models.TextField(
         verbose_name='Текст напоминания',
         help_text='Введите текст напоминания.'
@@ -119,7 +116,9 @@ class Task(models.Model):
         verbose_name='Периодичность напоминания',
         help_text='Выберите период повторения напоминания.'
     )
-    it_birthday = models.BooleanField(default=False)
+    it_birthday = models.BooleanField(
+        verbose_name='День рождения'
+    )
 
     class Meta:
         verbose_name = 'Напоминание'

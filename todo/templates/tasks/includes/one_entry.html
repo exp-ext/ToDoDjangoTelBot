@@ -1,37 +1,36 @@
 {% load static %}
 {% load tz %}
 
-{% block style %}  
-  {% comment %} <link  href="http://fonts.googleapis.com/css?family=Reenie+Beanie:regular" rel="stylesheet" type="text/css">
-  <link rel="stylesheet" href="{% static 'css/yellow_stick.css' %}">   {% endcomment %}
+{% block style %}
+  <link rel="stylesheet" href="{% static 'css/yellow_stick.css' %}">
 {% endblock %}
-
 
 <div class="stick">
   <ul>
-    <li>  
-
+    <li> 
       {% if note.it_birthday %}
 
-        <h2>{{ note.server_datetime|timezone:timezone|date:"d M Y D" }}</h2>
+        <h3>{{ note.server_datetime|timezone:timezone|date:"d M Y D" }}</h2>
         <p>{{ note.text|safe|truncatechars_html:400  }}</p>
 
       {% else %}
 
-        <h2>{{ note.server_datetime|timezone:timezone|date:"d M Y D в H:iч" }}</h2>
-        <p>{{ note.text|safe|truncatechars_html:400  }}</p>
-        <p>- напомню в {{ note.remind_at|timezone:timezone|time:"H:iч" }}</p>
-
+        <h3>{{ note.server_datetime|timezone:timezone|date:"d M Y D в H:iч" }}</h2>
+        <p>{{ note.text|safe|truncatechars_html:400  }}
+          <br>
+          <br>
+        - напомню в {{ note.remind_at|timezone:timezone|time:"H:iч" }}</p>
+        
       {% endif %}   
 
       <a class="button fast white" href="{% url 'tasks:task_edit' note.pk %}">изменить</a>
+      <br>
       <a class="button fast white" href="{% url 'tasks:task_delete' note.pk %}">удалить</a>
-
 
     </li>
   </ul>
 </div>
 
 {% block javascript %}
-
+  <script src="{% static 'js/yellow_stick.js' %}"></script>
 {% endblock %}

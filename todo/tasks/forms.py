@@ -73,7 +73,14 @@ class TaskForm(forms.ModelForm):
         help_text='Для ДР время можно оставить пустым',
         widget=MinimalSplitDateTimeMultiWidget()
     )
-    it_birthday = forms.BooleanField(required=False, initial=True)
+    it_birthday = forms.BooleanField(
+        label='День рождения?',
+        initial=False,
+        required=False,
+        widget=forms.CheckboxInput(
+            attrs={'style': 'width:25px;height:25px;'}
+        )
+    )
 
     class Meta:
         model = Task

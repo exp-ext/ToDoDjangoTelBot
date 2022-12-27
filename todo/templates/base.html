@@ -38,16 +38,16 @@
   {% include 'includes/header.html' %}
 
   <main> 
-    <div class="container py-5">
-      <br>
+    <br>
+    <div class="container py-5">     
+
         <div class="lobster">
           {% block header %}
           {% endblock%}
         </div>
-      <article>
+
         {% block content %}
-        {% endblock%}
-      </article>
+        {% endblock%}      
 
     </div>
   </main>

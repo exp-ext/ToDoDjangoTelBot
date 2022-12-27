@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block title %} Твои записи {% endblock %}
+
+{% block header %}    
+  <h1>Последние обновления:</h1>
+{% endblock %}
+
+{% block content %}
+
+
+  <div class="container">
+    <article>
+      {% for note in page_obj %}         
+        {% include 'tasks/includes/one_entry.html' %}
+      {% endfor %}    
+    </article>
+  </div>   
+
+
+  {% include 'tasks/includes/paginator.html' %}
+
+{% endblock %}

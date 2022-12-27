@@ -48,9 +48,8 @@ def del_notes(update: Update, context: CallbackContext):
         context.bot.delete_message(chat.id, id)
 
     if pars.server_date:
-        date_search = pars.user_date.date()
         tasks = user.tasks.filter(
-            user_date=date_search,
+            server_datetime=pars.server_date.date(),
             text__contains=pars.only_message[1:]
         )
         count = len(tasks)

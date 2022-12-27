@@ -49,7 +49,7 @@ def show_at_date(update: Update, context: CallbackContext):
     del_id = (context.user_data['del_message'], update.message.message_id)
     for id in del_id:
         context.bot.delete_message(chat.id, id)
-    show(update, context, pars.user_date.date())
+    show(update, context, pars.server_date.date())
     return ConversationHandler.END
 
 
@@ -94,8 +94,8 @@ def show(update: Update, context: CallbackContext,
     if chat.type == 'private':
         if at_date:
             tasks = user.tasks.filter(
-                user_date__day=at_date.day,
-                user_date__month=at_date.month
+                server_datetime__day=at_date.day,
+                server_datetime__month=at_date.month
             )
         else:
             tasks = user.tasks.filter(it_birthday=it_birthday)
@@ -106,8 +106,8 @@ def show(update: Update, context: CallbackContext,
         )
         if at_date:
             tasks = group.tasks.filter(
-                user_date__day=at_date.day,
-                user_date__month=at_date.month
+                server_datetime__day=at_date.day,
+                server_datetime__month=at_date.month
             )
         else:
             tasks = group.tasks.filter(it_birthday=it_birthday)
@@ -116,8 +116,10 @@ def show(update: Update, context: CallbackContext,
 
     for item in tasks:
         if item.it_birthday:
+            utc_date = item.server_datetime
+            user_date = utc_date.astimezone(user_tz)
             notes.append(
-                f'{datetime.strftime(item.user_date, "%d.%m")} '
+                f'{datetime.strftime(user_date, "%d.%m")} '
                 f'- {item.text}'
             )
         else:

@@ -74,8 +74,8 @@ def add_notes(update: Update, context: CallbackContext):
         context.bot.delete_message(chat.id, id)
 
     if pars.server_date:
-        date_search = pars.user_date.date()
-        tasks = user.tasks.filter(user_date__startswith=date_search)
+        date_search = pars.server_date.date()
+        tasks = user.tasks.filter(server_datetime__startswith=date_search)
 
         for task in tasks:
             simile = similarity(task.text, message)
@@ -103,7 +103,6 @@ def add_notes(update: Update, context: CallbackContext):
             user=user,
             group=group,
             server_datetime=pars.server_date,
-            user_date=pars.user_date.date(),
             text=message,
             remind_at=remind_at,
             reminder_period=repeat,

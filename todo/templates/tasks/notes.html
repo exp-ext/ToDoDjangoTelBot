@@ -9,11 +9,13 @@
 {% block content %}
 
 
-    <div class="container">
-      {% for note in page_obj %}  
-        {% include 'tasks/includes/one_entry.html' %}        
-      {% endfor %}
-    </div>   
+  <div class="container">
+    <article>
+      {% for note in page_obj %}         
+        {% include 'tasks/includes/one_entry.html' %}
+      {% endfor %}    
+    </article>
+  </div>   
 
 
   {% include 'tasks/includes/paginator.html' %}

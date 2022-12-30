@@ -67,13 +67,13 @@ def task_create(request: HttpRequest) -> HttpResponseRedirect | HttpResponse:
         form = form.save(commit=False)
         form.user = request.user
         form.save()
-
         redirecting = 'tasks:birthdays' if form.it_birthday else 'tasks:notes'
-
         return redirect(redirecting)
 
+    tz = request.user.locations.first().timezone
     context = {
         'form': form,
+        'tz': tz,
     }
     template = 'tasks/create_task.html'
     return render(request, template, context)
@@ -98,12 +98,15 @@ def task_edit(request: HttpRequest,
 
     if request.method == "POST" and form.is_valid():
         task = form.save()
-        return redirect(redirecting, task_id=task_id)
+        return redirect(redirecting)
 
     is_edit = True
+    tz = request.user.locations.first().timezone
+    form.initial['tz'] = tz
     context = {
         'form': form,
         'is_edit': is_edit,
+        'tz': tz,
     }
     template = 'tasks/create_task.html'
     return render(request, template, context)

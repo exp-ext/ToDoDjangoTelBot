@@ -81,6 +81,13 @@ class TaskForm(forms.ModelForm):
             attrs={'style': 'width:25px;height:25px;'}
         )
     )
+    tz = forms.CharField(
+        label='Часовой пояс',
+        required=False,
+        widget=forms.TextInput(
+            attrs={'readonly': 'readonly'}
+        )
+    )
 
     class Meta:
         model = Task

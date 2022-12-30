@@ -129,8 +129,7 @@ class Task(models.Model):
         return f'#{self.user} - напоминание на {self.user_date}'
 
     def save(self, *args, **kwargs):
-        if not self.remind_at:
-            self.remind_at = (
-                self.server_datetime - timedelta(minutes=self.remind_min)
-            )
+        self.remind_at = (
+            self.server_datetime - timedelta(minutes=self.remind_min)
+        )
         super().save(*args, **kwargs)

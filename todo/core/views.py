@@ -21,6 +21,6 @@ def csrf_failure(request: HttpRequest, reason='') -> HttpResponse:
 
 
 def paginator_handler(request: HttpRequest, query: QuerySet) -> Paginator:
-    paginator = Paginator(query, 10)
+    paginator = Paginator(query, 9)
     page_number = request.GET.get('page')
     return paginator.get_page(page_number)

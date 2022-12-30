@@ -1,6 +1,6 @@
-
 from datetime import datetime
 
+import pytz
 from django.forms import MultiWidget, TextInput
 from django.utils.timezone import make_aware
 
@@ -40,4 +40,5 @@ class MinimalSplitDateTimeMultiWidget(MultiWidget):
         my_datetime = datetime.strptime(
             date_str + ' ' + time_str, "%Y-%m-%d %H:%M"
         )
-        return make_aware(my_datetime)
+        timezone = pytz.timezone(data.get('tz'))
+        return make_aware(my_datetime, timezone)

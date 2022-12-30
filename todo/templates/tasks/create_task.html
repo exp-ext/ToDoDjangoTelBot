@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% load static %}
 {% load user_filters %}
+{% load tz %}
 
 {% block title %} Редактор напоминаний {% endblock %}
 
@@ -47,6 +48,12 @@
                   {% if field.name == 'it_birthday' %}  
                   
                     {{ field }} 
+
+                  {% elif field.name == 'server_datetime' %}  
+
+                    {% timezone tz %}
+                      {{ field|addclass:"form-control"  }} 
+                    {% endtimezone %}
 
                   {% else %}
 

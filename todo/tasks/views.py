@@ -71,6 +71,8 @@ def task_create(request: HttpRequest) -> HttpResponseRedirect | HttpResponse:
         return redirect(redirecting)
 
     tz = request.user.locations.first().timezone
+    form.initial['tz'] = tz
+    form.initial['group'] = request.user.groups_connections.all()
     context = {
         'form': form,
         'tz': tz,
@@ -103,6 +105,7 @@ def task_edit(request: HttpRequest,
     is_edit = True
     tz = request.user.locations.first().timezone
     form.initial['tz'] = tz
+    form.initial['group'] = request.user.groups_connections.all()
     context = {
         'form': form,
         'is_edit': is_edit,

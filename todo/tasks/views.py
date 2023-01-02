@@ -58,21 +58,22 @@ def tasks(request: HttpRequest) -> HttpResponse:
 
 @login_required
 def task_create(request: HttpRequest) -> HttpResponseRedirect | HttpResponse:
+    """Создаёт новую запись."""
+    tz = request.user.locations.first().timezone
     form = TaskForm(
         request.POST or None,
-        files=request.FILES or None
+        files=request.FILES or None,
+        initial={
+            'tz': tz,
+            'user': request.user,
+        }
     )
-
     if request.method == "POST" and form.is_valid():
         form = form.save(commit=False)
         form.user = request.user
         form.save()
         redirecting = 'tasks:birthdays' if form.it_birthday else 'tasks:notes'
         return redirect(redirecting)
-
-    tz = request.user.locations.first().timezone
-    form.initial['tz'] = tz
-    form.initial['group'] = request.user.groups_connections.all()
     context = {
         'form': form,
         'tz': tz,
@@ -92,10 +93,15 @@ def task_edit(request: HttpRequest,
     if task.user != request.user:
         return redirect(redirecting, task_id=task_id)
 
+    tz = request.user.locations.first().timezone
     form = TaskForm(
         request.POST or None,
         files=request.FILES or None,
-        instance=task
+        instance=task,
+        initial={
+            'tz': tz,
+            'user': request.user,
+        }
     )
 
     if request.method == "POST" and form.is_valid():
@@ -103,9 +109,6 @@ def task_edit(request: HttpRequest,
         return redirect(redirecting)
 
     is_edit = True
-    tz = request.user.locations.first().timezone
-    form.initial['tz'] = tz
-    form.initial['group'] = request.user.groups_connections.all()
     context = {
         'form': form,
         'is_edit': is_edit,

@@ -91,8 +91,9 @@ def main_menu(update: Update, context: CallbackContext) -> None:
         assign_group(update)
     else:
         reply_text = (
-            f'{update.effective_user.first_name}, пожалуйста пройдите '
-            f'[процедуру регистрации]({context.bot.link}) 🔆'
+            f'{update.effective_user.first_name}, пожалуйста пройдите по '
+            f'ссылке [для прохождения процедуры регистрации]'
+            f'({context.bot.link}) 🔆'
         )
         send_service_message(chat.id, reply_text, parse_mode='Markdown')
 

@@ -99,3 +99,17 @@ class TaskForm(forms.ModelForm):
             'it_birthday',
             'remind_min'
         )
+
+    def __init__(self, *args, **kwargs):
+        super(TaskForm, self).__init__(*args, **kwargs)
+        user = kwargs.pop('initial').get('user')
+        self.fields['group'] = forms.ModelChoiceField(
+            queryset=user.groups_connections.all()
+        )
+        self.fields['group'].required = False
+        self.fields['group'].label = (
+            'Группа для вывода напоминания.'
+        )
+        self.fields['group'].help_text = (
+            'Оповещение придёт в личный чат, если оставить пустым.'
+        )

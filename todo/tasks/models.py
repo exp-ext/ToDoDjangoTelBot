@@ -91,8 +91,8 @@ class Task(models.Model):
         related_name='tasks',
         blank=True,
         null=True,
-        verbose_name='Группа фаворит',
-        help_text='Если выбрать группу, то оповещения будут в ней.'
+        verbose_name='Группа',
+        help_text='Если выбрать группу, то оповещение будет в ней.'
     )
     server_datetime = models.DateTimeField(
         verbose_name='Дата и время для хранения на сервере'

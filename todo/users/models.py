@@ -62,6 +62,10 @@ class User(AbstractUser):
         null=True,
         related_name='users'
     )
+    group = models.ManyToManyField(
+        Group,
+        through="GroupConnections"
+    )
     role = models.CharField(
         verbose_name='Пользовательская роль',
         max_length=10,

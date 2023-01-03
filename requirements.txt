@@ -9,10 +9,12 @@ Pillow
 sorl-thumbnail
 python-dotenv
 
-gunicorn
-django-cors-headers
-whitenoise
-uvicorn
+# user agents parser
+python-memcached
+pyyaml
+ua-parser
+user-agents
+django-user-agents
 
 # API
 djoser
@@ -20,7 +22,13 @@ djangorestframework-simplejwt
 djangorestframework
 PyJWT
 
-# Debagger
+# Djando production
+gunicorn
+uvicorn
+django-cors-headers
+whitenoise
+
+# Djando debagger
 django-debug-toolbar
 
 # Distributed async tasks
@@ -29,9 +37,13 @@ redis
 celery[redis]
 django-celery-beat
 
-# Django async requirements
-gunicorn
-uvicorn
+# Bot & utils
+python-telegram-bot
+BeautifulSoup4
+python-dateutil
+dateparser
+tzlocal
+timezonefinder
 
 # lintering
 flake8
@@ -40,11 +52,3 @@ flake8-isort
 flake8-plugin-utils
 flake8-return
 pep8-naming
-
-# Bot & utils
-python-telegram-bot
-BeautifulSoup4
-python-dateutil
-dateparser
-tzlocal
-timezonefinder

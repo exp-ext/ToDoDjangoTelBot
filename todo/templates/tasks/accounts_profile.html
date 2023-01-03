@@ -10,63 +10,65 @@
 
 {% block content %}
 
-  <div class="card-body">
-    
-    <form method="post"
-    enctype="multipart/form-data"
-    action="{% url 'tasks:accounts_profile' user.username %}"
-    >
-        
-      {% csrf_token %}
+  <div class="container py-5"> 
 
-      {% for field in form %}
-        <div class="form-group row my-3 p-3">
+    <div class="card-body">
+      
+      <form method="post"
+      enctype="multipart/form-data"
+      action="{% url 'tasks:accounts_profile' user.username %}"
+      >
+          
+        {% csrf_token %}
 
-          <label for="{{ field.text.id_for_label }}">
-            {{ field.label }}
-            {% if field.field.required %}
-              <span class="reqired text-danger">*</span>
-            {% endif %}
+        {% for field in form %}
+          <div class="form-group row my-3 p-3">
 
-            {% if field.name == 'image' %} 
-              <div class="row">
-                <div class="col-md-2">
-                  {% thumbnail user.image "200x200" crop="center" upscale=True as im %}
-                    <img src="{{ im.url }}" width="{{ im.width }}" height="{{ im.height }}">
-                  {% endthumbnail %}
-                </div>                
-                <div class="mx-5 col-xl-6">
+            <label for="{{ field.text.id_for_label }}">
+              {{ field.label }}
+              {% if field.field.required %}
+                <span class="reqired text-danger">*</span>
+              {% endif %}
+
+              {% if field.name == 'image' %} 
+                <div class="row">
+                  <div class="col-md-2">
+                    {% thumbnail user.image "200x200" crop="center" upscale=True as im %}
+                      <img src="{{ im.url }}" width="{{ im.width }}" height="{{ im.height }}">
+                    {% endthumbnail %}
+                  </div>                
+                  <div class="mx-5 col-xl-6">
+                    {{ field|addclass:"form-control" }}
+                  </div>
+                </div>
+              {% else %}
+                <div class="col-md-9">                                   
                   {{ field|addclass:"form-control" }}
                 </div>
-              </div>
-            {% else %}
-              <div class="col-md-9">                                   
-                {{ field|addclass:"form-control" }}
-              </div>
-            {% endif %}                 
+              {% endif %}                 
 
-            {% if field.help_text %}
-            <small id="{{ field.text.id_for_label }}-help" class="form-text text-muted"> 
-              {{ field.help_text|safe }}
-            </small>
-            {% endif %} 
-            
-            <div class="form-error">{{ field.errors }}</div>                   
+              {% if field.help_text %}
+              <small id="{{ field.text.id_for_label }}-help" class="form-text text-muted"> 
+                {{ field.help_text|safe }}
+              </small>
+              {% endif %} 
+              
+              <div class="form-error">{{ field.errors }}</div>                   
 
-          </label>
+            </label>
 
+          </div>
+        {% endfor %}
+
+        <div class="col-md-6 offset-md-4">
+          <button type="submit" class="btn btn-primary">
+            Сохранить данные
+          </button>
         </div>
-      {% endfor %}
 
-      <div class="col-md-6 offset-md-4">
-        <button type="submit" class="btn btn-primary">
-          Сохранить данные
-        </button>
-      </div>
-
-    </form>
+      </form>
+    </div>
   </div>
-
 {% endblock content %}
 
 {% block javascript %}

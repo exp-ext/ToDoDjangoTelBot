@@ -61,6 +61,8 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework.authtoken',
     'djoser',
+    # user agents parser
+    'django_user_agents',
     # my app
     'core',
     'users',
@@ -76,7 +78,9 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-
+    # user agents parser
+    'django_user_agents.middleware.UserAgentMiddleware',
+    # debug_toolbar
     'debug_toolbar.middleware.DebugToolbarMiddleware',
 ]
 
@@ -247,3 +251,15 @@ CELERY_TASK_DEFAULT_QUEUE = 'default'
 
 # CELERY BEAT
 CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
+
+# # USER AGENTS PARSING
+# # Cache backend is optional, but recommended to speed up user agent parsing
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': '127.0.0.1:11211',
+    }
+}
+# # Name of cache backend to cache user agents. If it not specified default
+# # cache alias will be used. Set to `None` to disable caching.
+USER_AGENTS_CACHE = 'default'

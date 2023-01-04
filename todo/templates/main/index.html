@@ -1,15 +1,262 @@
-{% extends "base.html" %}
-    
+{% extends "base.html" %}  
+{% load static %}
+{% load user_agents %}
+
+{% block style %}
+  <style>
+    .bd-placeholder-img {
+      font-size: 1.125rem;
+      text-anchor: middle;
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+    }
+
+    @media (min-width: 768px) {
+      .bd-placeholder-img-lg {
+        font-size: 3.5rem;
+      }
+    }
+  </style>
+  <link rel="stylesheet" href="{% static 'css/carousel.css' %}">
+{% endblock %} 
+
+  
 {% block content %}
 
-    <div class="container">
+  <div id="myCarousel" class="carousel slide" data-ride="carousel">
+    <ol class="carousel-indicators">
+      <li data-target="#myCarousel" data-slide-to="0" class="active"></li>
+      <li data-target="#myCarousel" data-slide-to="1"></li>
+      <li data-target="#myCarousel" data-slide-to="2"></li>
+    </ol>
+    <div class="carousel-inner">
+      <div class="carousel-item active">        
 
-      <div class="lobster">
-      {{ page_obj|safe }}
-    </div>  
+        {% if request|is_mobile %}
+          <img class="img-fluid" src="{% static 'img/index/world_mobile.png' %}"></img>
+        {% else %}
+          <img class="img-fluid" src="{% static 'img/index/world.png' %}"></img>
+        {% endif %}        
 
-      {% include 'includes/hello.html' %}
+        <div class="container">
+          <div class="carousel-caption text-left">
+            <div class="lobster">
+              <h1>Регистрация</h1>
+              <p>&nbsp;</p>
+              <p>Она необходима, без неё бот не сможет разобратся где чьё напоминание. И кто в какой части мира живёт.</p>
+              <p>&nbsp;</p>
+              <p><a class="btn btn-lg btn-primary" href="#registration" role="button">Зарегистрироваться</a></p>
+            </div> 
+          </div>
+        </div>
+      </div>
+      <div class="carousel-item">
 
-    </div>   
+        {% if request|is_mobile %}
+          <img class="img-fluid" src="{% static 'img/index/scaled_mobile.png' %}"></img>
+        {% else %}
+          <img class="img-fluid" src="{% static 'img/index/scaled.png' %}"></img>
+        {% endif %}
+        
+        <div class="container">
+          <div class="carousel-caption">
+            <div class="lobster">
+              <h1>Основные функции</h1>
+              <p>&nbsp;</p>
+              <p>Есть некоторые приятные фишки о которых тебе нужно знать.</p>
+              <p>&nbsp;</p>
+              <p><a class="btn btn-lg btn-primary" href="#main-functions" role="button">Подробнее</a></p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="carousel-item">
 
+        {% if request|is_mobile %}
+          <img class="img-fluid" src="{% static 'img/index/services_mobile.png' %}"></img>
+        {% else %}
+          <img class="img-fluid" src="{% static 'img/index/services.png' %}"></img>
+        {% endif %}
+        
+        <div class="container">
+          <div class="carousel-caption text-right">
+            <div class="lobster">
+              <h1>Напоминания</h1>
+              <p>&nbsp;</p>
+              <p>В основном меня создали для того чтобы Ты ничего в своей жизни не пропусти, но есть и ещё кое-что ♨️</p>
+              <p>&nbsp;</p>
+              <p><a class="btn btn-lg btn-primary" href="#reminders" role="button">Подробнее.</a></p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <a class="carousel-control-prev" href="#myCarousel" role="button" data-slide="prev">
+      <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+      <span class="sr-only">Previous</span>
+    </a>
+    <a class="carousel-control-next" href="#myCarousel" role="button" data-slide="next">
+      <span class="carousel-control-next-icon" aria-hidden="true"></span>
+      <span class="sr-only">Next</span>
+    </a>
+  </div>
+
+  <!-- Marketing messaging and featurettes
+  ================================================== -->
+  <!-- Wrap the rest of the page in another container to center all the content. -->
+
+  <div class="container marketing">
+
+    <!-- Three columns of text below the carousel -->
+    <div class="row">
+      <div class="col-lg-4">
+        <svg class="bd-placeholder-img rounded-circle" width="140" height="140" xmlns="http://www.w3.org/2000/svg" aria-label="Placeholder: 140x140" preserveaspectratio="xMidYMid slice" role="img" focusable="false"><title>Placeholder</title><rect width="100%" height="100%" fill="#777"></rect><text x="50%" y="50%" fill="#777" dy=".3em">140x140</text></svg>
+
+        <h2>Прошлое</h2>
+        <p>Очень часто появлялась необходимость напоминания большому количеству людей о начале какого-либо мероприятия. И к сожалению иногда я и сам об этом забывал. Так и родилась идея создать Telegram бота для групповых чатов.</p>
+      </div><!-- /.col-lg-4 -->
+      <div class="col-lg-4">
+        <svg class="bd-placeholder-img rounded-circle" width="140" height="140" xmlns="http://www.w3.org/2000/svg" aria-label="Placeholder: 140x140" preserveaspectratio="xMidYMid slice" role="img" focusable="false"><title>Placeholder</title><rect width="100%" height="100%" fill="#777"></rect><text x="50%" y="50%" fill="#777" dy=".3em">140x140</text></svg>
+
+        <h2>Настоящее</h2>
+        <p>На данном этапе своей жизни я нахожусь в разработке, но уже сейчас я кое что умею.</p>
+      </div><!-- /.col-lg-4 -->
+      <div class="col-lg-4">
+        <svg class="bd-placeholder-img rounded-circle" width="140" height="140" xmlns="http://www.w3.org/2000/svg" aria-label="Placeholder: 140x140" preserveaspectratio="xMidYMid slice" role="img" focusable="false"><title>Placeholder</title><rect width="100%" height="100%" fill="#777"></rect><text x="50%" y="50%" fill="#777" dy=".3em">140x140</text></svg>
+
+        <h2>Будущее</h2>
+        <p>В дальнейшем все обязательно должно перерасти в соцсеть поверх соцсетей, в которой будут напоминания, листы желаний на праздники и многое другое.</p>
+      </div><!-- /.col-lg-4 -->
+    </div><!-- /.row -->
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+
+    <!-- START THE FEATURETTES -->
+    <section id="registration">
+    <hr class="featurette-divider">
+
+    
+    <div class="row featurette">
+      <div class="col-md-7">
+        <h2 class="featurette-Заголовок">Регистрация. <span class="text-muted">И это совсем просто...</span></h2>
+        <p class="lead">
+          Необходимо пройти в <a href="https://t.me/BorFAsbot">личный чат с ботом</a> нажать на кнопку &lt;Меню&gt; и запросить регистрацию. 
+          И в общем то и всё... Также для настройки часового пояса, очень рекомендую узнать погоду воспользовавшись кнопкой &lt;Показать меню&gt;.          
+        </p>
+      </div>
+      <div class="col-md-5">
+        <img class="bd-placeholder-img bd-placeholder-img-lg featurette-image img-fluid mx-auto" width="500" height="500"
+          src="{% static 'img/index/register.png' %}">
+        </img>
+      </div>      
+    </div>
+    </section>
+
+    <section id="main-functions">
+    <hr class="featurette-divider">
+
+    <div class="row featurette">
+      <div class="col-md-7 order-md-2">
+        <h2 class="featurette-Заголовок">Основные <span class="text-muted">функции.</span></h2>
+        <p class="lead">
+          <ol style="list-style: none; font-size: 14px; line-height: 32px; font-weight: bold;">
+            <li style="clear: both;">📅 Telegram ToDo management</a></li>
+            <li style="clear: both;">🎭 рассказываю анекдоты</li>
+            <li style="clear: both;">😼 высылаю картинки с котиками</li>
+            <li style="clear: both;">🌈 знаю погоду на улице в твоём местоположении</li>
+            <li style="clear: both;">☔️ предсказываю погоду на 4 дня вперёд</li>
+            <li style="clear: both;">🛰 могу отправить твоё местоположение в группу фаворит</li>
+            <li style="clear: both;">🏄 знаю о всех мероприятиях в ближайшем от тебя мегаполисе</li>
+        </p>
+      </div>
+      <div class="col-md-5 order-md-1">
+        <img class="bd-placeholder-img bd-placeholder-img-lg featurette-image img-fluid mx-auto" width="500" height="500"
+          src="{% static 'img/index/menu.png' %}">
+        </img>
+
+      </div>
+    </div>
+    </section>
+
+    <section id="reminders">
+    <hr class="featurette-divider">
+
+    <div class="row featurette">
+      <div class="col-md-7">
+        <h2 class="featurette-Заголовок">Описание работы  <span class="text-muted">основного модуля.</span></h2>
+        <p class="lead">
+          <h4 style="color: #080144;">- Кнопки меню:</h4>
+          <ol>
+            <li>
+            <p><strong>💬 добавить запись</strong></p>
+            <p>Формат ввода может быть:</p>
+            <ul>
+            <li>дата время <em>напоминание</em> &amp; период повтора</li>
+            <li>дата <em>напоминание</em> &amp; период повтора</li>
+            <li>дата <em>напоминание</em></li>
+            <li>дата День Рождения <em>напоминание</em> &amp; период повтора (каждый код)</li>
+            </ul>
+            </li>
+            <p>&nbsp;</p>
+            <li>
+            <p><strong>❌ удалить запись</strong></p>
+            <p>Формат ввода: <strong>дата часть напоминания</strong>.</p>
+            <p>Внимание! Если эта часть совпадёт с другой записью в этот день, то она тоже будет удалена.</p>
+            </li>
+            <li>
+            <p><strong>🚼 календарь рождений</strong></p>
+            <p>Выведет все записи с ДР.</p>
+            </li>
+            <li>
+            <p><strong>📅 планы на дату</strong></p>
+            <p>Формат ввода: <strong>дата</strong>.</p>
+            </li>
+            <li>
+            <p><strong>📝 все планы</strong></p>
+            <p>Выведет все записи которые найдёт в базе.</p>
+            </li>
+            </ol>
+            <p><strong><em>дата</em></strong> - вводится в формате <strong>##.##.#### или завтра послезавтра в пятницу и т.д.</strong></p>
+            <p><strong><em>период повтора</em></strong> - может быть <strong>день, неделя, месяц, год</strong></p>
+            <p><strong><em>День Рождения</em></strong> - может быть <strong>ДР, День рождения, Birthday</strong></p>
+            <h4 style="color: #080144;">- Схема работы в чатах:</h4>
+            <p>Если создать напоминание с ботом в личном чате, то он оповещает о нем только в личном с ним чате и в группе/группах ни нет записей и оповещений от тебя.</p>
+            <p>Если создать напоминание в группе, то он оповещает только в группе. Но при этом записи есть и у тебя в личном с ним чате. Но только у тебя, у остальных участников групп нет.</p>
+        </p>
+      </div>
+      <div class="col-md-5">
+        <img class="bd-placeholder-img bd-placeholder-img-lg featurette-image img-fluid mx-auto" width="500" height="500"
+          src="{% static 'img/index/message.png' %}">
+        </img>
+      </div>
+    </div>
+    </section>
+
+    <hr class="featurette-divider">
+
+    <div class="row featurette">
+      <div class="col-md-7 order-md-2">
+        <h2 class="featurette-Заголовок">Управление <span class="text-muted">с сайта.</span></h2>
+        <p class="lead">
+          После регистрации будут доступны функции управления напоминаниями на сайте.
+        </p>
+      </div>
+      <div class="col-md-5 order-md-1">
+        <img class="bd-placeholder-img bd-placeholder-img-lg featurette-image img-fluid mx-auto" width="500" height="500"
+          src="{% static 'img/index/site_menu.png' %}">
+        </img>
+
+      </div>
+    </div>
+
+    <!-- /END THE FEATURETTES -->
+
+  </div><!-- /.container -->
+
+{% endblock %}
+  
+{% block javascript %}
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/5.0.0-alpha1/js/bootstrap.bundle.min.js"></script>
 {% endblock %}

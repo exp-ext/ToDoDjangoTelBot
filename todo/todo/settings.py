@@ -109,35 +109,48 @@ ASGI_APPLICATION = 'todo.asgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.1/ref/settings/#databases
 
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.sqlite3',
-#         'NAME': BASE_DIR / 'db.sqlite3',
-#         'TIME_ZONE': 'UTC',
-#     }
-# }
-
-DATABASES = {
+SQLITE = {
     'default': {
-        'ENGINE': os.environ.get(
-            'POSTGRES_ENGINE', 'django.db.backends.sqlite3'
-        ),
-        'NAME': os.environ.get(
-            'POSTGRES_DB', BASE_DIR / 'db.sqlite3'),
-        'USER': os.environ.get(
-            'POSTGRES_USER', 'user'
-        ),
-        'PASSWORD': os.environ.get(
-            'POSTGRES_PASSWORD', 'password'
-            ),
-        'HOST': os.environ.get(
-            'POSTGRES_HOST', 'localhost'
-            ),
-        'PORT': os.environ.get(
-            'POSTGRES_PORT', '5432'
-        ),
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
+        'TIME_ZONE': 'UTC',
     }
 }
+
+POSTGRES = {
+    'default': {
+        'ENGINE': os.environ.get('POSTGRES_ENGINE'),
+        'NAME': os.environ.get('POSTGRES_DB'),
+        'USER': os.environ.get('POSTGRES_USER'),
+        'PASSWORD': os.environ.get('POSTGRES_PASSWORD'),
+        'HOST': os.environ.get('POSTGRES_HOST'),
+        'PORT': os.environ.get('POSTGRES_PORT'),
+    }
+}
+
+DATABASES = SQLITE if DEBUG else POSTGRES
+
+# DATABASES = {
+#     'default': {
+#         'ENGINE': os.environ.get(
+#             'POSTGRES_ENGINE', 'django.db.backends.sqlite3'
+#         ),
+#         'NAME': os.environ.get(
+#             'POSTGRES_DB', BASE_DIR / 'db.sqlite3'),
+#         'USER': os.environ.get(
+#             'POSTGRES_USER', 'user'
+#         ),
+#         'PASSWORD': os.environ.get(
+#             'POSTGRES_PASSWORD', 'password'
+#             ),
+#         'HOST': os.environ.get(
+#             'POSTGRES_HOST', 'localhost'
+#             ),
+#         'PORT': os.environ.get(
+#             'POSTGRES_PORT', '5432'
+#         ),
+#     }
+# }
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field
@@ -252,14 +265,18 @@ CELERY_TASK_DEFAULT_QUEUE = 'default'
 # CELERY BEAT
 CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
 
-# # USER AGENTS PARSING
-# # Cache backend is optional, but recommended to speed up user agent parsing
+# USER AGENTS PARSING
+# Cache backend is optional, but recommended to speed up user agent parsing
 CACHES = {
     'default': {
         'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
         'LOCATION': '127.0.0.1:11211',
     }
 }
+
 # # Name of cache backend to cache user agents. If it not specified default
 # # cache alias will be used. Set to `None` to disable caching.
 USER_AGENTS_CACHE = 'default'
+
+# sorl debag show
+THUMBNAIL_DEBUG = True

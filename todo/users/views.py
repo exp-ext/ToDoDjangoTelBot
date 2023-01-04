@@ -52,21 +52,22 @@ class Signup:
                 latitude=59.799,
                 longitude=30.274
             )
-        reply_text = (
-            'Вы успешно зарегистрированы в проекте Your ToDo.\n'
-            'Ссылка в личный кабинет для будущих посещений:\n'
-            f'{settings.DOMEN}/auth/login/\n'
-            'логин:\n'
-            f'{tel_user.id}\n'
-            'пароль:\n'
-            f'{password}\n'
+        reply_text = [
+            'Вы успешно зарегистрированы в [проекте Your To-Do]'
+            f'(https://{settings.DOMEN}/).\n'
+            'Ниже ссылка, логин и пароль для входа в личный кабинет:\n\n'
+            f'[www.yourtodo🕋⤵️](https://{settings.DOMEN}/auth/login/)\n',
+            f'{tel_user.id}\n',
+            f'{password}\n',
             # 'А сейчас, можно просто нажать на [ВХОД🕋]'
             # f'(https://{settings.DOMEN}/auth/login/{tel_user.id}/{password}/'
-            )
-        update.message.reply_text(
-                text=reply_text,
-                parse_mode='Markdown'
-            )
+            ]
+
+        for text in reply_text:
+            update.message.reply_text(
+                    text=text,
+                    parse_mode='Markdown'
+                )
         set_up_commands(context.bot)
         return JsonResponse({"ok": "User created."})
 

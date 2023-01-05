@@ -3,7 +3,7 @@
 {% load thumbnail %}
 {% load user_filters %}
 
-{% include "django/forms/widgets/input.html" %}
+{% block title %}Профиль{% endblock %}
 
 {% block style %}
 {% endblock %}
@@ -16,7 +16,7 @@
       
       <form method="post"
       enctype="multipart/form-data"
-      action="{% url 'tasks:accounts_profile' user.username %}"
+      action="{% url 'accounts_profile' user.username %}"
       >
           
         {% csrf_token %}
@@ -72,9 +72,5 @@
 {% endblock content %}
 
 {% block javascript %}
-{% comment %} <script>
-  document.getElementById("id_image").onchange = function() {
-    document.getElementById("form").submit();
-  };
-</script> {% endcomment %}
+
 {% endblock %}

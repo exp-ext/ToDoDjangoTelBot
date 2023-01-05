@@ -1,12 +1,8 @@
 from django.urls import include, path
 
-from .views import accounts_profile, task_create, task_delete, task_edit, tasks
+from .views import task_create, task_delete, task_edit, tasks
 
 urlpatterns = [
-    path(
-        'profile/<str:username>/', accounts_profile,
-        name='accounts_profile'
-    ),
     path('notes/', tasks, name='notes'),
     path('birthdays/', tasks, name='birthdays'),
     path('one_entry/', include([

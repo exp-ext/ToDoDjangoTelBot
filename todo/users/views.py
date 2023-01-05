@@ -4,15 +4,18 @@ from typing import Any, Dict
 
 from django.conf import settings
 from django.contrib.auth import authenticate, get_user_model
+from django.contrib.auth.decorators import login_required
 from django.db.models.query import QuerySet
-from django.http import HttpRequest, HttpResponseRedirect, JsonResponse
-from django.shortcuts import get_object_or_404, redirect
+from django.http import (HttpRequest, HttpResponse, HttpResponseRedirect,
+                         JsonResponse)
+from django.shortcuts import get_object_or_404, redirect, render
 from telbot.cleaner import process_to_delete_message
 from telbot.commands import set_up_commands
 from telegram import Update
 from telegram.ext import CallbackContext
 from timezonefinder import TimezoneFinder
 
+from .forms import ProfileForm
 from .models import Location
 
 User = get_user_model()
@@ -79,6 +82,31 @@ class Signup:
         """
         character_set = string.digits + string.ascii_letters
         return ''.join(secrets.choice(character_set) for i in range(length))
+
+
+@login_required
+def accounts_profile(request: HttpRequest, username: str) -> HttpResponse:
+    """Профиль юзера."""
+    user = get_object_or_404(User.objects, username=username)
+    if user != request.user:
+        redirect('index')
+
+    form = ProfileForm(
+        request.POST or None,
+        files=request.FILES or None,
+        instance=user
+    )
+
+    if request.method == "POST" and form.is_valid():
+        user = form.save()
+        return redirect('accounts_profile', username=username)
+
+    context = {
+        'user': user,
+        'form': form,
+    }
+    template = 'users/accounts_profile.html'
+    return render(request, template, context)
 
 
 def login_token(request: HttpRequest, user_id: int = None,

@@ -71,6 +71,9 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    # cache
+    'django.middleware.cache.UpdateCacheMiddleware',
+    # django
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -130,27 +133,6 @@ POSTGRES = {
 
 DATABASES = SQLITE if DEBUG else POSTGRES
 
-# DATABASES = {
-#     'default': {
-#         'ENGINE': os.environ.get(
-#             'POSTGRES_ENGINE', 'django.db.backends.sqlite3'
-#         ),
-#         'NAME': os.environ.get(
-#             'POSTGRES_DB', BASE_DIR / 'db.sqlite3'),
-#         'USER': os.environ.get(
-#             'POSTGRES_USER', 'user'
-#         ),
-#         'PASSWORD': os.environ.get(
-#             'POSTGRES_PASSWORD', 'password'
-#             ),
-#         'HOST': os.environ.get(
-#             'POSTGRES_HOST', 'localhost'
-#             ),
-#         'PORT': os.environ.get(
-#             'POSTGRES_PORT', '5432'
-#         ),
-#     }
-# }
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field
@@ -265,18 +247,28 @@ CELERY_TASK_DEFAULT_QUEUE = 'default'
 # CELERY BEAT
 CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
 
-# USER AGENTS PARSING
-# Cache backend is optional, but recommended to speed up user agent parsing
-CACHES = {
+# CACHE BACKEND
+REDISCACHE = {
+    'default': {
+        'BACKEND': 'django_redis.cache.RedisCache',
+        'LOCATION': f'redis://{REDIS_URL}',
+        'OPTIONS': {
+            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+        }
+    }
+}
+
+LOCMEMCACHE = {
     'default': {
         'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
         'LOCATION': '127.0.0.1:11211',
     }
 }
 
-# # Name of cache backend to cache user agents. If it not specified default
-# # cache alias will be used. Set to `None` to disable caching.
-USER_AGENTS_CACHE = 'default'
+CACHES = LOCMEMCACHE if DEBUG else REDISCACHE
 
-# sorl debag show
-THUMBNAIL_DEBUG = True
+# USER AGENTS PARSING
+# Cache backend is optional, but recommended to speed up user agent parsing
+# Name of cache backend to cache user agents. If it not specified default
+# cache alias will be used. Set to `None` to disable caching.
+USER_AGENTS_CACHE = 'default'

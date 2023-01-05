@@ -58,8 +58,8 @@
               </li>
 
               <li class="nav-item"> 
-                <a class="nav-link {% if view_name  == 'tasks:accounts_profile' %}active{% endif %}" 
-                  href="{% url 'tasks:accounts_profile' request.user.username %}">Профиль</a>
+                <a class="nav-link {% if view_name  == 'accounts_profile' %}active{% endif %}" 
+                  href="{% url 'accounts_profile' request.user.username %}">Профиль</a>
               </li>
 
               <li class="nav-item"> 

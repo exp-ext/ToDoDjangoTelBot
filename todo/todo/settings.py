@@ -190,7 +190,7 @@ USE_L10N = False
 
 STATIC_URL = '/static/'
 
-STATIC_ROOT = 'web/static'    # os.path.join(BASE_DIR, 'static')
+STATIC_ROOT = '/app/web/static'
 
 STATICFILES_DIRS = (
     os.path.join(BASE_DIR, 'static'),
@@ -204,7 +204,7 @@ STATICFILES_FINDERS = (
 # MEDIA
 MEDIA_URL = '/media/'
 
-MEDIA_ROOT = 'web/media'   # os.path.join(BASE_DIR, 'media')
+MEDIA_ROOT = '/app/web/media'
 
 THUMBNAIL_FORCE_OVERWRITE = True
 

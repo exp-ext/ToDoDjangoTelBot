@@ -137,4 +137,4 @@ class GroupConnections(models.Model):
         )
 
     def __str__(self):
-        return f'{self.user} состоит в группе {self.group}'
+        return f'{self.group}'

@@ -17,6 +17,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, path
+from users.views import accounts_profile
 
 from . import views
 
@@ -27,6 +28,11 @@ urlpatterns = [
     path('auth/', include('django.contrib.auth.urls')),
     path('bot/', include(('telbot.urls', 'telbot'))),
     path('tasks/', include(('tasks.urls', 'tasks'))),
+    path(
+        'profile/<str:username>/',
+        accounts_profile,
+        name='accounts_profile'
+    ),
 ]
 
 if settings.DEBUG:

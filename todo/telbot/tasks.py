@@ -1,3 +1,4 @@
+import time
 from datetime import datetime
 
 import pytz
@@ -83,22 +84,23 @@ def check_birthdays() -> str:
 @app.task
 def send_forismatic_quotes() -> str:
     """Рассылка цитат великих людей на русском языке от АПИ forismatic."""
-    try:
-        request = [
-            'http://api.forismatic.com/api/1.0/',
-            {
-                'method': 'getQuote',
-                'format': 'text',
-                'lang': 'ru',
-            }
-        ]
-        response = requests.get(*request)
-    except Exception as error:
-        raise KeyError(error)
-
-    msg = '*Цитата на злобу дня:*\n' + response.text
     groups = Group.objects.all()
+    request = [
+        'http://api.forismatic.com/api/1.0/',
+        {
+            'method': 'getQuote',
+            'format': 'text',
+            'lang': 'ru',
+        }
+    ]
 
     for id in groups:
+        try:
+            response = requests.get(*request)
+        except Exception as error:
+            raise KeyError(error)
+
+        msg = '*Цитата на злобу дня:*\n' + response.text
         bot.send_message(id.chat_id, msg, parse_mode='Markdown')
+        time.sleep(60)
     return 'Done'

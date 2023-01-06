@@ -51,6 +51,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    # login defender
+    'defender',
     # images
     'sorl.thumbnail',
     # celery
@@ -73,10 +75,14 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     # django
     'django.middleware.security.SecurityMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
+    # Authentication
+    'django.middleware.common.CommonMiddleware',
+    'django.contrib.sessions.middleware.SessionMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    # login defender
+    'defender.middleware.FailedLoginMiddleware',
+
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     # user agents parser
@@ -229,7 +235,11 @@ if DEBUG:
     INTERNAL_IPS = ([ip[: ip.rfind(".")] + ".1" for ip in ips]
                     + ["127.0.0.1", "10.0.2.2"])
 
+# REDIS
+# https://python-scripts.com/redis
+# https://redis.io/docs/
 # CELERY
+# https://django.fun/ru/docs/celery/5.1/getting-started/introduction/
 REDIS_URL = os.getenv('REDIS_URL', 'redis://127.0.0.1:6379')
 BROKER_URL = REDIS_URL
 CELERY_BROKER_URL = REDIS_URL
@@ -267,4 +277,10 @@ CACHES = LOCMEMCACHE if DEBUG else REDISCACHE
 # Cache backend is optional, but recommended to speed up user agent parsing
 # Name of cache backend to cache user agents. If it not specified default
 # cache alias will be used. Set to `None` to disable caching.
+# https://pypi.org/project/django-user-agents/
 USER_AGENTS_CACHE = 'default'
+
+
+#  DJANGO-DEFENDER
+# https://django-defender.readthedocs.io/en/latest/#
+DEFENDER_REDIS_URL = None if DEBUG else REDIS_URL

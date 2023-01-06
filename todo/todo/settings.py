@@ -71,8 +71,6 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
-    # cache
-    'django.middleware.cache.UpdateCacheMiddleware',
     # django
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -205,8 +203,6 @@ STATICFILES_FINDERS = (
 MEDIA_URL = '/media/'
 
 MEDIA_ROOT = '/app/web/media'
-
-THUMBNAIL_FORCE_OVERWRITE = True
 
 # API
 REST_FRAMEWORK = {

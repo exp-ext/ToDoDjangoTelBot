@@ -6,7 +6,7 @@ services:
     container_name: db
     restart: unless-stopped
     volumes:
-      - /home/exp-ext/pgdata/todo/:/var/lib/postgresql/data/
+      - postgresql_volume:/var/lib/postgresql/data/
     env_file:
       - ./.env
 
@@ -28,7 +28,7 @@ services:
     command: ./web_entrypoint.sh
     volumes:
       - static_volume:/app/web/static
-      - media_volume:/app/web/media
+      - /app/web/media:/app/web/media
     expose:
       - 8000
     env_file:
@@ -42,7 +42,7 @@ services:
     volumes:
       - ./nginx/:/etc/nginx/conf.d
       - static_volume:/app/web/static
-      - media_volume:/app/web/media
+      - /app/web/media:/app/web/media
     expose:
       - 80
     ports:
@@ -84,4 +84,4 @@ services:
 
 volumes:
   static_volume:
-  media_volume:
+  postgresql_volume:

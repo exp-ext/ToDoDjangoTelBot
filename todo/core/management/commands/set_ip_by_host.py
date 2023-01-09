@@ -1,6 +1,5 @@
+from core.tasks import set_ip_to_dns
 from django.core.management.base import BaseCommand, CommandError
-
-from ._set_ip import set_ip_to_dns
 
 
 class Command(BaseCommand):

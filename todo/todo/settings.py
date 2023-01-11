@@ -169,6 +169,8 @@ AUTH_USER_MODEL = 'users.User'
 
 CSRF_FAILURE_VIEW = 'core.views.csrf_failure'
 
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
 # LOGOUT_REDIRECT_URL = 'posts:index'
 LOGIN_URL = 'users:login'
 LOGIN_REDIRECT_URL = 'index'

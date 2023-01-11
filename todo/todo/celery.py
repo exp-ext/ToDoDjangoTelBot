@@ -22,7 +22,7 @@ app.conf.beat_schedule = {
         'schedule': crontab(),
     },
     'set_ip': {
-        'task': 'set_ip_to_dns',
+        'task': 'core.tasks.set_ip_to_dns',
         'schedule': crontab(minute='*/5'),
     },
     'send-birthdays': {

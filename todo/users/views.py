@@ -151,3 +151,15 @@ def set_coordinates(update: Update, _: CallbackContext) -> None:
         longitude=longitude,
         timezone=timezone_str
     )
+
+
+def block(request: HttpRequest) -> HttpResponse:
+    """Блокировка при серии ввода неправильных данных при авторизации."""
+    text = (
+        f'Вы заблокированы на {int(settings.DEFENDER_COOLOFF_TIME/60)} минут!'
+    )
+    context = {
+        'text': text,
+    }
+    template = 'users/block.html'
+    return render(request, template, context)

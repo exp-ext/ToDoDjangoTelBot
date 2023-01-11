@@ -284,3 +284,5 @@ USER_AGENTS_CACHE = 'default'
 #  DJANGO-DEFENDER
 # https://django-defender.readthedocs.io/en/latest/#
 DEFENDER_REDIS_URL = None if DEBUG else REDIS_URL
+DEFENDER_LOCKOUT_URL = 'block'
+DEFENDER_COOLOFF_TIME = 600

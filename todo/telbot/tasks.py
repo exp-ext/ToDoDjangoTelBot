@@ -50,11 +50,13 @@ def minute_by_minute_check() -> str:
     this_datetime = datetime.utcnow().replace(second=0, microsecond=0)
 
     tasks = Task.objects.filter(
-        remind_at__startswith=this_datetime
+        remind_at__startswith=this_datetime,
+        it_birthday=False
     ).select_related('user', 'group').order_by('user', 'group')
 
     id_users = Task.objects.filter(
-        remind_at__startswith=this_datetime
+        remind_at__startswith=this_datetime,
+        it_birthday=False
     ).order_by().values('user', 'group').distinct()
     reply_text = 'Напоминаю, о предстоящих событиях:\n'
     return process_task_data(id_users, tasks, reply_text)

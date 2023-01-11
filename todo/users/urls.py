@@ -5,9 +5,9 @@ from django.contrib.auth.views import (LoginView, LogoutView,
                                        PasswordResetConfirmView,
                                        PasswordResetDoneView,
                                        PasswordResetView)
-from django.urls import path, reverse_lazy
+from django.urls import include, path, reverse_lazy
 
-# from .views import login_token
+from .views import block
 
 urlpatterns = [
     path(
@@ -16,10 +16,11 @@ urlpatterns = [
         name='logout'
     ),
     # path('login/<int:user_id>/<str:password>/', login_token),
-    path(
-        'login/',
-        LoginView.as_view(template_name='users/login.html'),
-        name='login'
+    path('login/', include([
+        path('', LoginView.as_view(template_name='users/login.html'),
+             name='login'),
+        path('block/', block)
+        ])
     ),
     path(
         'password_change/',

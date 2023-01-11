@@ -46,7 +46,7 @@ def set_ip_to_dns() -> str:
     current_local_ip = get_current_ip()
 
     if current_local_ip in current_dns_ip.text:
-        return 'IP not change'
+        return 'IP у DNS провайдера соответствует текущему.'
 
     set_api_url = 'https://api.nic.ru/dyndns/update'
     params = {
@@ -59,4 +59,7 @@ def set_ip_to_dns() -> str:
         'Authorization': 'Basic %s' % b64val
     }
     set_ip = requests.get(set_api_url, headers=headers, params=params)
-    return f'Результат запроса на назначение IP для host: {set_ip.text}'
+    return (
+        f'На хост у DNS провайдера назначен новый IP: {current_local_ip}. '
+        f'Ответ сервера DNS: {set_ip.text}'
+    )

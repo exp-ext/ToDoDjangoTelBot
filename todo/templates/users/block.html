@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Блокировка{% endblock %}
+
+{% block content %}
+  <div class="container py-5"> 
+    <br>
+    <div class="lobster">
+        <p class="text-center"> {{ text }} </p>
+    </div>
+
+    <img class="img-fluid" src="{% static 'img/users/block.png' %}"></img>
+    
+  </div> <!-- container -->
+{% endblock %}

@@ -1,9 +1,10 @@
 import time
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import pytz
 import requests
 from celery import Celery
+from dateutil.relativedelta import relativedelta
 from django.apps import apps as django_apps
 from django.contrib.auth import get_user_model
 from django.db.models.query import QuerySet
@@ -36,8 +37,18 @@ def process_task_data(id_users: QuerySet[User],
                 time = datetime.strftime(user_date, "%H:%M")
                 header = '' if time == '00:00' else f'В {time} - '
                 reply_text += f'- {header}{task.text}\n'
-                if task.reminder_period == 'N':
-                    task.delete()
+                if not task.it_birthday:
+                    if task.reminder_period == 'N':
+                        task.delete()
+                    elif task.reminder_period == 'D':
+                        task.server_datetime += timedelta(days=1)
+                    elif task.reminder_period == 'W':
+                        task.server_datetime += timedelta(days=7)
+                    elif task.reminder_period == 'M':
+                        task.server_datetime += relativedelta(months=1)
+                    elif task.reminder_period == 'Y':
+                        task.server_datetime += relativedelta(years=1)
+                    task.save()
 
         target = task.group.chat_id if id_user['group'] else task.user.username
         bot.send_message(target, reply_text, parse_mode='Markdown')
@@ -49,8 +60,9 @@ def minute_by_minute_check() -> str:
     """Основной модуль оповещающий о событиях в чатах."""
     this_datetime = datetime.utcnow().replace(second=0, microsecond=0)
 
+    # все на текущую минуту без повтора
     tasks = Task.objects.filter(
-        remind_at__startswith=this_datetime,
+        remind_at__startswith=this_datetime.replace(second=0, microsecond=0),
         it_birthday=False
     ).select_related('user', 'group').order_by('user', 'group')
 
@@ -59,6 +71,7 @@ def minute_by_minute_check() -> str:
         it_birthday=False
     ).order_by().values('user', 'group').distinct()
     reply_text = 'Напоминаю, о предстоящих событиях:\n'
+
     return process_task_data(id_users, tasks, reply_text)
 
 

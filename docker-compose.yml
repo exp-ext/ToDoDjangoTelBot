@@ -43,7 +43,7 @@ services:
       - ./nginx/:/etc/nginx/conf.d
       - ./nginx/ssl/:/etc/ssl/
       - static_volume:/app/web/static
-      - /app/web/media:/app/web/media  
+      - /app/web/media:/app/web/media 
     ports:
       - "80:80"
       - "443:443"

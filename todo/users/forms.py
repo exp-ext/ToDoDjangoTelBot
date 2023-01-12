@@ -1,5 +1,7 @@
 from django import forms
 from django.contrib.auth import get_user_model
+from django.shortcuts import get_object_or_404
+from users.models import Group
 
 User = get_user_model()
 
@@ -59,6 +61,12 @@ class ProfileForm(forms.ModelForm):
         self.fields['favorite_group'].label = (
             'Группа которая будет назначена основной для аккаунта.'
         )
+
+    def clean_favorite_group(self):
+        favorite_group = self.cleaned_data['favorite_group']
+        if favorite_group:
+            return get_object_or_404(Group, pk=favorite_group.group_id)
+        return favorite_group
 
     def clean_image(self):
         image = self.cleaned_data.get("image")

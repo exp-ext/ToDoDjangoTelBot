@@ -18,6 +18,13 @@ Task = django_apps.get_model(app_label='tasks', model_name='Task')
 
 app = Celery()
 
+EXTEND = {
+    'D': timedelta(days=1),
+    'W': timedelta(days=7),
+    'M': relativedelta(months=1),
+    'Y': relativedelta(years=1),
+}
+
 
 def process_task_data(id_users: QuerySet[User],
                       tasks: QuerySet[Task],
@@ -37,19 +44,13 @@ def process_task_data(id_users: QuerySet[User],
                 time = datetime.strftime(user_date, "%H:%M")
                 header = '' if time == '00:00' else f'В {time} - '
                 reply_text += f'- {header}{task.text}\n'
+
                 if not task.it_birthday:
                     if task.reminder_period == 'N':
                         task.delete()
-                    elif task.reminder_period == 'D':
-                        task.server_datetime += timedelta(days=1)
-                    elif task.reminder_period == 'W':
-                        task.server_datetime += timedelta(days=7)
-                    elif task.reminder_period == 'M':
-                        task.server_datetime += relativedelta(months=1)
-                    elif task.reminder_period == 'Y':
-                        task.server_datetime += relativedelta(years=1)
-                    task.save()
-
+                    else:
+                        task.server_datetime += EXTEND[task.reminder_period]
+                        task.save()
         target = task.group.chat_id if id_user['group'] else task.user.username
         bot.send_message(target, reply_text, parse_mode='Markdown')
     return 'Done'
@@ -60,7 +61,6 @@ def minute_by_minute_check() -> str:
     """Основной модуль оповещающий о событиях в чатах."""
     this_datetime = datetime.utcnow().replace(second=0, microsecond=0)
 
-    # все на текущую минуту без повтора
     tasks = Task.objects.filter(
         remind_at__startswith=this_datetime.replace(second=0, microsecond=0),
         it_birthday=False

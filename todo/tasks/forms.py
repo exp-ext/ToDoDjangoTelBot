@@ -1,5 +1,7 @@
 from core.widget import MinimalSplitDateTimeMultiWidget
 from django import forms
+from django.shortcuts import get_object_or_404
+from users.models import Group
 
 from .models import Task
 
@@ -53,3 +55,9 @@ class TaskForm(forms.ModelForm):
             'Для появление Вашей группы в выпадающем списке, необходимо '
             'в её чате хотя бы один раз вызвать меню.</p>'
         )
+
+    def clean_group(self):
+        group = self.cleaned_data['group']
+        if group:
+            return get_object_or_404(Group, pk=group.group_id)
+        return group

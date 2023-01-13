@@ -1,8 +1,10 @@
-from datetime import datetime
+import time
+from datetime import datetime, timedelta
 
 import pytz
 import requests
 from celery import Celery
+from dateutil.relativedelta import relativedelta
 from django.apps import apps as django_apps
 from django.contrib.auth import get_user_model
 from django.db.models.query import QuerySet
@@ -15,6 +17,13 @@ Group = django_apps.get_model(app_label='users', model_name='Group')
 Task = django_apps.get_model(app_label='tasks', model_name='Task')
 
 app = Celery()
+
+EXTEND = {
+    'D': timedelta(days=1),
+    'W': timedelta(days=7),
+    'M': relativedelta(months=1),
+    'Y': relativedelta(years=1),
+}
 
 
 def process_task_data(id_users: QuerySet[User],
@@ -35,9 +44,13 @@ def process_task_data(id_users: QuerySet[User],
                 time = datetime.strftime(user_date, "%H:%M")
                 header = '' if time == '00:00' else f'В {time} - '
                 reply_text += f'- {header}{task.text}\n'
-                if task.reminder_period == 'N':
-                    task.delete()
 
+                if not task.it_birthday:
+                    if task.reminder_period == 'N':
+                        task.delete()
+                    else:
+                        task.server_datetime += EXTEND[task.reminder_period]
+                        task.save()
         target = task.group.chat_id if id_user['group'] else task.user.username
         bot.send_message(target, reply_text, parse_mode='Markdown')
     return 'Done'
@@ -49,13 +62,16 @@ def minute_by_minute_check() -> str:
     this_datetime = datetime.utcnow().replace(second=0, microsecond=0)
 
     tasks = Task.objects.filter(
-        remind_at__startswith=this_datetime
+        remind_at__startswith=this_datetime.replace(second=0, microsecond=0),
+        it_birthday=False
     ).select_related('user', 'group').order_by('user', 'group')
 
     id_users = Task.objects.filter(
-        remind_at__startswith=this_datetime
+        remind_at__startswith=this_datetime,
+        it_birthday=False
     ).order_by().values('user', 'group').distinct()
     reply_text = 'Напоминаю, о предстоящих событиях:\n'
+
     return process_task_data(id_users, tasks, reply_text)
 
 
@@ -83,22 +99,23 @@ def check_birthdays() -> str:
 @app.task
 def send_forismatic_quotes() -> str:
     """Рассылка цитат великих людей на русском языке от АПИ forismatic."""
-    try:
-        request = [
-            'http://api.forismatic.com/api/1.0/',
-            {
-                'method': 'getQuote',
-                'format': 'text',
-                'lang': 'ru',
-            }
-        ]
-        response = requests.get(*request)
-    except Exception as error:
-        raise KeyError(error)
-
-    msg = '*Цитата на злобу дня:*\n' + response.text
     groups = Group.objects.all()
+    request = [
+        'http://api.forismatic.com/api/1.0/',
+        {
+            'method': 'getQuote',
+            'format': 'text',
+            'lang': 'ru',
+        }
+    ]
 
     for id in groups:
+        try:
+            response = requests.get(*request)
+        except Exception as error:
+            raise KeyError(error)
+
+        msg = '*Цитата на злобу дня:*\n' + response.text
         bot.send_message(id.chat_id, msg, parse_mode='Markdown')
+        time.sleep(60)
     return 'Done'

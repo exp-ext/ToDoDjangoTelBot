@@ -1,6 +1,5 @@
 {% extends "base.html" %}  
 {% load static %}
-{% load cache %}
 
 {% block title %}Главная страница{% endblock %}
 
@@ -28,8 +27,6 @@
 
 {% block content %}
 
-  {% cache 60 index %}
-
     <div id="myCarousel" class="carousel slide" data-ride="carousel">
       <ol class="carousel-indicators">
         <li data-target="#myCarousel" data-slide-to="0" class="active"></li>
@@ -40,9 +37,9 @@
         <div class="carousel-item active">        
 
           {% if is_mobile %}
-            <img class="img-fluid" src="{% static 'img/index/world_mobile.png' %}"></img>
+            <img class="img-fluid" src="{% static 'img/index/1_reg_ban_mob.png' %}"></img>
           {% else %}
-            <img class="img-fluid" src="{% static 'img/index/world.png' %}"></img>
+            <img class="img-fluid" src="{% static 'img/index/1_reg_ban.png' %}"></img>
           {% endif %}        
 
           <div class="container">
@@ -60,9 +57,9 @@
         <div class="carousel-item">
 
           {% if is_mobile %}
-            <img class="img-fluid" src="{% static 'img/index/scaled_mobile.png' %}"></img>
+            <img class="img-fluid" src="{% static 'img/index/2_func_ban_mob.png' %}"></img>
           {% else %}
-            <img class="img-fluid" src="{% static 'img/index/scaled.png' %}"></img>
+            <img class="img-fluid" src="{% static 'img/index/2_func_ban.png' %}"></img>
           {% endif %}
           
           <div class="container">
@@ -80,9 +77,9 @@
         <div class="carousel-item">
 
           {% if is_mobile %}
-            <img class="img-fluid" src="{% static 'img/index/services_mobile.png' %}"></img>
+            <img class="img-fluid" src="{% static 'img/index/3_services_ban_mob.png' %}"></img>
           {% else %}
-            <img class="img-fluid" src="{% static 'img/index/services.png' %}"></img>
+            <img class="img-fluid" src="{% static 'img/index/3_services_ban.png' %}"></img>
           {% endif %}
           
           <div class="container">
@@ -145,10 +142,12 @@
       
       <div class="row featurette">
         <div class="col-md-7">
-          <h2 class="featurette-Заголовок">Регистрация. <span class="text-muted">И это совсем просто...</span></h2>
+          <h2 class="featurette-Заголовок">Регистр<span class="text-muted">ация...</span></h2>
           <p class="lead">
             Необходимо пройти в <a href="https://t.me/BorFAsbot">личный чат с ботом</a> нажать на кнопку &lt;Меню&gt; и запросить регистрацию. 
-            И в общем то и всё... Также для настройки часового пояса, очень рекомендую узнать погоду воспользовавшись кнопкой &lt;Показать меню&gt;.          
+            И в общем то и всё... Также для настройки часового пояса, очень рекомендую узнать погоду воспользовавшись кнопкой &lt;Показать меню&gt;.
+            <br><br>
+            <strong>Для корректной работы в общих чатах, после добавления бота в группу, его необходимо сделать администратором.</strong>      
           </p>
         </div>
         <div class="col-md-5">
@@ -259,8 +258,6 @@
       <!-- /END THE FEATURETTES -->
 
     </div><!-- /.container -->
-
-  {% endcache %} 
 
 {% endblock %}
   

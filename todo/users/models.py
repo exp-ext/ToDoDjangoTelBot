@@ -32,7 +32,7 @@ class Group(models.Model):
         verbose_name_plural = 'Группы'
 
     def __str__(self):
-        return f'#{self.title}: {self.chat_id}'
+        return f'#{self.title}'
 
     def save(self, *args, **kwargs):
         if not self.slug:
@@ -64,7 +64,7 @@ class User(AbstractUser):
     )
     group = models.ManyToManyField(
         Group,
-        through="GroupConnections"
+        through='GroupConnections'
     )
     role = models.CharField(
         verbose_name='Пользовательская роль',

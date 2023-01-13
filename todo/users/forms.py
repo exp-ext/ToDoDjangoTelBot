@@ -1,5 +1,7 @@
 from django import forms
 from django.contrib.auth import get_user_model
+from django.shortcuts import get_object_or_404
+from users.models import Group
 
 User = get_user_model()
 
@@ -43,7 +45,6 @@ class ProfileForm(forms.ModelForm):
         }
         labels = {
             'username': 'Your Telegram ID',
-            'favorite_group': 'Группа фаворит',
         }
 
     def __init__(self, *args, **kwargs):
@@ -52,6 +53,20 @@ class ProfileForm(forms.ModelForm):
         self.fields['username'].help_text = (
             'Ваш телеграмм ID. Получить его можно в чате с ботом.'
         )
+        user = kwargs.get('instance')
+        self.fields['favorite_group'] = forms.ModelChoiceField(
+            queryset=user.groups_connections.all()
+        )
+        self.fields['favorite_group'].required = False
+        self.fields['favorite_group'].label = (
+            'Группа которая будет назначена основной для аккаунта.'
+        )
+
+    def clean_favorite_group(self):
+        favorite_group = self.cleaned_data['favorite_group']
+        if favorite_group:
+            return get_object_or_404(Group, pk=favorite_group.group_id)
+        return favorite_group
 
     def clean_image(self):
         image = self.cleaned_data.get("image")

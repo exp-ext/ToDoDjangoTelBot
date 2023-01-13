@@ -18,11 +18,9 @@ class TaskAdmin(admin.ModelAdmin):
     list_display = (
         'user',
         'group',
-        'text',
         'remind_at',
         'reminder_period',
-        'it_birthday'
     )
-    search_fields = ('text',)
+    search_fields = ('user',)
     list_filter = ('group', 'user')
     empty_value_display = '-пусто-'

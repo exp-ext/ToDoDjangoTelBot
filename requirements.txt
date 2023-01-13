@@ -8,6 +8,7 @@ pytils==0.4.1
 Pillow==9.4.0
 sorl-thumbnail==12.9.0
 python-dotenv==0.21.0
+django-defender==0.9.6
 
 # API
 djoser==2.1.0

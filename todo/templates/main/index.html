@@ -1,4 +1,4 @@
-{% extends "base.html" %}  
+{% extends "base.html" %}
 {% load static %}
 
 {% block title %}Главная страница{% endblock %}
@@ -21,7 +21,9 @@
       }
     }
   </style>
+  
   <link rel="stylesheet" href="{% static 'css/carousel.css' %}">
+  {% include 'includes/yacounter.html' %}
 {% endblock %} 
 
 
@@ -163,7 +165,7 @@
           <h2 class="featurette-Заголовок">Основные <span class="text-muted">функции.</span></h2>
           <p class="lead">
             <ol style="list-style: none; font-size: 14px; line-height: 32px; font-weight: bold;">
-              <li style="clear: both;">📅 Telegram ToDo management</a></li>
+              <li style="clear: both;">📅 Telegram ToDo management</li>
               <li style="clear: both;">🎭 рассказываю анекдоты</li>
               <li style="clear: both;">😼 высылаю картинки с котиками</li>
               <li style="clear: both;">🌈 знаю погоду на улице в твоём местоположении</li>

@@ -23,10 +23,17 @@ from . import views
 
 urlpatterns = [
     path('', views.index, name="index"),
-    path('admin/', admin.site.urls),
-    path('admin/defender/', include('defender.urls')),
-    path('auth/', include(('users.urls', 'users'))),
-    path('auth/', include('django.contrib.auth.urls')),
+    path('admin/', include([
+        path('', admin.site.urls),
+        path('defender/', include('defender.urls')),
+        ])
+    ),
+    path('about/', include(('about.urls', 'about'))),
+    path('auth/', include([
+        path('', include(('users.urls', 'users'))),
+        path('', include('django.contrib.auth.urls')),
+        ])
+    ),
     path('bot/', include(('telbot.urls', 'telbot'))),
     path('tasks/', include(('tasks.urls', 'tasks'))),
     path(

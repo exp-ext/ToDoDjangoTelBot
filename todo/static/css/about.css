@@ -1,0 +1,72 @@
+@import url('https://fonts.googleapis.com/css?family=Montserrat:400,600&subset=cyrillic');
+
+@import url('https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css');
+
+
+/*--------------------------------------------------------------
+# Style
+--------------------------------------------------------------*/
+.wrapper h3 {
+  font-weight: 600;
+  font-size: 36px;
+  margin: 60px 0px;
+  display: inline-block;
+  margin-left: 8px;
+}
+
+.wrapper body {
+  font-family: 'Montserrat', sans-serif;
+}
+
+.wrapper {
+  width: 600px;
+  margin: 0 auto;
+}
+
+.clearfix:after,
+.clearfix:before {
+  content: ".";
+  display: block;
+  overflow: hidden;
+  visibility: hidden;
+  font-size: 0;
+  line-height: 0;
+  width: 0;
+  height: 0;
+  clear: both;
+}
+.ico-wrap {
+    color: #ECAB00;
+    width: 50px;
+    height: 50px;
+    margin: 25px 20px 2px 2px;
+    display: block;
+    text-align: center;
+    font-size: 25px;
+    border: 2px solid #ECAB00;
+    float: left;
+}
+.ico-contact {
+    line-height: 1.9 !important;
+}
+.descript-wrapper {
+    float: left;
+    margin-bottom: 20px;
+}
+.aio-icon-title {
+    font-size: 18px;
+    color: #ECAB00;
+    line-height: 1;
+    margin-bottom: 10px;
+}
+
+@media (max-width: 767px) {
+    .descript-wrapper,
+    .ico-wrap {
+      float: none;
+      text-align: center;
+    }
+    .ico-wrap {
+      margin: 0 auto 15px auto;
+    }
+}

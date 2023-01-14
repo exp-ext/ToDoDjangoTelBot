@@ -30,16 +30,6 @@
 
           <ul class="navbar-nav mr-auto nav-pills">
 
-            {% comment %} <li class="nav-item">
-              <a class="nav-link {% if view_name  == 'about:author' %}active{% endif %}" 
-                href="{% url 'about:author' %}">Об авторе</a>
-            </li> {% endcomment %}
-
-            {% comment %} <li class="nav-item">
-              <a class="nav-link {% if view_name  == 'about:tech' %}active{% endif %}" 
-                href="{% url 'about:tech' %}">Технологии</a>
-            </li> {% endcomment %}
-
             {% if request.user.is_authenticated %}
 
               <li class="nav-item">
@@ -71,15 +61,20 @@
                 <a class="nav-link link-light" 
                   href="{% url 'users:logout' %}">Выйти</a>
               </li>
-
+              
             {% else %}
 
               <li class="nav-item"> 
                 <a class="nav-link link-light {% if view_name  == 'users:login' %}active{% endif %}" 
                 href="{% url 'users:login' %}">Войти</a>
-              </li>
+              </li>              
 
             {% endif %}
+
+            <li class="nav-item"> 
+              <a class="nav-link {% if view_name  == 'about:project' %}active{% endif %}" 
+                href="{% url 'about:project' %}">Контакты</a>
+            </li>
             
           </ul>
 

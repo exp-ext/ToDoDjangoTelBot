@@ -41,7 +41,7 @@ def sending_messages(tasks: QuerySet[Task], event_text: str) -> str:
                 }
             })
         utc_date = task.server_datetime
-        user_date = utc_date.astimezone(user_tz)
+        user_date = utc_date.astimezone(messages[recipient]['user_tz'])
         header = datetime.strftime(user_date, "%H:%M")
         header = '' if task.it_birthday else f'В {header} - '
         messages[recipient]['reply_text'] += f'- {header}{task.text}\n'

@@ -1,11 +1,12 @@
 import time
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 import pytz
 import requests
 from celery import Celery
 from dateutil.relativedelta import relativedelta
 from django.apps import apps as django_apps
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db.models.query import QuerySet
 
@@ -25,7 +26,9 @@ EXTEND = {
 }
 
 
-def sending_messages(tasks: QuerySet[Task], event_text: str) -> str:
+def sending_messages(tasks: QuerySet[Task],
+                     event_text: str,
+                     cur_time: datetime) -> str:
     """Перебор записей и отправка их адресатам."""
     messages = dict()
 
@@ -40,11 +43,20 @@ def sending_messages(tasks: QuerySet[Task], event_text: str) -> str:
                     'reply_text': '',
                 }
             })
-        utc_date = task.server_datetime
-        user_date = utc_date.astimezone(messages[recipient]['user_tz'])
-        header = datetime.strftime(user_date, "%H:%M")
-        header = '' if task.it_birthday else f'В {header} - '
-        messages[recipient]['reply_text'] += f'- {header}{task.text}\n'
+        if task.group:
+            delta = task.server_datetime - cur_time
+            delta_min = int(delta.total_seconds() // 60)
+            if delta_min > 60:
+                header = f'📝 через {delta_min // 60 }час {delta_min % 60 }мин'
+            else:
+                header = f'📝 через {delta_min % 60 }мин'
+        else:
+            utc_date = task.server_datetime
+            user_date = utc_date.astimezone(messages[recipient]['user_tz'])
+            header = f'В {datetime.strftime(user_date, "%H:%M")}'
+
+        header = '' if task.it_birthday else f'- {header} -> \n'
+        messages[recipient]['reply_text'] += f'- {header}{task.text}\n\n'
 
         if not task.it_birthday:
             if task.reminder_period == 'N':
@@ -62,7 +74,7 @@ def sending_messages(tasks: QuerySet[Task], event_text: str) -> str:
 @app.task
 def minute_by_minute_check() -> str:
     """Основной модуль оповещающий о событиях в чатах."""
-    this_datetime = datetime.utcnow()
+    this_datetime = datetime.now(timezone.utc)
     start_datetime = this_datetime - timedelta(minutes=30)
 
     tasks = Task.objects.filter(
@@ -70,23 +82,23 @@ def minute_by_minute_check() -> str:
         it_birthday=False
     ).select_related('user', 'group')
 
-    reply_text = '~~~~~~~\n'
-    return sending_messages(tasks, reply_text)
+    reply_text = f'[~~~~~~~]({bot.link})\n'
+    return sending_messages(tasks, reply_text, this_datetime)
 
 
 @app.task
 def check_birthdays() -> str:
     """Модуль оповещающий о Днях рождения."""
-    this_date = datetime.today().date()
+    this_datetime = datetime.now(timezone.utc)
 
     tasks = Task.objects.filter(
-       remind_at__day=this_date.day,
-       remind_at__month=this_date.month,
+       remind_at__day=this_datetime.day,
+       remind_at__month=this_datetime.month,
        it_birthday=True
     ).select_related('user', 'group')
 
     reply_text = 'Не забудьте поздравить c Днём Рождения:\n'
-    return sending_messages(tasks, reply_text)
+    return sending_messages(tasks, reply_text, this_datetime)
 
 
 @app.task
@@ -101,14 +113,16 @@ def send_forismatic_quotes() -> str:
             'lang': 'ru',
         }
     ]
-
-    for id in groups:
+    for group in groups:
         try:
             response = requests.get(*request)
+            msg = (
+                f'[Мысли великих людей:](https://{settings.DOMEN}/)\n'
+                + response.text
+            )
+            bot.send_message(group.chat_id, msg, parse_mode='Markdown')
         except Exception as error:
+            bot.send_message(225429268, error)
             raise KeyError(error)
-
-        msg = '*Цитата на злобу дня:*\n' + response.text
-        bot.send_message(id.chat_id, msg, parse_mode='Markdown')
         time.sleep(60)
     return f'Quotes were sent to {len(groups)} groups'

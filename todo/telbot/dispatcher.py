@@ -1,9 +1,9 @@
+from django.conf import settings
 from telegram.ext import (CallbackQueryHandler, CommandHandler,
                           ConversationHandler, Dispatcher, Filters,
                           MessageHandler)
 
-from todo.settings import DEBUG
-
+from .external_api.chat_gpt import get_answer_davinci
 from .external_api.kudago import where_to_go
 from .external_api.pastime import get_new_image
 from .geoservis.positions import my_current_geoposition
@@ -91,7 +91,11 @@ def setup_dispatcher(dp: Dispatcher):
     dp.add_handler(
         CallbackQueryHandler(where_to_go, pattern='^show_festivals$')
     )
-
+    dp.add_handler(
+        MessageHandler(
+            Filters.regex('Бот, есть вопрос:'),
+            get_answer_davinci)
+    )
     # # эхо
     # dp.add_handler(
     #     MessageHandler(Filters.text, do_echo)
@@ -100,7 +104,7 @@ def setup_dispatcher(dp: Dispatcher):
     return dp
 
 
-n_workers = 0 if DEBUG else 4
+n_workers = 0 if settings.DEBUG else 4
 dispatcher = setup_dispatcher(
     Dispatcher(bot, update_queue=None, workers=n_workers, use_context=True)
 )

@@ -93,7 +93,7 @@ def setup_dispatcher(dp: Dispatcher):
     )
     dp.add_handler(
         MessageHandler(
-            Filters.regex('Бот, есть вопрос:'),
+            Filters.regex('#'),
             get_answer_davinci)
     )
     # # эхо

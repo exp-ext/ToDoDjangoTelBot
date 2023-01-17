@@ -1,4 +1,3 @@
-import time
 from datetime import datetime, timedelta, timezone
 
 import pytz
@@ -28,7 +27,7 @@ EXTEND = {
 
 def sending_messages(tasks: QuerySet[Task],
                      event_text: str,
-                     cur_time: datetime) -> str:
+                     this_datetime: datetime) -> str:
     """Перебор записей и отправка их адресатам."""
     messages = dict()
 
@@ -44,8 +43,8 @@ def sending_messages(tasks: QuerySet[Task],
                 }
             })
         if task.group:
-            delta = task.server_datetime - cur_time
-            delta_min = int(delta.total_seconds() // 60)
+            delta = task.server_datetime - this_datetime
+            delta_min = int(delta.total_seconds() / 60 + 1)
             if delta_min > 60:
                 header = f'📝 через {delta_min // 60 }час {delta_min % 60 }мин'
             else:
@@ -113,16 +112,14 @@ def send_forismatic_quotes() -> str:
             'lang': 'ru',
         }
     ]
+    response = requests.get(*request)
+    msg = (
+        f'[Мысли великих людей:](https://{settings.DOMEN}/)\n'
+        + response.text
+    )
     for group in groups:
         try:
-            response = requests.get(*request)
-            msg = (
-                f'[Мысли великих людей:](https://{settings.DOMEN}/)\n'
-                + response.text
-            )
             bot.send_message(group.chat_id, msg, parse_mode='Markdown')
         except Exception as error:
-            bot.send_message(225429268, error)
             raise KeyError(error)
-        time.sleep(60)
     return f'Quotes were sent to {len(groups)} groups'

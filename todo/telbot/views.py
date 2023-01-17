@@ -32,11 +32,7 @@ class TelegramBotWebhookView(View):
         if DEBUG:
             process_telegram_event(json.loads(request.body))
         else:
-            # Process Telegram event in Celery worker (async)
-            # Don't forget to run it and & Redis (message broker for Celery)!
-            # Locally, You can run all of these services via docker-compose.yml
             process_telegram_event.delay(json.loads(request.body))
-        # e.g. remove buttons, typing event
         return JsonResponse({"ok": "POST request processed"})
 
     def get(self, request: HttpRequest, *args, **kwargs) -> Dict[str, Any]:

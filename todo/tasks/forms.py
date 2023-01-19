@@ -33,6 +33,7 @@ class TaskForm(forms.ModelForm):
         fields = (
             'group',
             'server_datetime',
+            'picture_link',
             'text',
             'reminder_period',
             'it_birthday',

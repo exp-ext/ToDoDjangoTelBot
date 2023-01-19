@@ -28,7 +28,7 @@ EXTEND = {
 
 def sending_messages(tasks: QuerySet[Task],
                      event_text: str,
-                     cur_time: datetime) -> str:
+                     this_datetime: datetime) -> str:
     """Перебор записей и отправка их адресатам."""
     messages = dict()
 
@@ -44,19 +44,26 @@ def sending_messages(tasks: QuerySet[Task],
                 }
             })
         if task.group:
-            delta = task.server_datetime - cur_time
-            delta_min = int(delta.total_seconds() // 60)
+            delta = task.server_datetime - this_datetime
+            delta_min = int(delta.total_seconds() / 60 + 1)
             if delta_min > 60:
                 header = f'📝 через {delta_min // 60 }час {delta_min % 60 }мин'
+            elif delta_min <= 0:
+                header = 'Время начала:'
             else:
                 header = f'📝 через {delta_min % 60 }мин'
         else:
             utc_date = task.server_datetime
             user_date = utc_date.astimezone(messages[recipient]['user_tz'])
-            header = f'В {datetime.strftime(user_date, "%H:%M")}'
+            header = f'*В {datetime.strftime(user_date, "%H:%M")}*'
 
-        header = '' if task.it_birthday else f'- {header} -> \n'
-        messages[recipient]['reply_text'] += f'- {header}{task.text}\n\n'
+        header = '' if task.it_birthday else f'-- {header} -> \n'
+        picture = (
+            f'![​​​​​​​​​​]({task.picture_link}) ' if task.picture_link else ''
+        )
+        messages[recipient]['reply_text'] += (
+            f'{header}{task.text}{picture}\n\n'
+        )
 
         if not task.it_birthday:
             if task.reminder_period == 'N':
@@ -67,7 +74,10 @@ def sending_messages(tasks: QuerySet[Task],
 
     for recipient, body in messages.items():
         reply_text = event_text + body['reply_text']
-        bot.send_message(recipient, reply_text, parse_mode='Markdown')
+        try:
+            bot.send_message(recipient, reply_text, parse_mode='Markdown')
+        except Exception:
+            continue
     return f'Send {len(messages)} messages'
 
 
@@ -82,7 +92,7 @@ def minute_by_minute_check() -> str:
         it_birthday=False
     ).select_related('user', 'group')
 
-    reply_text = f'[~~~~~~~]({bot.link})\n'
+    reply_text = '*~~~~~~~*\n'
     return sending_messages(tasks, reply_text, this_datetime)
 
 
@@ -97,7 +107,7 @@ def check_birthdays() -> str:
        it_birthday=True
     ).select_related('user', 'group')
 
-    reply_text = 'Не забудьте поздравить c Днём Рождения:\n'
+    reply_text = 'Сегодня не забудьте поздравить с праздником:\n'
     return sending_messages(tasks, reply_text, this_datetime)
 
 
@@ -121,8 +131,7 @@ def send_forismatic_quotes() -> str:
                 + response.text
             )
             bot.send_message(group.chat_id, msg, parse_mode='Markdown')
-        except Exception as error:
-            bot.send_message(225429268, error)
-            raise KeyError(error)
-        time.sleep(60)
+            time.sleep(5)
+        except Exception:
+            continue
     return f'Quotes were sent to {len(groups)} groups'

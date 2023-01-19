@@ -11,21 +11,41 @@
 
         {% if note.it_birthday %}
 
-          <h3 class="card-header">{{ note.server_datetime|timezone:timezone|date:"d M Y D" }}</h2>
+          <h3 class="card-header">
+
+            {% if note.picture_link %}
+              <img
+                class="card-img-top embed-responsive-item border border-secondary rounded-lg" 
+                src="{{ note.picture_link }}"
+              />
+            {% endif %}
+            
+            {{ note.server_datetime|timezone:timezone|date:"d M Y D" }}
+          </h3>
 
           <div class="card-body">
             <p class="card-text">{{ note.text|safe|truncatechars_html:400  }}</p>
           </div>
         {% else %}
 
-          <h3 class="card-header">{{ note.server_datetime|timezone:timezone|date:"d M Y D в H:iч" }}</h2>
+          <h3 class="card-header">
+
+            {% if note.picture_link %}
+              <img
+                class="card-img-top embed-responsive-item border border-secondary rounded-lg" 
+                src="{{ note.picture_link }}"
+              />
+            {% endif %}
+
+            {{ note.server_datetime|timezone:timezone|date:"d M Y D в H:iч" }}
+          </h3>
 
           <div class="card-body">
             <p class="card-text">{{ note.text|safe|truncatechars_html:400  }}
               <br>
               <br>
             - напомню в {{ note.remind_at|timezone:timezone|time:"H:iч" }}</p>
-          </div>
+          </div> 
         {% endif %}
 
       

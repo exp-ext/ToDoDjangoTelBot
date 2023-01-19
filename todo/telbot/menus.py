@@ -165,3 +165,21 @@ def ask_registration(update: Update, context: CallbackContext) -> None:
             reply_markup=reply_markup
         )
         Signup().register(update, context)
+
+
+def show_my_links(update: Update, context: CallbackContext):
+    """Выводит ссылки на бота и на основной сайт."""
+    chat = update.effective_chat
+    button_list = [
+        InlineKeyboardButton(text='Телеграмм',
+                             url=context.bot.link),
+        InlineKeyboardButton(text='Вебсайт',
+                             url='https://www.yourtodo.com')
+    ]
+    reply_markup = InlineKeyboardMarkup(build_menu(button_list, n_cols=1))
+    menu_text = 'Личный кабинет системы -->'
+    context.bot.send_message(
+        chat.id,
+        menu_text,
+        reply_markup=reply_markup
+    )

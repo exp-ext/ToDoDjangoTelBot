@@ -9,7 +9,7 @@ from .external_api.pastime import get_new_image
 from .geoservis.positions import my_current_geoposition
 from .geoservis.weather import current_weather, weather_forecast
 from .loader import bot
-from .menus import ask_registration, main_menu, private_menu
+from .menus import ask_registration, main_menu, private_menu, show_my_links
 from .message.add_notes import add_notes, first_step_add
 from .message.del_notes import del_notes, first_step_dell
 from .message.show_notes import (first_step_show, show_all_notes, show_at_date,
@@ -96,6 +96,11 @@ def setup_dispatcher(dp: Dispatcher):
             Filters.regex('#'),
             get_answer_davinci)
     )
+
+    dp.add_handler(
+        CommandHandler('show_my_links', show_my_links)
+    )
+
     # # эхо
     # dp.add_handler(
     #     MessageHandler(Filters.text, do_echo)

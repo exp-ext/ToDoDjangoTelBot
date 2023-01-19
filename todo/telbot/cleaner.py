@@ -30,6 +30,11 @@ def clear_commands(update: Update) -> None:
             bot.delete_message(chat_id, message_id)
 
     except Exception as error:
+        text = (
+            'Для корректной работы, я должен быть администратором группы! '
+            'Иначе я не смогу удалять подобные технические сообщения.'
+        )
+        bot.send_message(chat_id, text)
         raise KeyError(error)
 
 
@@ -45,8 +50,6 @@ def remove_keyboard(update: Update, context: CallbackContext) -> None:
     try:
         context.bot.delete_message(chat.id, del_menu_id)
     except Exception as error:
-        text = 'Для корректной работы, я должен быть администратором группы!'
-        bot.send_message(chat.id, text)
         raise KeyError(error)
 
 
@@ -66,8 +69,6 @@ def delete_messages_by_time(params: Sequence[int]) -> None:
     try:
         bot.delete_message(chat_id, message_id)
     except Exception as error:
-        text = 'Для корректной работы, я должен быть администратором группы!'
-        bot.send_message(chat_id, text)
         raise KeyError(error)
 
 

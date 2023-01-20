@@ -125,7 +125,7 @@ def send_forismatic_quotes() -> str:
         try:
             response = requests.get(*request)
             msg = (
-                'Мысли великих людей:\n'
+                '*Мысли великих людей:*\n'
                 + response.text
             )
             bot.send_message(group.chat_id, msg, parse_mode='Markdown')

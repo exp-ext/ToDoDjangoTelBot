@@ -6,7 +6,6 @@ import requests
 from celery import Celery
 from dateutil.relativedelta import relativedelta
 from django.apps import apps as django_apps
-from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db.models.query import QuerySet
 
@@ -27,8 +26,8 @@ EXTEND = {
 
 
 def sending_messages(tasks: QuerySet[Task],
-                     event_text: str,
-                     this_datetime: datetime) -> str:
+                     this_datetime: datetime,
+                     event_text: str = '') -> str:
     """Перебор записей и отправка их адресатам."""
     messages = dict()
 
@@ -92,8 +91,7 @@ def minute_by_minute_check() -> str:
         it_birthday=False
     ).select_related('user', 'group')
 
-    reply_text = '*~~~~~~~*\n'
-    return sending_messages(tasks, reply_text, this_datetime)
+    return sending_messages(tasks, this_datetime)
 
 
 @app.task
@@ -108,7 +106,7 @@ def check_birthdays() -> str:
     ).select_related('user', 'group')
 
     reply_text = 'Сегодня не забудьте поздравить с праздником:\n'
-    return sending_messages(tasks, reply_text, this_datetime)
+    return sending_messages(tasks, this_datetime, reply_text)
 
 
 @app.task
@@ -127,7 +125,7 @@ def send_forismatic_quotes() -> str:
         try:
             response = requests.get(*request)
             msg = (
-                f'[Мысли великих людей:](https://{settings.DOMEN}/)\n'
+                'Мысли великих людей:\n'
                 + response.text
             )
             bot.send_message(group.chat_id, msg, parse_mode='Markdown')

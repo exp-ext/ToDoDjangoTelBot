@@ -5,9 +5,7 @@
   
 <head>    
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-
-  {% include 'includes/yacounter.html' %}
+  <meta name="viewport" content="width=device-width, initial-scale=1">  
  
   <link rel="icon" href="{% static 'img/fav/favicon.ico' %}" type="image/x-icon">
   <link rel="apple-touch-icon" sizes="180x180" href="{% static 'img/fav/apple-touch-icon.png' %}">
@@ -17,6 +15,8 @@
 
   <meta name="msapplication-TileColor" content="#000">
   <meta name="theme-color" content="#ffffff">
+
+  {% include 'includes/yacounter.html' %}
 
   <title>  {% block title %} {% endblock %} </title>
 
@@ -29,12 +29,11 @@
     href="https://cdnjs.cloudflare.com/ajax/libs/cropper/4.1.0/cropper.min.css"
     integrity="sha512-vmXqikRa5kmI3gOQygzml5nV+5NGxG8rt8KWHKj8JYYK12JUl2L8RBfWinFGTzvpwwsIRcINy9mhLyodnmzjig=="
     crossorigin="anonymous"
-    referrerpolicy="no-referrer" />        
-
+    referrerpolicy="no-referrer" />
 
   <link rel="stylesheet" href="{% static 'css/general-style.css' %}">
  
-  {% block style %} {% endblock %}  
+  {% block style %} {% endblock %}   
 
 </head>
 

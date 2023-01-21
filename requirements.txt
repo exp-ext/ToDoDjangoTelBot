@@ -53,3 +53,6 @@ python-dateutil==2.8.2
 dateparser==1.1.5
 tzlocal==4.2
 timezonefinder==6.1.9
+
+# test ChatGPT
+openai==0.26.1

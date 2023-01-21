@@ -1,5 +1,5 @@
 import time
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 import pytz
 import requests
@@ -25,7 +25,9 @@ EXTEND = {
 }
 
 
-def sending_messages(tasks: QuerySet[Task], event_text: str) -> str:
+def sending_messages(tasks: QuerySet[Task],
+                     this_datetime: datetime,
+                     event_text: str = '') -> str:
     """Перебор записей и отправка их адресатам."""
     messages = dict()
 
@@ -40,11 +42,28 @@ def sending_messages(tasks: QuerySet[Task], event_text: str) -> str:
                     'reply_text': '',
                 }
             })
-        utc_date = task.server_datetime
-        user_date = utc_date.astimezone(user_tz)
-        header = datetime.strftime(user_date, "%H:%M")
-        header = '' if task.it_birthday else f'В {header} - '
-        messages[recipient]['reply_text'] += f'- {header}{task.text}\n'
+        if task.group:
+            delta = task.server_datetime - this_datetime
+            delta_min = int(delta.total_seconds() / 60 + 1)
+            if delta_min > 60:
+                header = f'📝 через {delta_min // 60 }час {delta_min % 60 }мин'
+            elif delta_min <= 0:
+                header = 'Время начала:'
+            else:
+                header = f'📝 через {delta_min % 60 }мин'
+        else:
+            utc_date = task.server_datetime
+            user_date = utc_date.astimezone(messages[recipient]['user_tz'])
+            header = f'*В {datetime.strftime(user_date, "%H:%M")}*'
+
+        header = '' if task.it_birthday else f'-- {header} -> \n'
+        # удалил знак !
+        picture = (
+            f'[​​​​​​​​​​]({task.picture_link}) ' if task.picture_link else ''
+        )
+        messages[recipient]['reply_text'] += (
+            f'{header}{task.text}{picture}\n\n'
+        )
 
         if not task.it_birthday:
             if task.reminder_period == 'N':
@@ -55,14 +74,17 @@ def sending_messages(tasks: QuerySet[Task], event_text: str) -> str:
 
     for recipient, body in messages.items():
         reply_text = event_text + body['reply_text']
-        bot.send_message(recipient, reply_text, parse_mode='Markdown')
+        try:
+            bot.send_message(recipient, reply_text, parse_mode='Markdown')
+        except Exception:
+            continue
     return f'Send {len(messages)} messages'
 
 
 @app.task
 def minute_by_minute_check() -> str:
     """Основной модуль оповещающий о событиях в чатах."""
-    this_datetime = datetime.utcnow()
+    this_datetime = datetime.now(timezone.utc)
     start_datetime = this_datetime - timedelta(minutes=30)
 
     tasks = Task.objects.filter(
@@ -70,23 +92,22 @@ def minute_by_minute_check() -> str:
         it_birthday=False
     ).select_related('user', 'group')
 
-    reply_text = '~~~~~~~\n'
-    return sending_messages(tasks, reply_text)
+    return sending_messages(tasks, this_datetime)
 
 
 @app.task
 def check_birthdays() -> str:
     """Модуль оповещающий о Днях рождения."""
-    this_date = datetime.today().date()
+    this_datetime = datetime.now(timezone.utc)
 
     tasks = Task.objects.filter(
-       remind_at__day=this_date.day,
-       remind_at__month=this_date.month,
+       remind_at__day=this_datetime.day,
+       remind_at__month=this_datetime.month,
        it_birthday=True
     ).select_related('user', 'group')
 
-    reply_text = 'Не забудьте поздравить c Днём Рождения:\n'
-    return sending_messages(tasks, reply_text)
+    reply_text = 'Сегодня не забудьте поздравить с праздником:\n'
+    return sending_messages(tasks, this_datetime, reply_text)
 
 
 @app.task
@@ -101,14 +122,15 @@ def send_forismatic_quotes() -> str:
             'lang': 'ru',
         }
     ]
-
-    for id in groups:
+    for group in groups:
         try:
             response = requests.get(*request)
-        except Exception as error:
-            raise KeyError(error)
-
-        msg = '*Цитата на злобу дня:*\n' + response.text
-        bot.send_message(id.chat_id, msg, parse_mode='Markdown')
-        time.sleep(60)
+            msg = (
+                '*Мысли великих людей:*\n'
+                + response.text
+            )
+            bot.send_message(group.chat_id, msg, parse_mode='Markdown')
+            time.sleep(5)
+        except Exception:
+            continue
     return f'Quotes were sent to {len(groups)} groups'

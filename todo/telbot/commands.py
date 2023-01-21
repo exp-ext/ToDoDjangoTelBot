@@ -7,11 +7,13 @@ from .loader import bot
 COMMANDS: Mapping[str, Mapping[str, str]] = {
     'en': {
         'main_menu': '📲 Main menu of bot',
-        'ask_registration': '📍Register',
+        'ask_registration': '📍 Register',
+        'show_my_links': '📥 Show my links'
     },
     'ru': {
         'main_menu': '📲 Основное меню бота',
         'ask_registration': '📍Пройти регистрацию',
+        'show_my_links': '📥 Показать основные ссылки'
     }
 }
 

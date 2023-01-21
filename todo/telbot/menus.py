@@ -1,6 +1,7 @@
 from multiprocessing import Process
 from typing import Any, Iterable
 
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
 from telegram import (InlineKeyboardButton, InlineKeyboardMarkup,
@@ -9,7 +10,7 @@ from telegram.ext import CallbackContext
 from users.models import Group, GroupConnections
 from users.views import Signup, set_coordinates
 
-from .cleaner import delete_messages_by_time
+from .cleaner import delete_messages_by_time, process_to_delete_message
 from .service_message import send_service_message
 
 User = get_user_model()
@@ -72,8 +73,8 @@ def main_menu(update: Update, context: CallbackContext) -> None:
                                  callback_data='show_all_notes'),
             InlineKeyboardButton('🎭 анекдот',
                                  callback_data='show_joke'),
-            InlineKeyboardButton('😼 картинки с котиками',
-                                 callback_data='get_cat_image'),
+            InlineKeyboardButton('🌁 генерировать картинку по описанию',
+                                 callback_data='gen_image_first'),
         ]
         reply_markup = InlineKeyboardMarkup(build_menu(button_list, n_cols=2))
 
@@ -165,3 +166,23 @@ def ask_registration(update: Update, context: CallbackContext) -> None:
             reply_markup=reply_markup
         )
         Signup().register(update, context)
+
+
+def show_my_links(update: Update, context: CallbackContext):
+    """Выводит ссылки на бота и на основной сайт."""
+    chat = update.effective_chat
+    button_list = [
+        InlineKeyboardButton(text='Телеграмм',
+                             url=context.bot.link),
+        InlineKeyboardButton(text='Вебсайт',
+                             url=f'https://{settings.DOMEN}/')
+    ]
+    reply_markup = InlineKeyboardMarkup(build_menu(button_list, n_cols=1))
+    menu_text = 'личный кабинет системы -->'
+    message_id = context.bot.send_message(
+        chat.id,
+        menu_text,
+        reply_markup=reply_markup
+    ).message_id
+    *params, = chat.id, message_id, 40
+    process_to_delete_message(params)

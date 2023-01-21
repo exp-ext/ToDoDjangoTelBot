@@ -73,8 +73,8 @@ def main_menu(update: Update, context: CallbackContext) -> None:
                                  callback_data='show_all_notes'),
             InlineKeyboardButton('🎭 анекдот',
                                  callback_data='show_joke'),
-            InlineKeyboardButton('😼 картинки с котиками',
-                                 callback_data='get_cat_image'),
+            InlineKeyboardButton('🌁 генерировать картинку по описанию',
+                                 callback_data='gen_image_first'),
         ]
         reply_markup = InlineKeyboardMarkup(build_menu(button_list, n_cols=2))
 

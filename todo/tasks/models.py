@@ -97,6 +97,12 @@ class Task(models.Model):
     server_datetime = models.DateTimeField(
         verbose_name='Дата и время для хранения на сервере'
     )
+    picture_link = models.CharField(
+        verbose_name='Ссылка на картинку',
+        help_text='Ссылка в формате https://domen.ru/fantasy.jpg',
+        max_length=200,
+        blank=True
+    )
     text = models.TextField(
         verbose_name='Текст напоминания',
         help_text='Введите текст напоминания.'

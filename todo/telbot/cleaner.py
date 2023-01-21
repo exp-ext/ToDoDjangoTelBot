@@ -30,8 +30,12 @@ def clear_commands(update: Update) -> None:
             bot.delete_message(chat_id, message_id)
 
     except Exception as error:
-        print(f'!!! Ошибка в модуле clear_commands: {error}')
-        # raise KeyError(error)
+        text = (
+            'Для корректной работы, я должен быть администратором группы! '
+            'Иначе я не смогу удалять подобные технические сообщения.'
+        )
+        bot.send_message(chat_id, text)
+        raise KeyError(error)
 
 
 def remove_keyboard(update: Update, context: CallbackContext) -> None:
@@ -43,7 +47,10 @@ def remove_keyboard(update: Update, context: CallbackContext) -> None:
     """
     chat = update.effective_chat
     del_menu_id = update.effective_message.message_id
-    context.bot.delete_message(chat.id, del_menu_id)
+    try:
+        context.bot.delete_message(chat.id, del_menu_id)
+    except Exception as error:
+        raise KeyError(error)
 
 
 def delete_messages_by_time(params: Sequence[int]) -> None:
@@ -59,7 +66,10 @@ def delete_messages_by_time(params: Sequence[int]) -> None:
     seconds: int
     chat_id, message_id, seconds = params
     time.sleep(seconds)
-    bot.delete_message(chat_id, message_id)
+    try:
+        bot.delete_message(chat_id, message_id)
+    except Exception as error:
+        raise KeyError(error)
 
 
 def process_to_delete_message(params):
@@ -67,5 +77,8 @@ def process_to_delete_message(params):
     Запускает дополнительный процесс для функции
     :obj:`delete_messages_by_time`.
     """
-    thread = threading.Thread(target=delete_messages_by_time, args=(params,))
+    thread = threading.Thread(
+        target=delete_messages_by_time,
+        args=(params,)
+    )
     thread.start()

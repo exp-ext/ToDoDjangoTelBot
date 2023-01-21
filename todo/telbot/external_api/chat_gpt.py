@@ -8,6 +8,7 @@ from telegram import ParseMode, Update
 from telegram.ext import CallbackContext
 
 from ..cleaner import process_to_delete_message
+from ..menus import assign_group
 
 load_dotenv()
 
@@ -21,11 +22,20 @@ def get_answer_davinci(update: Update, context: CallbackContext):
     user_tel = update.effective_user
     user = User.objects.filter(username=user_tel.id)
     text = None
+    prompt = update.message.text.replace('#', '')
+    answers = {
+        '?': ('Я мог бы ответить Вам, если '
+              f'[зарегистрируетесь]({context.bot.link}) 🧐'),
+        '!': ('Я обязательно поддержу Вашу дискуссию, если '
+              f'[зарегистрируетесь]({context.bot.link}) 🙃'),
+        '':  ('Какая интересная беседа, [зарегистрируетесь]'
+              f'({context.bot.link}) и я подключусь к ней 😇'),
+    }
     if not user:
-        text = (
-            'Я мог бы ответить Вам, если '
-            f'[зарегистрируетесь]({context.bot.link})...'
-        )
+        for key, _ in answers.items():
+            if key in prompt:
+                text = answers[key]
+                break
     elif not user[0].first_name:
         text = (
             'Я мог бы ответить, но не знаю как к Вам обращаться?\n'
@@ -45,7 +55,8 @@ def get_answer_davinci(update: Update, context: CallbackContext):
         process_to_delete_message(params)
         return 'Bad user model'
 
-    prompt = update.message.text.replace('#', '')
+    assign_group(update)
+
     model_engine = 'text-davinci-003'
 
     try:
@@ -53,11 +64,12 @@ def get_answer_davinci(update: Update, context: CallbackContext):
             engine=model_engine,
             prompt=prompt,
             max_tokens=2048,
-            # temperature=0.5,
+            temperature=0.3,
             top_p=0,
             frequency_penalty=0,
-            presence_penalty=0
+            presence_penalty=0,
         )
+
         context.bot.send_message(
             chat_id=chat.id,
             reply_to_message_id=update.message.message_id,

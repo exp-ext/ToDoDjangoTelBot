@@ -50,7 +50,7 @@ def del_notes(update: Update, context: CallbackContext):
     if pars.server_date:
         tasks = user.tasks.filter(
             server_datetime=pars.server_date.date(),
-            text__contains=pars.only_message[1:]
+            text__icontains=pars.only_message[1:]
         )
         count = len(tasks)
 

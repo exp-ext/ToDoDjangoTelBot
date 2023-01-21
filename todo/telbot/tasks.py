@@ -57,8 +57,9 @@ def sending_messages(tasks: QuerySet[Task],
             header = f'*В {datetime.strftime(user_date, "%H:%M")}*'
 
         header = '' if task.it_birthday else f'-- {header} -> \n'
+        # удалил знак !
         picture = (
-            f'![​​​​​​​​​​]({task.picture_link}) ' if task.picture_link else ''
+            f'[​​​​​​​​​​]({task.picture_link}) ' if task.picture_link else ''
         )
         messages[recipient]['reply_text'] += (
             f'{header}{task.text}{picture}\n\n'

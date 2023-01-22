@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
-from difflib import SequenceMatcher
 
+from core.views import similarity
 from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
 from tasks.models import Task
@@ -13,20 +13,6 @@ from ..service_message import send_service_message
 from .parse_message import TaskParse
 
 User = get_user_model()
-
-
-def similarity(s1: str, s2: str) -> float:
-    """
-    Сравнение 2-х строк в модуле difflib
-    [https://docs.python.org/3/library/difflib.html].
-    """
-    normalized = tuple((map(lambda x: x.lower(), [s1, s2])))
-    matcher = SequenceMatcher(
-        lambda x: x == " ",
-        normalized[0],
-        normalized[1]
-    )
-    return matcher.ratio()
 
 
 def first_step_add(update: Update, context: CallbackContext):
@@ -74,9 +60,16 @@ def add_notes(update: Update, context: CallbackContext):
         context.bot.delete_message(chat.id, id)
 
     if pars.server_date:
-        date_search = pars.server_date.date()
-        tasks = user.tasks.filter(server_datetime__startswith=date_search)
-
+        start_datetime = pars.server_date - timedelta(minutes=60)
+        end_datetime = pars.server_date + timedelta(minutes=60)
+        if group:
+            tasks = Task.objects.filter(
+                server_datetime__range=[start_datetime, end_datetime],
+                group=group)
+        else:
+            tasks = user.tasks.filter(
+                server_datetime__range=[start_datetime, end_datetime]
+            )
         for task in tasks:
             simile = similarity(task.text, message)
             if simile > 0.62:
@@ -85,7 +78,7 @@ def add_notes(update: Update, context: CallbackContext):
                     'Запись отклонена.'
                 )
                 send_service_message(chat.id, reply_text)
-                return {"ok": True}
+                return ConversationHandler.END
 
         birthday = pars.it_birthday()
         repeat = 'Y' if birthday else pars.period_repeat

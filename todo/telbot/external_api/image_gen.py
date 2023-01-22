@@ -4,7 +4,7 @@ import requests
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from dotenv import load_dotenv
-from telegram import ParseMode, Update
+from telegram import InputMediaPhoto, ParseMode, Update
 from telegram.ext import CallbackContext, ConversationHandler
 
 from ..cleaner import process_to_delete_message, remove_keyboard
@@ -75,18 +75,26 @@ def get_image_dall_e(update: Update, context: CallbackContext):
     payload = {
         'prompt': prompt,
         'model': model_engine,
+        'n': 5,
         'size': '1024x1024',
         'response_format': 'url'
     }
     openai_api_url = 'https://api.openai.com/v1/images/generations'
 
+    media_group = []
+
     try:
         response = requests.post(openai_api_url, json=payload, headers=headers)
 
-        context.bot.send_photo(
+        for number, url in enumerate(response.json()['data']):
+            media_group.append(
+                InputMediaPhoto(media=url['url'], caption=f'Gen № {number}')
+            )
+
+        context.bot.send_media_group(
             chat_id=chat.id,
             reply_to_message_id=update.message.message_id,
-            photo=response.json()['data'][0]['url']
+            media=media_group
         )
     except Exception as error:
         raise KeyError(error)

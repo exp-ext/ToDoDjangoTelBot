@@ -1,14 +1,13 @@
 import os
 
 import requests
-from django.conf import settings
 from django.contrib.auth import get_user_model
 from dotenv import load_dotenv
 from telegram import InputMediaPhoto, ParseMode, Update
 from telegram.ext import CallbackContext, ConversationHandler
 
-from ..cleaner import process_to_delete_message, remove_keyboard
-from ..menus import assign_group
+from ..checking import check_registration
+from ..cleaner import remove_keyboard
 
 load_dotenv()
 
@@ -34,35 +33,23 @@ def first_step_get_image(update: Update, context: CallbackContext):
 
 
 def get_image_dall_e(update: Update, context: CallbackContext):
+    """
+    Возвращает серию картинок от АПИ Dall-e 2.
+    Предварительно вызвав функцию проверки регистрации.
+    """
+    answers = {
+        '':  ('К сожалению данная функция доступна только для '
+              '[зарегистрированных пользователей]'
+              f'({context.bot.link})'),
+    }
+    if check_registration(update, context, answers) is False:
+        return 'Bad register'
+
     chat = update.effective_chat
-    user_tel = update.effective_user
-    user = User.objects.filter(username=user_tel.id)
-    text = None
     prompt = update.message.text
 
     del_id = context.user_data['image_gen']
     context.bot.delete_message(chat.id, del_id)
-
-    if not user[0].first_name:
-        text = (
-            'Я мог бы ответить, но не знаю как к Вам обращаться?\n'
-            'Есть 2 варианта решения.\n'
-            '1 - добавить имя в личном кабинете '
-            f'[WEB версии](https://{settings.DOMEN}/\n'
-            '2 - в настройках Телеграмма и заново пройти регистрацию'
-        )
-    if text:
-        message_id = context.bot.send_message(
-            chat_id=chat.id,
-            reply_to_message_id=update.message.message_id,
-            text=text,
-            parse_mode=ParseMode.MARKDOWN
-        ).message_id
-        *params, = chat.id, message_id, 20
-        process_to_delete_message(params)
-        return 'Bad user model'
-
-    assign_group(update)
 
     prompt = update.message.text
 

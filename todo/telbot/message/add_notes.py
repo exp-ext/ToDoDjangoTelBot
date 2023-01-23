@@ -63,7 +63,7 @@ def add_notes(update: Update, context: CallbackContext):
         start_datetime = pars.server_date - timedelta(minutes=60)
         end_datetime = pars.server_date + timedelta(minutes=60)
         if group:
-            tasks = Task.objects.filter(
+            tasks = group.tasks.filter(
                 server_datetime__range=[start_datetime, end_datetime],
                 group=group)
         else:

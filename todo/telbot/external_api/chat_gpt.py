@@ -1,14 +1,12 @@
 import os
 
 import openai
-from django.conf import settings
 from django.contrib.auth import get_user_model
 from dotenv import load_dotenv
-from telegram import ParseMode, Update
+from telegram import Update
 from telegram.ext import CallbackContext
 
-from ..cleaner import process_to_delete_message
-from ..menus import assign_group
+from ..checking import check_registration
 
 load_dotenv()
 
@@ -18,11 +16,10 @@ User = get_user_model()
 
 
 def get_answer_davinci(update: Update, context: CallbackContext):
-    chat = update.effective_chat
-    user_tel = update.effective_user
-    user = User.objects.filter(username=user_tel.id)
-    text = None
-    prompt = update.message.text.replace('#', '')
+    """
+    Возвращает ответ от API ИИ ChatGPT.
+    Предварительно вызвав функцию проверки регистрации.
+    """
     answers = {
         '?': ('Я мог бы ответить Вам, если '
               f'[зарегистрируетесь]({context.bot.link}) 🧐'),
@@ -31,32 +28,12 @@ def get_answer_davinci(update: Update, context: CallbackContext):
         '':  ('Какая интересная беседа, [зарегистрируетесь]'
               f'({context.bot.link}) и я подключусь к ней 😇'),
     }
-    if not user:
-        for key, _ in answers.items():
-            if key in prompt:
-                text = answers[key]
-                break
-    elif not user[0].first_name:
-        text = (
-            'Я мог бы ответить, но не знаю как к Вам обращаться?\n'
-            'Есть 2 варианта решения.\n'
-            '1 - добавить имя в личном кабинете '
-            f'[WEB версии](https://{settings.DOMEN}/\n'
-            '2 - в настройках Телеграмма и заново пройти регистрацию'
-        )
-    if text:
-        message_id = context.bot.send_message(
-            chat_id=chat.id,
-            reply_to_message_id=update.message.message_id,
-            text=text,
-            parse_mode=ParseMode.MARKDOWN
-        ).message_id
-        *params, = chat.id, message_id, 20
-        process_to_delete_message(params)
-        return 'Bad user model'
 
-    assign_group(update)
+    if check_registration(update, context, answers) is False:
+        return 'Bad register'
 
+    chat = update.effective_chat
+    prompt = update.message.text.replace('#', '')
     model_engine = 'text-davinci-003'
 
     try:

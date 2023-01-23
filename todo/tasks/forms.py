@@ -77,7 +77,7 @@ class TaskForm(forms.ModelForm):
         end_datetime = server_datetime + timedelta(minutes=60)
 
         if group:
-            tasks = Task.objects.filter(
+            tasks = group.tasks.filter(
                 server_datetime__range=[start_datetime, end_datetime],
                 group=group)
         else:

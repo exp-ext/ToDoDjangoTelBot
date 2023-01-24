@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import render
 from django.views.decorators.http import require_GET
@@ -28,6 +29,6 @@ def robots_txt(request):
         "Disallow: /tasks/birthdays/",
         "Disallow: /profile/",
         "Disallow: /auth/",
-        "Sitemap: /sitemap.xml",
+        f"Sitemap: https://{settings.DOMEN}/sitemap.xml",
     ]
     return HttpResponse("\n".join(lines), content_type="text/plain")

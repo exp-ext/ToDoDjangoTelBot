@@ -69,6 +69,8 @@ class TaskForm(forms.ModelForm):
 
     def clean_text(self):
         text = self.cleaned_data['text']
+        if self.initial.get('is_edit'):
+            return text
         group = self.cleaned_data['group']
         server_datetime = self.cleaned_data['server_datetime']
         user = self.initial.get('user')

@@ -69,6 +69,8 @@ class TaskForm(forms.ModelForm):
 
     def clean_text(self):
         text = self.cleaned_data['text']
+        if self.initial.get('is_edit'):
+            return text
         group = self.cleaned_data['group']
         server_datetime = self.cleaned_data['server_datetime']
         user = self.initial.get('user')
@@ -77,7 +79,7 @@ class TaskForm(forms.ModelForm):
         end_datetime = server_datetime + timedelta(minutes=60)
 
         if group:
-            tasks = Task.objects.filter(
+            tasks = group.tasks.filter(
                 server_datetime__range=[start_datetime, end_datetime],
                 group=group)
         else:

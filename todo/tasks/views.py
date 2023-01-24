@@ -38,6 +38,7 @@ def task_create(request: HttpRequest) -> HttpResponseRedirect | HttpResponse:
         initial={
             'tz': tz,
             'user': request.user,
+            'is_edit': False,
         }
     )
     if request.method == "POST" and form.is_valid():
@@ -48,7 +49,6 @@ def task_create(request: HttpRequest) -> HttpResponseRedirect | HttpResponse:
         return redirect(redirecting)
     context = {
         'form': form,
-        'tz': tz,
     }
     template = 'tasks/create_task.html'
     return render(request, template, context)
@@ -66,6 +66,8 @@ def task_edit(request: HttpRequest,
         return redirect(redirecting, task_id=task_id)
 
     tz = request.user.locations.first().timezone
+    is_edit = True
+
     form = TaskForm(
         request.POST or None,
         files=request.FILES or None,
@@ -73,6 +75,7 @@ def task_edit(request: HttpRequest,
         initial={
             'tz': tz,
             'user': request.user,
+            'is_edit': is_edit,
         }
     )
 
@@ -80,11 +83,8 @@ def task_edit(request: HttpRequest,
         task = form.save()
         return redirect(redirecting)
 
-    is_edit = True
     context = {
         'form': form,
-        'is_edit': is_edit,
-        'tz': tz,
     }
     template = 'tasks/create_task.html'
     return render(request, template, context)

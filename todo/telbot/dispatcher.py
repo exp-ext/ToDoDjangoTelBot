@@ -6,6 +6,7 @@ from telegram.ext import (CallbackQueryHandler, CommandHandler,
 from .external_api.chat_gpt import get_answer_davinci
 from .external_api.image_gen import first_step_get_image, get_image_dall_e
 from .external_api.kudago import where_to_go
+from .external_api.translator import send_translation
 from .geoservis.positions import my_current_geoposition
 from .geoservis.weather import current_weather, weather_forecast
 from .loader import bot
@@ -103,7 +104,11 @@ def setup_dispatcher(dp: Dispatcher):
             Filters.regex('#'),
             get_answer_davinci)
     )
-
+    dp.add_handler(
+        MessageHandler(
+            Filters.regex('->'),
+            send_translation)
+    )
     dp.add_handler(
         CommandHandler('show_my_links', show_my_links)
     )

@@ -5,6 +5,10 @@
 
 {% block title %} Редактор напоминаний {% endblock %}
 
+{% block style %}
+  <meta name="description" content="Создание записи о напоминании."/>  
+{% endblock %}
+
 {% block content %} 
 
   <div class="container py-5"> 
@@ -15,7 +19,7 @@
           <div class="card-header"> 
             <div class="lobster">
               <h1>
-                {% if is_edit %}
+                {% if form.initial.is_edit %}
                   Редактировать запись
                 {% else %}
                   Новая запись
@@ -25,7 +29,7 @@
           </div>
             
           <form method="post" enctype="multipart/form-data"
-          action="{% if is_edit %}
+          action="{% if form.initial.is_edit %}
                     {% url 'tasks:task_edit' task_id=form.instance.id %}
                   {% else %} 
                     {% url 'tasks:task_create' %} 
@@ -52,7 +56,7 @@
 
                     {% elif field.name == 'server_datetime' %}  
 
-                      {% timezone tz %}
+                      {% timezone form.initial.tz %}
                         {{ field|addclass:"form-control"  }} 
                       {% endtimezone %}
 
@@ -76,7 +80,7 @@
 
               <div class="d-flex justify-content-end">              
                 <button type="submit" class="btn btn-primary">
-                  {% if is_edit %}
+                  {% if form.initial.is_edit %}
                     Сохранить изменения
                   {% else %}
                     Добавить

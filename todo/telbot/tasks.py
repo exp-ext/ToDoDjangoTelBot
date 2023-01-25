@@ -8,6 +8,7 @@ from dateutil.relativedelta import relativedelta
 from django.apps import apps as django_apps
 from django.contrib.auth import get_user_model
 from django.db.models.query import QuerySet
+from telegram import ParseMode
 
 from .loader import bot
 
@@ -54,12 +55,12 @@ def sending_messages(tasks: QuerySet[Task],
         else:
             utc_date = task.server_datetime
             user_date = utc_date.astimezone(messages[recipient]['user_tz'])
-            header = f'*В {datetime.strftime(user_date, "%H:%M")}*'
+            header = f'В {datetime.strftime(user_date, "%H:%M")}'
 
-        header = '' if task.it_birthday else f'-- {header} -> \n'
-        # удалил знак !
+        header = '' if task.it_birthday else f'<b>-- {header} -></b>\n'
         picture = (
-            f'[​​​​​​​​​​]({task.picture_link}) ' if task.picture_link else ''
+            '<a href='
+            f'"{task.picture_link}">​​​​​​</a> ' if task.picture_link else ''
         )
         messages[recipient]['reply_text'] += (
             f'{header}{task.text}{picture}\n\n'
@@ -75,7 +76,11 @@ def sending_messages(tasks: QuerySet[Task],
     for recipient, body in messages.items():
         reply_text = event_text + body['reply_text']
         try:
-            bot.send_message(recipient, reply_text, parse_mode='Markdown')
+            bot.send_message(
+                chat_id=recipient,
+                text=reply_text,
+                parse_mode=ParseMode.HTML
+            )
         except Exception:
             continue
     return f'Send {len(messages)} messages'
@@ -106,7 +111,7 @@ def check_birthdays() -> str:
        it_birthday=True
     ).select_related('user', 'group')
 
-    reply_text = 'Сегодня не забудьте поздравить с праздником:\n'
+    reply_text = '<b>Сегодня не забудьте поздравить с праздником:</b>\n'
     return sending_messages(tasks, this_datetime, reply_text)
 
 
@@ -129,7 +134,11 @@ def send_forismatic_quotes() -> str:
                 '*Мысли великих людей:*\n'
                 + response.text
             )
-            bot.send_message(group.chat_id, msg, parse_mode='Markdown')
+            bot.send_message(
+                chat_id=group.chat_id,
+                text=msg,
+                parse_mode=ParseMode.MARKDOWN
+            )
             time.sleep(5)
         except Exception:
             continue

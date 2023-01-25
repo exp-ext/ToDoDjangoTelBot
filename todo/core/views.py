@@ -1,3 +1,5 @@
+from difflib import SequenceMatcher
+
 from django.core.paginator import Paginator
 from django.db.models.query import QuerySet
 from django.http import HttpRequest, HttpResponse
@@ -24,3 +26,17 @@ def paginator_handler(request: HttpRequest, query: QuerySet) -> Paginator:
     paginator = Paginator(query, 9)
     page_number = request.GET.get('page')
     return paginator.get_page(page_number)
+
+
+def similarity(s1: str, s2: str) -> float:
+    """
+    Сравнение 2-х строк в модуле difflib
+    [https://docs.python.org/3/library/difflib.html].
+    """
+    normalized = tuple((map(lambda x: x.lower(), [s1, s2])))
+    matcher = SequenceMatcher(
+        lambda x: x == " ",
+        normalized[0],
+        normalized[1]
+    )
+    return matcher.ratio()

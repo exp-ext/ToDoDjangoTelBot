@@ -1,5 +1,9 @@
+from datetime import timedelta
+
+from core.views import similarity
 from core.widget import MinimalSplitDateTimeMultiWidget
 from django import forms
+from django.core.exceptions import ValidationError
 from django.shortcuts import get_object_or_404
 from users.models import Group
 
@@ -62,3 +66,30 @@ class TaskForm(forms.ModelForm):
         if group:
             return get_object_or_404(Group, pk=group.group_id)
         return group
+
+    def clean_text(self):
+        text = self.cleaned_data['text']
+        if self.initial.get('is_edit'):
+            return text
+        group = self.cleaned_data['group']
+        server_datetime = self.cleaned_data['server_datetime']
+        user = self.initial.get('user')
+
+        start_datetime = server_datetime - timedelta(minutes=60)
+        end_datetime = server_datetime + timedelta(minutes=60)
+
+        if group:
+            tasks = group.tasks.filter(
+                server_datetime__range=[start_datetime, end_datetime],
+                group=group)
+        else:
+            tasks = user.tasks.filter(
+                server_datetime__range=[start_datetime, end_datetime]
+            )
+        for task in tasks:
+            simile = similarity(task.text, text)
+            if simile > 0.62:
+                raise ValidationError(
+                    'Очень похожая запись уже присутствует в напоминаниях.'
+                )
+        return text

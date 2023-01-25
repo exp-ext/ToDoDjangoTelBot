@@ -3,7 +3,7 @@ from datetime import datetime
 import pytz
 from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
-from telegram import Update
+from telegram import ParseMode, Update
 from telegram.ext import CallbackContext, ConversationHandler
 from users.models import Group
 
@@ -133,25 +133,30 @@ def show(update: Update, context: CallbackContext,
                 notes.append(
                     f'{datetime.strftime(user_date, "%d.%m.%Y")} {user_time}'
                     f'- {item.text}\n'
-                    f'_напомню в {datetime.strftime(remind, "%H:%M")}ч_'
+                    '<b><i>- напомню в '
+                    f'{datetime.strftime(remind, "%H:%M")}ч</i></b>\n'
                 )
     if tasks:
         if it_birthday:
             note_sort = (
-                f'*{update.effective_user.first_name}, '
-                'найдены записи Дней Рождений 🎉:*\n'
+                f'<strong>{update.effective_user.first_name}, '
+                'найдены записи Дней Рождений 🎉:</strong>\n'
             )
         else:
             note_sort = (
-                f'*{update.effective_user.first_name}, '
-                'в планах, с учётом вашего часового пояса,\nесть записи 📜:*\n'
+                f'<strong>{update.effective_user.first_name}, '
+                'в планах есть записи 📜:</strong>\n\n'
             )
     else:
         note_sort = (
-            f'*{update.effective_user.first_name}, '
-            'у нас нет никаких планов 👌*\n'
+            f'</strong>{update.effective_user.first_name}, '
+            'у нас нет никаких планов 👌</strong>\n'
         )
     for n in notes:
         note_sort = note_sort + f'{n}\n'
 
-    context.bot.send_message(chat.id, note_sort, parse_mode='Markdown')
+    context.bot.send_message(
+        chat_id=chat.id,
+        text=note_sort,
+        parse_mode=ParseMode.HTML
+    )

@@ -1,5 +1,6 @@
 import os
 
+import openai
 import requests
 from django.contrib.auth import get_user_model
 from dotenv import load_dotenv
@@ -12,6 +13,7 @@ from ..cleaner import remove_keyboard
 load_dotenv()
 
 APY_KEY = os.getenv('CHAT_GP_TOKEN')
+openai.api_key = APY_KEY
 
 User = get_user_model()
 
@@ -83,7 +85,20 @@ def get_image_dall_e(update: Update, context: CallbackContext):
             reply_to_message_id=update.message.message_id,
             media=media_group
         )
-    except Exception as error:
-        raise KeyError(error)
+    except Exception:
+        response = openai.Image.create(
+            prompt=prompt,
+            n=5,
+            size='1024x1024'
+        )
+        for number, url in enumerate(response['data']):
+            media_group.append(
+                InputMediaPhoto(media=url['url'], caption=f'Gen № {number}')
+            )
+        context.bot.send_media_group(
+            chat_id=chat.id,
+            reply_to_message_id=update.message.message_id,
+            media=media_group
+        )
     finally:
         return ConversationHandler.END

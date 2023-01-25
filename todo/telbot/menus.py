@@ -26,10 +26,12 @@ def assign_group(update: Update):
             User.objects.select_related('favorite_group'),
             username=user_id
         )
-        group = Group.objects.get_or_create(
-            chat_id=chat.id,
-            title=chat.title
-        )[0]
+        group, _ = Group.objects.get_or_create(
+            chat_id=chat.id
+        )
+        if group.title != chat.title:
+            group.title = chat.title
+            group.save()
 
         if not user.favorite_group:
             user.favorite_group = group

@@ -35,8 +35,7 @@ class Group(models.Model):
         return f'# ~ {self.title}'
 
     def save(self, *args, **kwargs):
-        if not self.slug:
-            self.slug = slugify(self.title)[:100]
+        self.slug = slugify(self.title)[:100]
         super().save(*args, **kwargs)
 
 

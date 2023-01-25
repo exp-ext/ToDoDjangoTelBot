@@ -1,7 +1,8 @@
 {% load static %}
 
+{% block title %} 404 error 🥶{% endblock %}
+
 {% block style %}  
-    <title>404 error 🥶</title>
     <link rel="stylesheet" href="{% static 'css/fagro.css' %}">
 {% endblock %}
 
@@ -21,5 +22,6 @@
   </div>
 
 
-  <!-- partial -->
-    <script  src="{% static 'css/fagro.js' %}"></script>
+{% block javascript %}
+  <script  src="{% static 'js/fagro.js' %}"></script>
+{% endblock %}

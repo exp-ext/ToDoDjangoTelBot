@@ -15,6 +15,9 @@ from .loader import bot
 User = get_user_model()
 Group = django_apps.get_model(app_label='users', model_name='Group')
 Task = django_apps.get_model(app_label='tasks', model_name='Task')
+GroupConnections = django_apps.get_model(
+    app_label='users', model_name='GroupConnections'
+)
 
 app = Celery()
 
@@ -143,3 +146,27 @@ def send_forismatic_quotes() -> str:
         except Exception:
             continue
     return f'Quotes were sent to {len(groups)} groups'
+
+
+@app.task
+def check_members() -> str:
+    """
+    Сверяет людей в группе с моделью GroupConnections,
+    удаляет связи, если кто-то вышел из группы.
+    """
+    count = 0
+    entries = GroupConnections.objects.prefetch_related('user', 'group')
+    exit_status = ['kicked', 'left']
+    for entry in entries:
+        time.sleep(5)
+        try:
+            result = bot.getChatMember(
+                entry.group.chat_id,
+                entry.user.username
+            )
+            if result.status in exit_status:
+                entry.delete()
+                count += 1
+        except Exception:
+            continue
+    return f'Delete {count} members.'

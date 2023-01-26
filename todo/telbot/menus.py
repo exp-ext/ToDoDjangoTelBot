@@ -1,4 +1,3 @@
-from multiprocessing import Process
 from typing import Any, Iterable
 
 from django.conf import settings
@@ -10,7 +9,7 @@ from telegram.ext import CallbackContext
 from users.models import Group, GroupConnections
 from users.views import Signup, set_coordinates
 
-from .cleaner import delete_messages_by_time, process_to_delete_message
+from .cleaner import process_to_delete_message
 from .service_message import send_service_message
 
 User = get_user_model()
@@ -139,8 +138,7 @@ def private_menu(update: Update, context: CallbackContext) -> None:
             parse_mode='Markdown'
         ).message_id
         *params, = user_id, message_id, 20
-        p1 = Process(target=delete_messages_by_time, args=(params,))
-        p1.start()
+        process_to_delete_message(params)
         assign_group(update)
 
 

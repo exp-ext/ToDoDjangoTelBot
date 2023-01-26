@@ -33,4 +33,8 @@ app.conf.beat_schedule = {
         'task': 'telbot.tasks.send_forismatic_quotes',
         'schedule': crontab(hour=7, minute=0),
     },
+    'check_members': {
+        'task': 'telbot.tasks.check_members',
+        'schedule': crontab(hour='*/6'),
+    },
 }

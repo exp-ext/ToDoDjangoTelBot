@@ -1,7 +1,6 @@
 import re
 import threading
 import time
-from typing import Sequence
 
 from telegram import Update
 from telegram.ext import CallbackContext
@@ -53,7 +52,7 @@ def remove_keyboard(update: Update, context: CallbackContext) -> None:
         raise KeyError(error)
 
 
-def delete_messages_by_time(params: Sequence[int]) -> None:
+def delete_messages_by_time(params: list) -> None:
     """
     Удаление сообщения по таймеру.
     Параметры:

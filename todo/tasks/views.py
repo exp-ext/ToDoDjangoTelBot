@@ -1,4 +1,4 @@
-from core.views import paginator_handler
+from core.views import linkages_check, paginator_handler
 from django.contrib.auth.decorators import login_required
 from django.http import HttpRequest, HttpResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, redirect, render
@@ -31,6 +31,9 @@ def tasks(request: HttpRequest) -> HttpResponse:
 @login_required
 def task_create(request: HttpRequest) -> HttpResponseRedirect | HttpResponse:
     """Создаёт новую запись."""
+
+    linkages_check(request.user)
+
     tz = request.user.locations.first().timezone
     form = TaskForm(
         request.POST or None,
@@ -64,6 +67,8 @@ def task_edit(request: HttpRequest,
 
     if task.user != request.user:
         return redirect(redirecting, task_id=task_id)
+
+    linkages_check(request.user)
 
     tz = request.user.locations.first().timezone
     is_edit = True

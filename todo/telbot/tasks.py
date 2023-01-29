@@ -60,13 +60,10 @@ def sending_messages(tasks: QuerySet[Task],
             user_date = utc_date.astimezone(messages[recipient]['user_tz'])
             header = f'В {datetime.strftime(user_date, "%H:%M")}'
 
-        header = '' if task.it_birthday else f'<b>-- {header} -></b>\n'
-        picture = (
-            '<a href='
-            f'"{task.picture_link}">​​​​​​</a> ' if task.picture_link else ''
-        )
+        header = '' if task.it_birthday else f'<b>-- {header} -></b>'
+        picture = f'<a href="{task.picture_link}">​​​​​​</a>'
         messages[recipient]['reply_text'] += (
-            f'{header}{task.text}{picture}\n\n'
+            f'{header}{picture}\n{task.text}\n\n'
         )
 
         if not task.it_birthday:
@@ -146,27 +143,3 @@ def send_forismatic_quotes() -> str:
         except Exception:
             continue
     return f'Quotes were sent to {len(groups)} groups'
-
-
-@app.task
-def check_members() -> str:
-    """
-    Сверяет людей в группе с моделью GroupConnections,
-    удаляет связи, если кто-то вышел из группы.
-    """
-    count = 0
-    entries = GroupConnections.objects.prefetch_related('user', 'group')
-    exit_status = ['kicked', 'left']
-    for entry in entries:
-        time.sleep(5)
-        try:
-            result = bot.getChatMember(
-                entry.group.chat_id,
-                entry.user.username
-            )
-            if result.status in exit_status:
-                entry.delete()
-                count += 1
-        except Exception:
-            continue
-    return f'Delete {count} members.'

@@ -1,9 +1,13 @@
 from difflib import SequenceMatcher
 
+from django.contrib.auth import get_user_model
 from django.core.paginator import Paginator
 from django.db.models.query import QuerySet
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import render
+from telbot.loader import bot
+
+User = get_user_model()
 
 
 def page_not_found(request: HttpRequest, exception) -> HttpResponse:
@@ -40,3 +44,22 @@ def similarity(s1: str, s2: str) -> float:
         normalized[1]
     )
     return matcher.ratio()
+
+
+def linkages_check(user: QuerySet[User]) -> None:
+    """
+    Сравнивает связи модели GroupConnections с группами Телеграмм,
+    если в группе нет user(вышел или кикнули) то удаляет связь.
+    """
+    exit_status = ['kicked', 'left']
+    entries = user.groups_connections.prefetch_related('group')
+    for entry in entries:
+        try:
+            result = bot.getChatMember(
+                entry.group.chat_id,
+                user.username
+                )
+            if result.status in exit_status:
+                entry.delete()
+        except Exception:
+            continue

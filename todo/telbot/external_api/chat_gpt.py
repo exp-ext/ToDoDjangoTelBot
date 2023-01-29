@@ -1,5 +1,4 @@
 import os
-import random
 
 import openai
 from django.contrib.auth import get_user_model
@@ -35,11 +34,11 @@ def get_answer_davinci(update: Update, context: CallbackContext):
 
     chat = update.effective_chat
     prompt = update.message.text.replace('#', '')
-    model_engine = ['text-davinci-003', 'text-davinci-002']
+    model_engine = 'text-davinci-003'
 
     try:
         answer = openai.Completion.create(
-            engine=random.choice(model_engine),
+            engine=model_engine,
             prompt=prompt,
             max_tokens=2048,
             temperature=0.3,

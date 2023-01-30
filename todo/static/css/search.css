@@ -1,0 +1,19 @@
+@font-face {
+    font-family: 'Legendaria';
+    src: url('../fonts/Legendaria.ttf') format("truetype");
+}
+
+.search-font {    
+    font-family: Legendaria, regular;
+    font-size: 30px;
+}
+
+.text_search{
+    color: black;
+    text-decoration: none;    
+}
+
+.text_search:hover {
+    color: blue;
+    text-decoration: underline;
+}

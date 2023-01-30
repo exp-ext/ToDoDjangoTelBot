@@ -30,32 +30,49 @@
 
           <ul class="navbar-nav mr-auto nav-pills">
 
+            <li class="nav-item dropdown">
+              <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                Посты
+              </a>
+              <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+                {% if request.user.is_authenticated %}
+                  <li><a class="dropdown-item" href="{% url 'posts:post_create' %}">Создать пост</a></li>
+                  <li><a class="dropdown-item" href="{% url 'posts:profile' request.user.username %}">Мои посты</a></li>
+                {% endif %}
+                <li><hr class="dropdown-divider"></li>                
+                <li><a class="dropdown-item" href="{% url 'posts:index_posts' %}">Лента постов</a></li>
+              </ul>
+            </li>            
+
             {% if request.user.is_authenticated %}
 
-              <li class="nav-item">
-                <a class="nav-link {% if view_name  == 'tasks:task_create' %}active{% endif %}"
-                href="{% url 'tasks:task_create' %}">Создать запись</a>
-              </li>
+            <li class="nav-item dropdown">
+              <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                Напоминания
+              </a>
+              <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+                <li><a class="dropdown-item" href="{% url 'tasks:task_create' %}">Создать запись</a></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><a class="dropdown-item" href="{% url 'tasks:notes' %}">Напоминания</a></li>
+                <li><a class="dropdown-item" href="{% url 'tasks:birthdays' %}">Дни рождения</a></li>
+              </ul>
+            </li>
 
-              <li class="nav-item">
-                <a class="nav-link {% if view_name  == 'tasks:notes' %}active{% endif %}"
-                href="{% url 'tasks:notes' %}">Напоминания</a>
-              </li>
+            <li class="nav-item dropdown">
+              <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                Профиль
+              </a>
+              <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+                <li><a class="dropdown-item" href="{% url 'accounts_profile' request.user.username %}">Профиль</a></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><a class="dropdown-item" href="{% url 'users:password_change_form' %}">Изменить пароль</a></li>
+              </ul>
+            </li>
 
-              <li class="nav-item">
-                <a class="nav-link {% if view_name  == 'tasks:birthdays' %}active{% endif %}"
-                href="{% url 'tasks:birthdays' %}">Дни рождения</a>
-              </li>
-
-              <li class="nav-item"> 
-                <a class="nav-link {% if view_name  == 'accounts_profile' %}active{% endif %}" 
-                  href="{% url 'accounts_profile' request.user.username %}">Профиль</a>
-              </li>
-
-              <li class="nav-item"> 
-                <a class="nav-link {% if view_name  == 'users:password_change_form' %}active{% endif %}" 
-                  href="{% url 'users:password_change_form' %}">Изменить пароль</a>
-              </li>
+            <li class="nav-item"> 
+              <a class="nav-link {% if view_name  == 'about:support' %}active{% endif %}" 
+                href="{% url 'about:support' %}">Контакты</a>
+            </li>
 
               <li class="nav-item"> 
                 <a class="nav-link link-light" 
@@ -64,27 +81,26 @@
               
             {% else %}
 
+            <li class="nav-item"> 
+              <a class="nav-link {% if view_name  == 'about:support' %}active{% endif %}" 
+                href="{% url 'about:support' %}">Контакты</a>
+            </li>
+
               <li class="nav-item"> 
                 <a class="nav-link link-light {% if view_name  == 'users:login' %}active{% endif %}" 
                 href="{% url 'users:login' %}">Войти</a>
               </li>              
 
-            {% endif %}
-
+            {% endif %}            
+          </ul>
+          <ul class="nav justify-content-end">
             <li class="nav-item"> 
-              <a class="nav-link {% if view_name  == 'about:support' %}active{% endif %}" 
-                href="{% url 'about:support' %}">Контакты</a>
+              <a class="nav-link" href="https://t.me/BorFAsbot">К боту в Telegram</a>
             </li>
-            <li class="nav-item"> 
-              <a class="nav-link" 
-                href="https://t.me/BorFAsbot">К боту в Telegram</a>
-            </li>
-            
           </ul>
 
         {% endwith %}
       </div>
-
     </div>
   </nav>
 </header>

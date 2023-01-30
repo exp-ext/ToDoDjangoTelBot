@@ -12,7 +12,8 @@
 
     <div class="row row-cols-1 row-cols-md-3 g-4">
       {% for note in page_obj %}         
-        {% include 'tasks/includes/one_entry.html' %}
+        {% comment %} {% include 'tasks/includes/one_entry.html' %} {% endcomment %}
+        {% include 'tasks/includes/stcard_list.html' %}
       {% endfor %}
     </div>   
 

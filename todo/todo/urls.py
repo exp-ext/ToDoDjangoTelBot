@@ -35,19 +35,20 @@ urlpatterns = [
         path('defender/', include('defender.urls')),
         ])
     ),
-    path('about/', include(('about.urls', 'about'))),
+    path('about/', include(('about.urls', 'about'), namespace='about')),
     path('auth/', include([
-        path('', include(('users.urls', 'users'))),
+        path('', include(('users.urls', 'users'), namespace='users')),
         path('', include('django.contrib.auth.urls')),
         ])
     ),
     path('bot/', include(('telbot.urls', 'telbot'))),
-    path('tasks/', include(('tasks.urls', 'tasks'))),
+    path('tasks/', include(('tasks.urls', 'tasks'), namespace='tasks')),
     path(
         'profile/<str:username>/',
         accounts_profile,
         name='accounts_profile'
     ),
+    path('posts/', include(('posts.urls', 'posts'), namespace='posts')),
     path(
         'sitemap.xml', sitemap, {'sitemaps': SITEMAPS},
         name='django.contrib.sitemaps.views.sitemap'

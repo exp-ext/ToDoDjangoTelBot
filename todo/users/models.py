@@ -32,7 +32,7 @@ class Group(models.Model):
         verbose_name_plural = 'Группы'
 
     def __str__(self):
-        return f'# ~ {self.title}'
+        return f'~ {self.title}'
 
     def save(self, *args, **kwargs):
         self.slug = slugify(self.title)[:100]
@@ -82,7 +82,7 @@ class User(AbstractUser):
         verbose_name_plural = 'Пользователи'
 
     def __str__(self):
-        return f'@{self.username}'
+        return self.username
 
     @property
     def is_admin(self):

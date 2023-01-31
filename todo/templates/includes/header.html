@@ -36,15 +36,15 @@
                   <path d="M8 4.5a.5.5 0 0 0-1 0v7a.5.5 0 0 0 1 0v-7Zm3.5.878c1.482-1.42 4.795 1.392 0 4.622-4.795-3.23-1.482-6.043 0-4.622ZM2.5 5a.5.5 0 0 0 0 1h3a.5.5 0 0 0 0-1h-3Zm0 2a.5.5 0 0 0 0 1h3a.5.5 0 0 0 0-1h-3Zm0 2a.5.5 0 0 0 0 1h3a.5.5 0 0 0 0-1h-3Z"/>
                   <path fill-rule="evenodd" d="M0 4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V4Zm2-1a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4a1 1 0 0 0-1-1H2Z"/>
                 </svg>
-                посты
+                заметки
               </a>
-              <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+              <ul class="dropdown-menu bg-light" aria-labelledby="navbarDropdown">
                 {% if request.user.is_authenticated %}
-                  <li><a class="dropdown-item" href="{% url 'posts:post_create' %}">Создать пост</a></li>
-                  <li><a class="dropdown-item" href="{% url 'posts:profile' request.user.username %}">Мои посты</a></li>
+                  <li><a class="dropdown-item" href="{% url 'posts:post_create' %}">Создать заметку</a></li>
+                  <li><a class="dropdown-item" href="{% url 'posts:profile' request.user.username %}">Мои заметки</a></li>
                 {% endif %}
                 <li><hr class="dropdown-divider"></li>                
-                <li><a class="dropdown-item" href="{% url 'posts:index_posts' %}">Лента постов</a></li>
+                <li><a class="dropdown-item" href="{% url 'posts:index_posts' %}">Общая лента</a></li>
               </ul>
             </li>            
 
@@ -59,7 +59,7 @@
                 </svg>
                 напоминания
               </a>
-              <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+              <ul class="dropdown-menu bg-light" aria-labelledby="navbarDropdown">
                 <li><a class="dropdown-item" href="{% url 'tasks:task_create' %}">Создать запись</a></li>
                 <li><hr class="dropdown-divider"></li>
                 <li><a class="dropdown-item" href="{% url 'tasks:notes' %}">Напоминания</a></li>
@@ -74,7 +74,7 @@
                 </svg>
                 профиль
               </a>
-              <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+              <ul class="dropdown-menu bg-light" aria-labelledby="navbarDropdown">
                 <li><a class="dropdown-item" href="{% url 'accounts_profile' request.user.username %}">Профиль</a></li>
                 <li><hr class="dropdown-divider"></li>
                 <li><a class="dropdown-item" href="{% url 'users:password_change_form' %}">Изменить пароль</a></li>
@@ -105,7 +105,11 @@
 
             <li class="nav-item"> 
               <a class="nav-link" 
-                href="{% url 'about:support' %}">Контакты</a>
+                href="{% url 'about:support' %}">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-envelope-paper-heart" viewBox="0 0 16 16">
+                  <path fill-rule="evenodd" d="M2 2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v1.133l.941.502A2 2 0 0 1 16 5.4V14a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V5.4a2 2 0 0 1 1.059-1.765L2 3.133V2Zm0 2.267-.47.25A1 1 0 0 0 1 5.4v.817l1 .6v-2.55Zm1 3.15 3.75 2.25L8 8.917l1.25.75L13 7.417V2a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1v5.417Zm11-.6 1-.6V5.4a1 1 0 0 0-.53-.882L14 4.267v2.55ZM8 2.982C9.664 1.309 13.825 4.236 8 8 2.175 4.236 6.336 1.31 8 2.982Zm7 4.401-4.778 2.867L15 13.117V7.383Zm-.035 6.88L8 10.082l-6.965 4.18A1 1 0 0 0 2 15h12a1 1 0 0 0 .965-.738ZM1 13.116l4.778-2.867L1 7.383v5.734Z"/>
+                </svg>
+                контакты</a>
             </li>
 
               <li class="nav-item"> 
@@ -116,13 +120,8 @@
             {% endif %}            
           </ul>
 
-          <ul class="nav justify-content-end">
-            
-            <li class="nav-item"> 
-              &#160&#160&#160&#160&#160&#160&#160&#160
-            </li> 
-
-            <li class="nav-item">
+          <ul class="nav justify-content-end">            
+            <li class="nav-item px-5">
               <a class="nav-link" href="https://t.me/BorFAsbot">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-telegram" viewBox="0 0 16 16">
                   <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM8.287 5.906c-.778.324-2.334.994-4.666 2.01-.378.15-.577.298-.595.442-.03.243.275.339.69.47l.175.055c.408.133.958.288 1.243.294.26.006.549-.1.868-.32 2.179-1.471 3.304-2.214 3.374-2.23.05-.012.12-.026.166.016.047.041.042.12.037.141-.03.129-1.227 1.241-1.846 1.817-.193.18-.33.307-.358.336a8.154 8.154 0 0 1-.188.186c-.38.366-.664.64.015 1.088.327.216.589.393.85.571.284.194.568.387.936.629.093.06.183.125.27.187.331.236.63.448.997.414.214-.02.435-.22.547-.82.265-1.417.786-4.486.906-5.751a1.426 1.426 0 0 0-.013-.315.337.337 0 0 0-.114-.217.526.526 0 0 0-.31-.093c-.3.005-.763.166-2.984 1.09z"/>

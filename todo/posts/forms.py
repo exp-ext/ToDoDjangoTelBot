@@ -10,6 +10,18 @@ class PostForm(forms.ModelForm):
         model = Post
         fields = ('title', 'text', 'group', 'image')
 
+    def __init__(self, *args, **kwargs):
+        super(PostForm, self).__init__(*args, **kwargs)
+        user = kwargs.pop('initial').get('user')
+        self.fields['group'] = forms.ModelChoiceField(
+            queryset=user.groups_connections.all()
+        )
+        self.fields['group'].required = False
+        self.fields['group'].label = ('Группа')
+        self.fields['group'].help_text = (
+            'Группа, к которой будет относиться пост'
+        )
+
 
 class CommentForm(forms.ModelForm):
     class Meta:

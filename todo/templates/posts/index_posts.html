@@ -1,14 +1,10 @@
 {% extends "base.html" %}
 
 {% block title %} Публикации {% endblock %}
-
-{% block header %}    
-  <h1>Последние обновления на {{ date_today }}</h1>
-{% endblock %}
      
 {% block content %}
 
-  <div class="container">
+  <div class="container py-5">
 
     {% include 'posts/includes/switcher.html' %}
     {% include 'posts/includes/search.html' %}

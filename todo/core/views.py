@@ -6,6 +6,7 @@ from django.db.models.query import QuerySet
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import render
 from telbot.loader import bot
+from users.models import Group
 
 User = get_user_model()
 
@@ -55,7 +56,7 @@ def linkages_check(user: QuerySet[User]) -> None:
     entries = user.groups_connections.prefetch_related('group')
     for entry in entries:
         try:
-            result = bot.getChatMember(
+            result = bot.get_chat_member(
                 entry.group.chat_id,
                 user.username
                 )
@@ -63,3 +64,18 @@ def linkages_check(user: QuerySet[User]) -> None:
                 entry.delete()
         except Exception:
             continue
+
+
+def get_status_in_group(group: QuerySet[Group], user_id: int) -> bool:
+    """
+    Возвращает статус юзера в группе и обновляет описание группы.
+    """
+    try:
+        chat = bot.get_chat(group.chat_id)
+        if group.description != chat.description:
+            group.description = chat.description
+            group.save()
+        result = bot.get_chat_member(group.chat_id, user_id)
+        return result.status
+    except Exception as error:
+        raise KeyError(error)

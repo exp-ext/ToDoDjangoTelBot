@@ -26,6 +26,17 @@ class Group(models.Model):
         upload_to='group',
         blank=True
     )
+    description = models.TextField(
+        verbose_name='Описание группы',
+        max_length=200,
+        blank=True
+    )
+    link = models.TextField(
+        verbose_name='Пригласительная ссылка для публичных групп',
+        max_length=150,
+        blank=True,
+        null=True
+    )
 
     class Meta:
         verbose_name = 'Группа'
@@ -37,6 +48,20 @@ class Group(models.Model):
     def save(self, *args, **kwargs):
         self.slug = slugify(self.title)[:100]
         super().save(*args, **kwargs)
+
+
+class GroupMailing(models.Model):
+    class GroupMailingTypes(models.TextChoices):
+        FORISMATIC_QUOTES = 'forismatic_quotes', _('Цитаты')
+
+    group = models.ForeignKey(
+        Group,
+        on_delete=models.CASCADE
+    )
+    mailing_type = models.CharField(
+        choices=GroupMailingTypes.choices,
+        max_length=100
+    )
 
 
 class User(AbstractUser):

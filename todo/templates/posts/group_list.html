@@ -3,18 +3,49 @@
 {% block title %} Записи сообщества {{ group.title }} {% endblock %}
 
 {% block header %} 
-  <h1> {{ group.title }} </h1>
-  <p> {{ group.description }} </p>
+
+  <div class="container py-5">
+    <div class="py-3">
+
+      <div class="card shadow mb-3 rounded text-center bg-secondary">
+        <div class="card-body">
+          <h1 class="card-header">{{ group.title }}</h1>
+          {% if group.description %}<p class="card-text p-3">Описание: "{{ group.description }}"</p>{% endif %}
+          {% if group.link %}<p class="card-text">Пригласительная ссылка: <a href="{{ group.link }}">{{ group.link }}</a> </p>{% endif %}
+        </div>
+      
+
+        {% if is_admin %}
+          <ul class="list-group list-group-horizontal">
+            <li class="list-group-item bg-secondary">
+              <p>Рассылка "Мысли великих людей"</p>
+              <div class="btn-group" role="group" aria-label="Базовая группа переключателей радио">      
+                <input type="radio" class="btn-check" name="btnradio" id="btnradio1" autocomplete="off" checked>
+                <label class="btn btn-outline-dark" for="btnradio1">Включить</label>        
+                <input type="radio" class="btn-check" name="btnradio" id="btnradio2" autocomplete="off">
+                <label class="btn btn-outline-dark" for="btnradio2">Выключить</label>
+              </div>
+            </li>
+          </ul>
+        {% endif  %}
+      </div>
+
+    </div>
+  </div>
+  
+
 {% endblock %}
 
 {% block content %}
 
-  {% for post in page_obj %}
+  <div class="container">
+    {% for post in page_obj %}
 
-    {% include 'posts/includes/post_list.html' %}
+      {% include 'posts/includes/post_list.html' %}
 
-  {% endfor %}
+    {% endfor %}
 
-  {% include 'posts/includes/paginator.html' %}
+    {% include 'posts/includes/paginator.html' %}
+  </div>
 
 {% endblock %}

@@ -1,4 +1,4 @@
-from core.views import paginator_handler
+from core.views import get_status_in_group, paginator_handler
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect, render
@@ -18,10 +18,19 @@ def search(request):
 
     post_list = (
         Post.objects
-        .filter(text__contains=keyword)
+        .filter(text__icontains=keyword)
+        .exclude(group=True, group__link__isnull=True)
         .order_by('group')
         .select_related('author', 'group')
     )
+    if request.user.is_authenticated:
+        items = request.user.groups_connections.prefetch_related(
+            'group__posts'
+        )
+        for item in items:
+            posts = item.group.posts.filter(text__icontains=keyword)
+            post_list = post_list | posts
+
     page_obj = paginator_handler(request, post_list)
 
     context = {
@@ -36,9 +45,16 @@ def search(request):
 def index_posts(request):
     post_list = (
         Post.objects
-        .all()
+        .exclude(group=True, group__link__isnull=True)
         .select_related('author', 'group')
     )
+    if request.user.is_authenticated:
+        items = request.user.groups_connections.prefetch_related(
+            'group__posts'
+        )
+        for item in items:
+            posts = item.group.posts.all()
+            post_list = post_list | posts
 
     page_obj = paginator_handler(request, post_list)
 
@@ -49,8 +65,19 @@ def index_posts(request):
     return render(request, template, context)
 
 
+@login_required
 def group_posts(request, slug):
+
     group = get_object_or_404(Group, slug=slug)
+    status = get_status_in_group(group, request.user.username)
+
+    is_admin = False
+    admin_status = ['creator', 'administrator']
+
+    if status in admin_status:
+        is_admin = True
+    elif status != 'member':
+        redirect('posts:index_posts')
 
     post_list = group.posts.all()
 
@@ -59,6 +86,7 @@ def group_posts(request, slug):
     context = {
         'group': group,
         'page_obj': page_obj,
+        'is_admin': is_admin
     }
     template = 'posts/group_list.html'
     return render(request, template, context)
@@ -67,7 +95,18 @@ def group_posts(request, slug):
 def profile(request, username):
     user = get_object_or_404(User, username=username)
 
-    user_posts = user.posts.select_related('group')
+    user_posts = (
+        user.posts
+        .exclude(group=True, group__link__isnull=True)
+        .select_related('group')
+    )
+    if request.user.is_authenticated:
+        items = request.user.groups_connections.prefetch_related(
+            'group__posts'
+        )
+        for item in items:
+            posts = item.group.posts.all()
+            user_posts = user_posts | posts
 
     page_obj = paginator_handler(request, user_posts)
 
@@ -113,7 +152,11 @@ def post_detail(request, post_id):
 def post_create(request):
     form = PostForm(
         request.POST or None,
-        files=request.FILES or None
+        files=request.FILES or None,
+        initial={
+            'user': request.user,
+            'is_edit': False
+        }
     )
 
     if request.method == "POST" and form.is_valid():
@@ -126,7 +169,7 @@ def post_create(request):
         )
 
     context = {
-        'form': form,
+        'form': form
     }
     template = 'posts/create_post.html'
     return render(request, template, context)
@@ -142,17 +185,19 @@ def post_edit(request, post_id):
     form = PostForm(
         request.POST or None,
         files=request.FILES or None,
-        instance=post
+        instance=post,
+        initial={
+            'user': request.user,
+            'is_edit': True
+        }
     )
 
     if request.method == "POST" and form.is_valid():
         post = form.save()
         return redirect('posts:post_detail', post_id=post_id)
 
-    is_edit = True
     context = {
-        'form': form,
-        'is_edit': is_edit,
+        'form': form
     }
     template = 'posts/create_post.html'
     return render(request, template, context)

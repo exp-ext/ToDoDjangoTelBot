@@ -1,0 +1,51 @@
+@font-face {
+	font-family: 'BadScript-Regular';
+	src: url('../fonts/BadScript-Regular.ttf') format("truetype");
+}
+
+.stcard-container {
+	display: flex;
+	justify-content: center;  
+	flex-wrap: wrap;
+	padding: 20px 0;
+}
+.stcard {
+	display: flex;
+	flex-direction: column;
+	padding: 12px 12px 6px;
+	background: #f8f3e8;
+	box-shadow: 0 0 40px rgba(0, 0, 0, 0.2), 0 0 40px rgba(0, 0, 0, 0.2);
+	border-radius: 6px;
+	flex: 1 0 300px;
+	max-width: 400px;
+	align-self: center;
+}
+.stcard img {
+	width: 100%;
+	aspect-ratio: 2/1;
+	object-fit: cover;
+	border-radius: 6px;
+	filter: sepia(100%);
+	transition: filter 0.5s;
+	margin-bottom: 10px;
+}
+.stcard:hover img {
+	filter: sepia(0)
+}
+.stcard .stcard-title {
+	margin: 6px 10px 10px;
+	font-family: 'Roboto', sans-serif;
+	font-weight: bold;
+	font-size: 19px;
+	line-height: 1.1;
+	color: #a18342;
+	text-align: center;
+}
+.stcard p {
+	font-family: 'BadScript-Regular';
+	font-size: 21px;
+	font-weight: 600;
+	text-align: center;
+	margin: 0 0 10px 0;
+	line-height: 1.3;	
+}

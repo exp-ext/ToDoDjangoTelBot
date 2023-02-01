@@ -19,6 +19,7 @@ def assign_group(update: Update):
     """Присваивание группы юзеру."""
     chat = update.effective_chat
     user_id = update.message.from_user.id
+    flag = False
 
     if chat.type != 'private':
         user = get_object_or_404(
@@ -30,6 +31,11 @@ def assign_group(update: Update):
         )
         if group.title != chat.title:
             group.title = chat.title
+            flag = True
+        if group.link != chat.link:
+            group.link = chat.link
+            flag = True
+        if flag:
             group.save()
 
         if not user.favorite_group:

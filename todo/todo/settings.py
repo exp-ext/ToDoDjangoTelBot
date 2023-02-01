@@ -212,7 +212,8 @@ STATICFILES_FINDERS = (
 # MEDIA
 MEDIA_URL = '/media/'
 
-MEDIA_ROOT = f'{BASE_DIR}/web/media' if DEBUG else '/app/web/media'
+UP_DIR = os.path.abspath(os.path.join(BASE_DIR, os.pardir))
+MEDIA_ROOT = f'{UP_DIR}/web/media' if DEBUG else '/app/web/media'
 
 # API
 REST_FRAMEWORK = {

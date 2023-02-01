@@ -83,7 +83,6 @@ def setup_dispatcher(dp: Dispatcher):
     dp.add_handler(
         CallbackQueryHandler(show_joke, pattern='^show_joke$')
     )
-    # меню только для private и его Handler's
     dp.add_handler(
         MessageHandler(Filters.location, private_menu)
     )

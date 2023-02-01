@@ -1,23 +1,28 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block title %} Твои записи {% endblock %}
 
-{% block header %}    
+{% block header %}
   <h1>Последние обновления:</h1>
 {% endblock %}
 
 {% block content %}
 
-  <div class="container py-5"> 
-
+  <div class="container py-5">
     <div class="row row-cols-1 row-cols-md-3 g-4">
-      {% for note in page_obj %}         
-        {% include 'tasks/includes/one_entry.html' %}
-      {% endfor %}
-    </div>   
 
-  </div> 
+        {% for note in page_obj %}
+          {% include 'tasks/includes/stcard_list.html' %}
+        {% endfor %}
 
-  {% include 'tasks/includes/paginator.html' %}
+    </div>
 
+    {% include 'tasks/includes/paginator.html' %}
+  </div>
+
+{% endblock %}
+
+{% block javascript %}
+  <script  src="{% static 'js/stcard.js' %}"></script>
 {% endblock %}

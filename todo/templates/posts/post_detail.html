@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block title %} Пост {{ post }} {% endblock %}
+
+{% block style %}
+  <meta name="description" content="Одна Заметка - множество возможностей!"/>
+  <meta name="keywords" content="Telegram, заметки, организация заметок, Telegram инструмент, автор">
+{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="container py-5">
+    {% include 'posts/includes/detail_one_post.html' %} 
+  </div> 
+</div>
+{% endblock %}

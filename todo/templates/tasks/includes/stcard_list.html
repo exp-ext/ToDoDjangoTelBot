@@ -1,0 +1,41 @@
+{% load static %}
+{% load tz %}
+
+{% block style %}
+  <link rel="stylesheet" href="{% static 'css/stcard.css' %}">
+{% endblock %}
+
+<div class="stcard-container">
+    <div class="stcard">
+
+        {% if note.it_birthday %}
+
+            <div class="stcard-title">{{ note.server_datetime|timezone:timezone|date:"d M Y D" }}</div>
+
+            {% if note.picture_link %}
+              <img alt="image" src="{{ note.picture_link }}"/>
+            {% endif %}           
+            
+
+            <p>{{ note.text|safe|truncatechars_html:400  }}</p>
+
+        {% else %}
+
+            <div class="stcard-title">{{ note.server_datetime|timezone:timezone|date:"d M Y D в H:iч" }}</div>
+            {% if note.picture_link %}
+              <img alt="image" src="{{ note.picture_link }}"/>
+            {% endif %}
+
+            <p class="card-text">{{ note.text|safe|truncatechars_html:400  }}
+              <br>
+              <br>
+            - напомню в {{ note.remind_at|timezone:timezone|time:"H:iч" }}</p>
+
+        {% endif %}     
+
+
+        <a class="btn btn-outline-secondary" href="{% url 'tasks:task_edit' note.pk %}" class="card-link">изменить</a>
+        <a class="btn btn-outline-dark" href="{% url 'tasks:task_delete' note.pk %}" class="card-link">удалить</a>
+
+  </div>
+</div>

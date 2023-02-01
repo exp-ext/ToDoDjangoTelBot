@@ -43,12 +43,12 @@ class CelebratoryFriend(Create):
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        related_name='follower'
+        related_name='friend_follower'
     )
     friend = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        related_name='following'
+        related_name='friend_following'
     )
     gift = models.BooleanField(default=False)
     remind_in = models.IntegerField(
@@ -60,7 +60,7 @@ class CelebratoryFriend(Create):
         verbose_name = 'Подписка на праздники друзей'
         constraints = (models.UniqueConstraint(
             fields=('user', 'friend'),
-            name='unique_follower'),
+            name='unique_following_of_friend'),
         )
 
     def __str__(self):

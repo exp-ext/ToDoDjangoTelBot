@@ -42,10 +42,13 @@ class Signup:
             return JsonResponse({"error": "Only in the private chat type."})
 
         password = self.get_password(length=15)
-
         user, _ = User.objects.get_or_create(username=tel_user.id)
-        user.first_name = tel_user.first_name
-        user.last_name = tel_user.last_name
+
+        if tel_user.first_name and user.first_name != tel_user.first_name:
+            user.first_name = tel_user.first_name
+        if tel_user.last_name and user.last_name != tel_user.last_name:
+            user.last_name = tel_user.last_name
+
         user.set_password(password)
         user.save()
 

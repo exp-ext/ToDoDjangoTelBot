@@ -1,9 +1,9 @@
-
-    <!-- Использованы классы бустрапа: -->
-    <!-- border-top: создаёт тонкую линию сверху блока -->
-    <!-- text-center: выравнивает текстовые блоки внутри блока по центру -->
-    <!-- py-3: контент внутри размещается с отступом сверху и снизу -->         
-    <footer class="border-top text-center py-3">
-      <!-- тег span используется для добавления нужных стилей отдельным участкам текста --> 
-      <p>© {{ year }} Copyright Your <span style="color:red">To-</span>Do</p>    
+    <footer class="footer text-center py-1 bg-dark {% if is_main %}fixed-bottom{% endif %}">
+      <div class="container">
+        <p>
+          <span class="text-light">© {{ year }} Copyright Your</span>
+          <span style="color:red">To -</span>
+          <span class="text-light">Do</span>
+        </p>
+      </div>
     </footer>

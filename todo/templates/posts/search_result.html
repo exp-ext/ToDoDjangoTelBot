@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block title %} Поиск {% endblock %}
+
+{% block header %}    
+  <h1>Результаты поиска</h1>
+{% endblock %}
+
+{% block content %}
+  <div class="container py-5">
+  
+    {% include 'posts/includes/search.html' %} 
+  
+    {% if page_obj %}
+      {% include 'posts/includes/search_group.html' %}
+    {% else %}
+      {% include 'posts/includes/thinking-hand.html' %}
+    {% endif %}
+  </div>
+
+
+{% endblock %}

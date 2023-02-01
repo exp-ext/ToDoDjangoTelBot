@@ -67,10 +67,11 @@ INSTALLED_APPS = [
     # user agents parser
     'django_user_agents',
     # my app
-    'core',
-    'users',
-    'tasks',
-    'telbot',
+    'core.apps.CoreConfig',
+    'users.apps.UsersConfig',
+    'tasks.apps.TasksConfig',
+    'telbot.apps.TelbotConfig',
+    'posts.apps.PostsConfig',
 ]
 
 MIDDLEWARE = [
@@ -211,7 +212,8 @@ STATICFILES_FINDERS = (
 # MEDIA
 MEDIA_URL = '/media/'
 
-MEDIA_ROOT = '/app/web/media'
+UP_DIR = os.path.abspath(os.path.join(BASE_DIR, os.pardir))
+MEDIA_ROOT = f'{UP_DIR}/web/media' if DEBUG else '/app/web/media'
 
 # API
 REST_FRAMEWORK = {

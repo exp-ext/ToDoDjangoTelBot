@@ -15,6 +15,9 @@ from .loader import bot
 User = get_user_model()
 Group = django_apps.get_model(app_label='users', model_name='Group')
 Task = django_apps.get_model(app_label='tasks', model_name='Task')
+GroupConnections = django_apps.get_model(
+    app_label='users', model_name='GroupConnections'
+)
 
 app = Celery()
 
@@ -57,13 +60,10 @@ def sending_messages(tasks: QuerySet[Task],
             user_date = utc_date.astimezone(messages[recipient]['user_tz'])
             header = f'В {datetime.strftime(user_date, "%H:%M")}'
 
-        header = '' if task.it_birthday else f'<b>-- {header} -></b>\n'
-        picture = (
-            '<a href='
-            f'"{task.picture_link}">​​​​​​</a> ' if task.picture_link else ''
-        )
+        header = '' if task.it_birthday else f'<b>-- {header} -></b>'
+        picture = f'<a href="{task.picture_link}">​​​​​​</a>'
         messages[recipient]['reply_text'] += (
-            f'{header}{task.text}{picture}\n\n'
+            f'{header}{picture}\n{task.text}\n\n'
         )
 
         if not task.it_birthday:

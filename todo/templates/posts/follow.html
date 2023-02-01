@@ -8,14 +8,15 @@
 {% endblock %}
      
 {% block content %}
+  <div class="container">
 
     {% include 'posts/includes/switcher.html' %}
     
-    <div class="container">
       {% for post in page_obj %}      
         {% include 'posts/includes/post_list.html' %}        
       {% endfor %}
-    </div>   
+ 
+  </div>
 
   {% include 'posts/includes/paginator.html' %}
 

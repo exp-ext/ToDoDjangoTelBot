@@ -21,11 +21,11 @@ from django.urls import include, path
 from users.views import accounts_profile
 
 from . import views
-from .sitemap import StaticViewSitemap
+from .sitemap import DynamicViewSitemap, StaticViewSitemap
 
 SITEMAPS = {
     'static': StaticViewSitemap,
-    # 'dynamic': DynamicViewSitemap
+    'dynamic': DynamicViewSitemap
 }
 
 urlpatterns = [

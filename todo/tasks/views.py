@@ -1,5 +1,9 @@
+from datetime import datetime, timezone
+
 from core.views import linkages_check, paginator_handler
 from django.contrib.auth.decorators import login_required
+from django.db import models
+from django.db.models import F
 from django.http import HttpRequest, HttpResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, redirect, render
 
@@ -11,18 +15,49 @@ from .models import Task
 def tasks(request: HttpRequest) -> HttpResponse:
     """Отображает все заметки."""
     user = request.user
-    timezone = user.locations.first().timezone
+    user_timezone = user.locations.first().timezone
 
-    it_birthday = False
     if request.resolver_match.view_name == 'tasks:notes':
-        it_birthday = True
+        now = datetime.now(timezone.utc)
+        note_list = (
+            user.tasks.annotate(
+                relevance=models.Case(
+                    models.When(
+                        server_datetime__gte=now,
+                        then=1
+                    ),
+                    models.When(
+                        server_datetime__lt=now,
+                        then=2
+                    ),
+                    output_field=models.IntegerField(),
+                )).annotate(
+                timediff=models.Case(
+                    models.When(
+                        server_datetime__gte=now,
+                        then=F('server_datetime')-now
+                    ),
+                    models.When(
+                        server_datetime__lt=now,
+                        then=now-F('server_datetime')
+                    ),
+                    output_field=models.DurationField(),
+                )).exclude(
+                    it_birthday=True
+                ).order_by('relevance', 'timediff')
+        )
+    else:
+        note_list = (
+            user.tasks
+            .exclude(it_birthday=False)
+            .order_by('server_datetime__month', 'server_datetime__day')
+        )
 
-    note_list = user.tasks.exclude(it_birthday=it_birthday)
     page_obj = paginator_handler(request, note_list)
 
     context = {
         'page_obj': page_obj,
-        'timezone': timezone,
+        'timezone': user_timezone,
     }
     template = 'tasks/notes.html'
     return render(request, template, context)

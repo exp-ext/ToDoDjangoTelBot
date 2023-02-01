@@ -212,7 +212,7 @@ STATICFILES_FINDERS = (
 # MEDIA
 MEDIA_URL = '/media/'
 
-MEDIA_ROOT = f'{BASE_DIR}/web/media'    # '/app/web/media'
+MEDIA_ROOT = f'{BASE_DIR}/web/media' if DEBUG else '/app/web/media'
 
 # API
 REST_FRAMEWORK = {

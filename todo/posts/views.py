@@ -1,4 +1,4 @@
-from core.views import get_status_in_group, paginator_handler
+from core.views import get_status_in_group, linkages_check, paginator_handler
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect, render
@@ -150,6 +150,7 @@ def post_detail(request, post_id):
 
 @login_required
 def post_create(request):
+    linkages_check(request.user)
     form = PostForm(
         request.POST or None,
         files=request.FILES or None,
@@ -181,6 +182,8 @@ def post_edit(request, post_id):
 
     if post.author != request.user:
         return redirect('posts:post_detail', post_id=post_id)
+
+    linkages_check(request.user)
 
     form = PostForm(
         request.POST or None,

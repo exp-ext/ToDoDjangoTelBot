@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block title %} Публикации {% endblock %}
+     
+{% block content %}
+
+  <div class="container py-5">
+
+    {% include 'posts/includes/switcher.html' %}
+    {% include 'posts/includes/search.html' %}
+    
+    {% for post in page_obj %}  
+      {% include 'posts/includes/post_list.html' %}        
+    {% endfor %}      
+
+    {% include 'posts/includes/paginator.html' %}
+  </div> 
+
+{% endblock %}

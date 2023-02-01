@@ -16,18 +16,18 @@
 .hover-effects .button {
   --background: #275efe;
   --text: #fff;
-  --font-size: 16px;
+  --font-size: 14px;
   --duration: .44s;
   --move-hover: -4px;
   --shadow: 0 2px 8px -1px rgba(39, 94, 254, 0.32);
   --shadow-hover: 0 4px 20px -2px rgba(39, 94, 254, 0.5);
   --font-shadow: var(--font-size);
-  padding: 16px 32px;
+  padding: 10px 32px;
   font-family: "Roboto";
   font-weight: 500;
   line-height: var(--font-size);
   border-radius: 24px;
-  display: block;
+  display: flex;
   outline: none;
   text-decoration: none;
   font-size: var(--font-size);
@@ -37,6 +37,8 @@
   box-shadow: var(--shadow);
   transform: translateY(var(--y)) translateZ(0);
   transition: transform var(--duration) ease, box-shadow var(--duration) ease;
+  justify-content: center;
+  align-items: center
 }
 .hover-effects .button div {
   display: flex;

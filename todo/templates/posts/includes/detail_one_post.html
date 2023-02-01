@@ -1,0 +1,72 @@
+{% load thumbnail %}
+{% load static %}
+
+{% block style %}  
+  <link rel="stylesheet" href="{% static 'css/hover-effects.css' %}">
+{% endblock %}
+
+
+<div class="row">  
+    <aside class="col-12 col-md-3">
+      <div class="hover-effects">
+      <ul class="list-group">
+        <li class="list-group-item bg-secondary">
+          Дата публикации: {{ post.created_at|date:"d E Y" }}
+        </li>        
+        {% if post.group %}
+            <li class="list-group-item  bg-secondary">
+            Группа: {{ post.group }}
+            <p></p>
+              <a type="button" class="button fast white" href="{% url 'posts:group_list' post.group.slug%}">
+                все &#160 записи &#160 группы
+              </a>
+            </li>
+        {% endif %} 
+        <li class="list-group-item  bg-secondary">
+          Автор: {{ post.author.get_full_name }}
+        </li>
+        <li class="list-group-item justify-content-between align-items-center bg-secondary">
+          Всего постов автора:  <span > {{ authors_posts_count }} </span>
+          <p></p>
+          <a type="button" class="button fast white" href="{% url 'posts:profile' post.author %}">
+            все &#160 посты &#160 пользователя            
+          </a>
+        </li>
+        <li class="list-group-item bg-secondary">
+          {% if post.author == user %}  
+          <li class="list-group-item bg-secondary">      
+            <a class="button" href="{% url 'posts:post_edit' post.pk  %}">
+              изменить&#160пост
+            </a> 
+          </li>
+          <li class="list-group-item  bg-secondary">
+            <a class="button reverse dark" href="{% url 'posts:post_delete' post.pk %}">
+              удалить&#160пост
+            </a> 
+          </li>
+          {% endif %}
+        </li>
+      </ul>
+    </div> 
+    </aside>
+
+    <article class="col-12 col-md-9">
+      {% thumbnail post.image "x339" as im %}
+        <img class="card-img my-2" src="{{ im.url }}">
+      {% endthumbnail %}
+      <p>
+       {{ post.text|safe }} 
+      </p>
+      {% include 'posts/includes/comments.html' %}
+    </article>   
+</div>
+
+<a class="dribbble"
+href="https://dribbble.com/shots/7441241-Button-Hover-Effects"
+  target="_blank">
+<img src="https://cdn.dribbble.com/assets/dribbble-ball-mark-2bd45f09c2fb58dbbfb44766d5d1d07c5a12972d602ef8b32204d28fa3dda554.svg"
+  alt=""></a>
+
+{% block javascript %}
+  <script  src="{% static 'js/script.js' %}"></script>
+{% endblock %}

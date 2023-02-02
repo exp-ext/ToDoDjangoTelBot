@@ -1,76 +1,75 @@
 {% extends "base.html" %}
 {% load static %}
 
-
 {% block title %}Контакты{% endblock %}
 
-
 {% block style %}
-<meta name="description" content="Контакты для связи с разработчиком"/>
-<meta name="keywords" content="разработка приложений, WEB разработка, разработчик"> 
+  <meta name="description" content="Контакты для связи с разработчиком"/>
+  <meta name="keywords" content="разработка приложений, WEB разработка, разработчик"> 
   <link rel="stylesheet" href="{% static 'css/about.css' %}">
 {% endblock %}
 
 
 {% block content %}
-  <div class="container py-5 col-lg-4">
+<div class="container p-5">
+  <div class="wrapper">
 
-    <div class="wrapper">
-        <br><br> 
-            <div class="col-md-2" style="display: inline-flex;">
-                <img class="rounded-circle" width="140" height="140" src="{% static 'img/about/logotype.png' %}"></img>
-                <h3>КОНТАКТЫ:</h3>
-            </div> 
-        <br>            
+    <div class="row align-items-start">            
+      <div class="col-md-5">
+        <img class="rounded-circle" width="140" height="140" src="{% static 'img/about/logotype.png' %}"></img>
+      </div>
+      <div class="col-md-5">
+        <h3>КОНТАКТЫ:</h3>
+      </div>
+    </div>          
 
-        <div class="ico-wrap"> <i class="fa fa-map-marker ico-contact"></i>
-        </div>
-        <div class="descript-wrapper">
-            <h4 class="aio-icon-title">Наш фактический адрес:</h4>
-            <div class="aio-icon-description">
-                197227, г. Санкт-Петербург, пр-т. Сизова,
-                <br>дом 12, корпус 1</div>
-        </div>
-    
-        <span class="clearfix"></span>
-    
-        <div class="ico-wrap"> <i class="fa fa-clock-o ico-contact"></i>
-        </div>
-        <div class="descript-wrapper">
-            <h4 class="aio-icon-title">Время работы техподдержки:</h4>
-            <div class="aio-icon-description">
-                пн.-сб. с 9:00 до 20:00.
-                <br>вс — выходной</div>
-        </div>
-    
-        <span class="clearfix"></span>
-    
-        <div class="ico-wrap">
-            <i class="fa fa-envelope ico-contact"></i>
-        </div>
-        <div class="descript-wrapper">
-            <h4 class="aio-icon-title">Электронная почта:</h4>
-            <div class="aio-icon-description">
-                yourtodo@yandex.ru
-            </div>
-        </div>
-    
-        <span class="clearfix"></span>
-    
-        <div class="ico-wrap">
-            <i class="fa fa-phone ico-contact"></i>
-        </div>
-        <div class="descript-wrapper">
-            <h4 class="aio-icon-title">Телефон для связи:</h4>
-            <div class="aio-icon-description">
-                +7 (981) 860-56-36<br>
-                <a href="https://t.me/Borokin" target="_blank" rel="noopener"><img src="https://img.shields.io/badge/Telegram-Messaging-blue" /></a>
-            </div>
-        </div>
-    
-        <span class="clearfix"></span>
-    
+    <div class="ico-wrap"> <i class="fa fa-map-marker ico-contact"></i></div>
+
+    <div class="descript-wrapper">
+      <h4 class="aio-icon-title">Наш фактический адрес:</h4>
+      <div class="aio-icon-description">
+          197227, г. Санкт-Петербург, пр-т. Сизова,
+          <br>дом 12, корпус 1
+      </div>
     </div>
+    
+    <span class="clearfix"></span>
+    
+    <div class="ico-wrap"> <i class="fa fa-clock-o ico-contact"></i></div>
 
-  </div> <!-- container -->
+    <div class="descript-wrapper">
+      <h4 class="aio-icon-title">Время работы техподдержки:</h4>
+      <div class="aio-icon-description">
+        пн.-сб. с 9:00 до 20:00.
+        <br>вс — выходной</div>
+    </div>
+    
+      <span class="clearfix"></span>
+    
+      <div class="ico-wrap">
+        <i class="fa fa-envelope ico-contact"></i>
+      </div>
+      <div class="descript-wrapper">
+        <h4 class="aio-icon-title">Электронная почта:</h4>
+        <div class="aio-icon-description">
+          yourtodo@yandex.ru
+        </div>
+      </div>
+    
+      <span class="clearfix"></span>
+    
+      <div class="ico-wrap">
+          <i class="fa fa-phone ico-contact"></i>
+      </div>
+      <div class="descript-wrapper">
+        <h4 class="aio-icon-title">Телефон для связи:</h4>
+        <div class="aio-icon-description">
+          +7 (981) 860-56-36<br>
+          <a href="https://t.me/Borokin" target="_blank" rel="noopener"><img src="https://img.shields.io/badge/Telegram-Messaging-blue" /></a>
+        </div>
+      </div>    
+      <span class="clearfix"></span>  
+
+  </div>
+</div>
 {% endblock %} 

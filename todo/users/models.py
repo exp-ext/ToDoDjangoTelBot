@@ -29,7 +29,8 @@ class Group(models.Model):
     description = models.TextField(
         verbose_name='Описание группы',
         max_length=200,
-        blank=True
+        blank=True,
+        null=True
     )
     link = models.TextField(
         verbose_name='Пригласительная ссылка для публичных групп',

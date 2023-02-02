@@ -1,7 +1,8 @@
 from django import forms
 from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
-from users.models import Group
+
+from .models import Group
 
 User = get_user_model()
 

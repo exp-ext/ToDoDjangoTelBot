@@ -17,7 +17,7 @@
 	box-shadow: 0 0 40px rgba(0, 0, 0, 0.2), 0 0 40px rgba(0, 0, 0, 0.2);
 	border-radius: 6px;
 	flex: 1 0 300px;
-	max-width: 400px;
+	max-width: 300px;
 	align-self: center;
 }
 .stcard img {

@@ -85,8 +85,14 @@ def get_status_in_group(group: QuerySet[Group], user_id: int) -> bool:
     """
     try:
         chat = bot.get_chat(group.chat_id)
+        flag = False
         if group.description != chat.description:
             group.description = chat.description
+            flag = True
+        if group.link != chat.link:
+            group.link = chat.link
+            flag = True
+        if flag:
             group.save()
         result = bot.get_chat_member(group.chat_id, user_id)
         return result.status

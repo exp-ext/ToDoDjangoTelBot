@@ -3,7 +3,7 @@ from datetime import datetime, timezone
 from core.views import linkages_check, paginator_handler
 from django.contrib.auth.decorators import login_required
 from django.db import models
-from django.db.models import F
+from django.db.models import F, Q
 from django.http import HttpRequest, HttpResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, redirect, render
 
@@ -16,11 +16,15 @@ def tasks(request: HttpRequest) -> HttpResponse:
     """Отображает все заметки."""
     user = request.user
     user_timezone = user.locations.first().timezone
+    groups = user.groups_connections.values('group_id')
+    groups_id = tuple(x['group_id'] for x in groups)
 
     if request.resolver_match.view_name == 'tasks:notes':
         now = datetime.now(timezone.utc)
         note_list = (
-            user.tasks.annotate(
+            Task.objects
+            .filter(Q(user=user) | Q(group_id__in=groups_id))
+            .annotate(
                 relevance=models.Case(
                     models.When(
                         server_datetime__gte=now,
@@ -48,7 +52,8 @@ def tasks(request: HttpRequest) -> HttpResponse:
         )
     else:
         note_list = (
-            user.tasks
+            Task.objects
+            .filter(Q(user=user) | Q(group_id__in=groups_id))
             .exclude(it_birthday=False)
             .order_by('server_datetime__month', 'server_datetime__day')
         )

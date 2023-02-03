@@ -1,6 +1,7 @@
 from core.views import get_status_in_group, linkages_check, paginator_handler
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
+from django.db.models import Q
 from django.shortcuts import get_object_or_404, redirect, render
 from users.models import Group
 
@@ -76,11 +77,12 @@ def group_posts(request, slug):
 
     if status in admin_status:
         is_admin = True
+    elif group.link:
+        pass    # группа публичная
     elif status != 'member':
         redirect('posts:index_posts')
 
     post_list = group.posts.all()
-
     page_obj = paginator_handler(request, post_list)
 
     context = {
@@ -95,18 +97,18 @@ def group_posts(request, slug):
 def profile(request, username):
     user = get_object_or_404(User, username=username)
 
+    groups_id = []
+    if request.user.is_authenticated:
+        groups = request.user.groups_connections.values('group_id')
+        groups_id = tuple(x['group_id'] for x in groups)
+
     user_posts = (
         user.posts
-        .exclude(group=True, group__link__isnull=True)
-        .select_related('group')
-    )
-    if request.user.is_authenticated:
-        items = request.user.groups_connections.prefetch_related(
-            'group__posts'
+        .filter(
+            Q(group=None)
+            | Q(group_id__in=groups_id)
+            | Q(group__link__isnull=False))
         )
-        for item in items:
-            posts = item.group.posts.all()
-            user_posts = user_posts | posts
 
     page_obj = paginator_handler(request, user_posts)
 

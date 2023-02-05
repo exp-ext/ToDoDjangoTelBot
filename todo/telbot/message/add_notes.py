@@ -80,7 +80,7 @@ def add_notes(update: Update, context: CallbackContext):
                 send_service_message(chat.id, reply_text)
                 return ConversationHandler.END
 
-        birthday = pars.it_birthday()
+        birthday = pars.birthday
         repeat = 'Y' if birthday else pars.period_repeat
 
         if pars.user_date.hour == 0 and pars.user_date.minute == 0:

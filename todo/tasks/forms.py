@@ -13,7 +13,6 @@ from .models import Task
 class TaskForm(forms.ModelForm):
     server_datetime = forms.DateTimeField(
         label='Дата и время мероприятия',
-        help_text='Для ДР время можно оставить пустым',
         widget=MinimalSplitDateTimeMultiWidget()
     )
     it_birthday = forms.BooleanField(

@@ -49,7 +49,7 @@ def show_at_date(update: Update, context: CallbackContext):
     del_id = (context.user_data['del_message'], update.message.message_id)
     for id in del_id:
         context.bot.delete_message(chat.id, id)
-    show(update, context, pars.server_date.date())
+    show(update, context, pars.server_date)
     return ConversationHandler.END
 
 

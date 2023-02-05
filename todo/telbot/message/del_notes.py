@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
@@ -48,9 +48,13 @@ def del_notes(update: Update, context: CallbackContext):
         context.bot.delete_message(chat.id, id)
 
     if pars.server_date:
+        time_range = [
+            pars.server_date,
+            pars.server_date + timedelta(days=1)
+        ]
         tasks = user.tasks.filter(
-            server_datetime=pars.server_date.date(),
-            text__icontains=pars.only_message[1:]
+            server_datetime__range=time_range,
+            text__contains=pars.only_message[1:]
         )
         count = len(tasks)
 

@@ -34,11 +34,13 @@ class MinimalSplitDateTimeMultiWidget(MultiWidget):
         if date_str == time_str == '':
             return None
 
-        if time_str == '':
+        if data.get('it_birthday'):
             time_str = '00:00'
+            timezone = pytz.utc
+        else:
+            timezone = pytz.timezone(data.get('tz'))
 
         my_datetime = datetime.strptime(
             date_str + ' ' + time_str, "%Y-%m-%d %H:%M"
         )
-        timezone = pytz.timezone(data.get('tz'))
         return make_aware(my_datetime, timezone)

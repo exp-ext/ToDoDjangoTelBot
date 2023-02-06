@@ -46,11 +46,15 @@ def show_at_date(update: Update, context: CallbackContext):
     pars = TaskParse(update.message.text, user_locally.timezone)
     pars.parse_without_parameters()
 
-    del_id = (context.user_data['del_message'], update.message.message_id)
-    for id in del_id:
-        context.bot.delete_message(chat.id, id)
-    show(update, context, pars.server_date)
-    return ConversationHandler.END
+    try:
+        del_id = (context.user_data['del_message'], update.message.message_id)
+        for id in del_id:
+            context.bot.delete_message(chat.id, id)
+        show(update, context, pars.user_date)
+    except Exception as error:
+        raise KeyError(error)
+    finally:
+        return ConversationHandler.END
 
 
 def show_all_notes(update: Update, context: CallbackContext):
@@ -148,10 +152,16 @@ def show(update: Update, context: CallbackContext,
                 'в планах есть записи 📜:</strong>\n\n'
             )
     else:
-        note_sort = (
-            f'</strong>{update.effective_user.first_name}, '
-            'у нас нет никаких планов 👌</strong>\n'
-        )
+        if it_birthday:
+            note_sort = (
+                f'<strong>{update.effective_user.first_name}, '
+                'не найдены записи о Днях Рождений 🤷🏼</strong>\n'
+            )
+        else:
+            note_sort = (
+                f'<strong>{update.effective_user.first_name}, '
+                'у нас нет никаких планов 🙅🏼‍♀️</strong>\n'
+            )
     for n in notes:
         note_sort = note_sort + f'{n}\n'
 

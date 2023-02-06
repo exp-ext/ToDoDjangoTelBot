@@ -1,3 +1,6 @@
+import random
+import string
+
 import pytz
 from core.models import Create
 from django.contrib.auth.models import AbstractUser
@@ -48,6 +51,10 @@ class Group(models.Model):
 
     def save(self, *args, **kwargs):
         self.slug = slugify(self.title)[:100]
+        if Group.objects.get(slug=self.slug) or not self.slug:
+            self.slug = ''.join(
+                random.choices(string.ascii_lowercase, k=15)
+            )
         super().save(*args, **kwargs)
 
 

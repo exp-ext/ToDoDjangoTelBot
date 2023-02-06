@@ -40,46 +40,57 @@ def del_notes(update: Update, context: CallbackContext):
     )
     user_locally = user.locations.first()
 
-    pars = TaskParse(update.message.text, user_locally.timezone)
-    pars.parse_with_parameters()
+    text = update.message.text.replace('  ', ' ').replace('- ', '')
 
-    del_id = (context.user_data['del_message'], update.message.message_id)
-    for id in del_id:
-        context.bot.delete_message(chat.id, id)
+    try:
+        pars = TaskParse(text, user_locally.timezone)
+        pars.parse_without_parameters()
 
-    if pars.server_date:
-        time_range = [
-            pars.server_date,
-            pars.server_date + timedelta(days=1)
-        ]
-        tasks = user.tasks.filter(
-            server_datetime__range=time_range,
-            text__contains=pars.only_message[1:]
-        )
-        count = len(tasks)
+        del_id = (context.user_data['del_message'], update.message.message_id)
+        for id in del_id:
+            context.bot.delete_message(chat.id, id)
 
-        if count > 0:
-            tasks.delete()
-            reply_text = (
-                f'Напоминани{"е" if count == 1 else "я"} с текстом '
-                f'*<{pars.only_message}>*\n'
-                'на дату: '
-                f'*{datetime.strftime(pars.user_date, "%d.%m.%Y")}*\n'
-                f'Удален{"о" if count == 1 else "ы"} безвозвратно'
-                f'{"." if count==1 else "в количестве "+str(count)+"шт."}'
-            )
+        if pars.server_date:
+            if pars.user_date.hour == 0 and pars.user_date.minute == 0:
+                time_range = [
+                    pars.server_date,
+                    pars.server_date + timedelta(days=1)
+                ]
+                tasks = user.tasks.filter(
+                    server_datetime__range=time_range,
+                    text__icontains=pars.only_message
+                )
+            else:
+                tasks = user.tasks.filter(
+                    server_datetime=pars.server_date,
+                    text__icontains=pars.only_message
+                )
+            count = len(tasks)
+
+            if count > 0:
+                tasks.delete()
+                reply_text = (
+                    f'Напоминани{"е" if count == 1 else "я"} с текстом '
+                    f'*<{pars.only_message}>*\n'
+                    'на дату: '
+                    f'*{datetime.strftime(pars.user_date, "%d.%m.%Y")}*\n'
+                    f'Удален{"о" if count == 1 else "ы"} безвозвратно'
+                    f'{"." if count==1 else "в количестве "+str(count)+"шт."}'
+                )
+            else:
+                reply_text = (
+                    f'Не удалось найти напоминание *<{pars.only_message}>*\n'
+                    'на дату: '
+                    f'*{datetime.strftime(pars.user_date, "%d.%m.%Y")}*\n'
+                    'Попробуйте снова.'
+                )
         else:
             reply_text = (
-                f'Не удалось найти напоминание *<{pars.only_message}>*\n'
-                'на дату: '
-                f'*{datetime.strftime(pars.user_date, "%d.%m.%Y")}*\n'
-                'Попробуйте снова.'
+                f'*{update.message.from_user.first_name}*, '
+                'не удалось разобрать что это за дата 🧐. Попробуйте снова 🙄.'
             )
-    else:
-        reply_text = (
-            f'*{update.message.from_user.first_name}*, '
-            'не удалось разобрать что это за дата 🧐. Попробуйте снова 🙄.'
-        )
-
-    send_service_message(chat.id, reply_text, 'Markdown')
-    return ConversationHandler.END
+        send_service_message(chat.id, reply_text, 'Markdown')
+    except Exception as error:
+        raise KeyError(error)
+    finally:
+        return ConversationHandler.END

@@ -12,7 +12,7 @@ https://docs.djangoproject.com/en/4.1/ref/settings/
 
 import os
 import socket
-from pathlib import Path
+from pathlib import Path, PurePath
 
 from dotenv import load_dotenv
 
@@ -94,7 +94,7 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = 'todo.urls'
-TEMPLATES_DIR = os.path.join(BASE_DIR, 'templates')
+TEMPLATES_DIR = os.fspath(PurePath(BASE_DIR, 'templates'))
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
@@ -200,9 +200,7 @@ STATIC_URL = '/static/'
 
 STATIC_ROOT = '/app/web/static'
 
-STATICFILES_DIRS = (
-    os.path.join(BASE_DIR, 'static'),
-)
+STATICFILES_DIRS = (os.fspath(PurePath(BASE_DIR, 'static')),)
 
 STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.FileSystemFinder',
@@ -212,7 +210,7 @@ STATICFILES_FINDERS = (
 # MEDIA
 MEDIA_URL = '/media/'
 
-UP_DIR = os.path.abspath(os.path.join(BASE_DIR, os.pardir))
+UP_DIR = BASE_DIR.resolve().parent
 MEDIA_ROOT = f'{UP_DIR}/web/media' if DEBUG else '/app/web/media'
 
 # API

@@ -14,7 +14,9 @@ import os
 import socket
 from pathlib import Path, PurePath
 
+import sentry_sdk
 from dotenv import load_dotenv
+from sentry_sdk.integrations.django import DjangoIntegration
 
 load_dotenv()
 
@@ -42,6 +44,8 @@ SECRET_KEY = os.getenv('DJANGO_SECRET_KEY')
 DEBUG = int(os.environ.get('DEBUG', default=0))
 
 ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS").split(" ")
+
+SENTRY_KEY = os.getenv('SENTRY_KEY')
 
 # Application definition
 INSTALLED_APPS = [
@@ -289,3 +293,18 @@ USER_AGENTS_CACHE = 'default'
 DEFENDER_REDIS_URL = None if DEBUG else REDIS_URL
 DEFENDER_LOCKOUT_URL = 'block'
 DEFENDER_COOLOFF_TIME = 600
+
+# SENTRY MONITORING
+sentry_sdk.init(
+    dsn=f'https://{SENTRY_KEY}',
+    integrations=(DjangoIntegration(),),
+
+    # Set traces_sample_rate to 1.0 to capture 100%
+    # of transactions for performance monitoring.
+    # We recommend adjusting this value in production.
+    traces_sample_rate=1.0,
+
+    # If you wish to associate users to errors (assuming you are using
+    # django.contrib.auth) you may enable sending PII data.
+    send_default_pii=True
+)

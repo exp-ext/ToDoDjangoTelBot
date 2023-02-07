@@ -3,7 +3,7 @@ import string
 from typing import Any, Dict
 
 from django.conf import settings
-from django.contrib.auth import authenticate, get_user_model
+from django.contrib.auth import authenticate, get_user_model, login
 from django.contrib.auth.decorators import login_required
 from django.db.models.query import QuerySet
 from django.http import (HttpRequest, HttpResponse, HttpResponseRedirect,
@@ -62,7 +62,7 @@ class Signup:
             'Вы успешно зарегистрированы в [проекте Your To-Do]'
             f'(https://{settings.DOMEN}/).\n'
             'Ниже ссылка, логин и пароль для входа в личный кабинет:\n\n'
-            f'[www.yourtodo.ru🕋⤵️](https://{settings.DOMEN}/auth/login/)\n',
+            f'[🕋⤵️](https://{settings.DOMEN}/auth/login/)\n',
             f'{tel_user.id}\n',
             f'{password}\n',
             # 'А сейчас, можно просто нажать на [ВХОД🕋]'
@@ -118,7 +118,7 @@ def login_token(request: HttpRequest, user_id: int = None,
     user = authenticate(request, username=user_id, password=password)
     if not user:
         return redirect('users:login')
-    login_token(request, user)
+    login(request, user)
     return redirect('index')
 
 

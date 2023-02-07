@@ -73,7 +73,7 @@ class ProfileForm(forms.ModelForm):
         image = self.cleaned_data.get("image")
         if not image:
             raise forms.ValidationError("No image!")
-        if image.size > 1000000:
+        if image.size > 10000000:
             raise forms.ValidationError(
                 "Размер вашего фото превышает разрешенный в 1мб."
             )

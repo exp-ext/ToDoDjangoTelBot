@@ -56,14 +56,6 @@ class TaskParse:
                     self.period_repeat = item
         return division_message[0]
 
-    def it_birthday(self) -> bool:
-        """Определяет ДР в сообщении."""
-        for word in TaskParse.birthday_list:
-            if word in self.message:
-                self.birthday = True
-                break
-        return self.birthday
-
     def _parse(self, message: str) -> None:
         """Дифференцирует текст определяя значения атрибутов класса."""
         pattern = r'(\d+)[\.](\d+)[\.]?'
@@ -89,11 +81,19 @@ class TaskParse:
 
             if first_match:
                 date = first_match[1]
+
                 user_tz = pytz.timezone(self.time_zone)
                 self.user_date = user_tz.localize(date)
 
                 utc = pytz.utc
-                self.server_date = self.user_date.astimezone(utc)
+
+                if self.it_birthday:
+                    self.server_date = utc.localize(
+                        date.replace(hour=0, minute=0, second=0, microsecond=0)
+                    )
+                else:
+                    self.server_date = self.user_date.astimezone(utc)
+
                 message = message.replace(first_match[0], '').strip()
                 if message == '':
                     self.only_message = ''
@@ -112,3 +112,12 @@ class TaskParse:
         """Распарсит сообщение без параметрами."""
         message = self.message
         self._parse(message)
+
+    @property
+    def it_birthday(self) -> bool:
+        """Определяет ДР в сообщении."""
+        for word in TaskParse.birthday_list:
+            if word in self.message:
+                self.birthday = True
+                break
+        return self.birthday

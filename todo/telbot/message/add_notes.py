@@ -43,76 +43,81 @@ def add_notes(update: Update, context: CallbackContext):
     )
     user_locally = user.locations.first()
 
-    pars = TaskParse(update.message.text, user_locally.timezone)
-    pars.parse_with_parameters()
+    try:
+        pars = TaskParse(update.message.text, user_locally.timezone)
+        pars.parse_with_parameters()
 
-    if chat.type == 'private':
-        group = None
-    else:
-        group = get_object_or_404(
-            Group,
-            chat_id=chat.id
-        )
-    message = pars.only_message
-
-    del_id = (context.user_data['del_message'], update.message.message_id)
-    for id in del_id:
-        context.bot.delete_message(chat.id, id)
-
-    if pars.server_date:
-        start_datetime = pars.server_date - timedelta(minutes=60)
-        end_datetime = pars.server_date + timedelta(minutes=60)
-        if group:
-            tasks = group.tasks.filter(
-                server_datetime__range=[start_datetime, end_datetime],
-                group=group)
+        if chat.type == 'private':
+            group = None
         else:
-            tasks = user.tasks.filter(
-                server_datetime__range=[start_datetime, end_datetime]
+            group = get_object_or_404(
+                Group,
+                chat_id=chat.id
             )
-        for task in tasks:
-            simile = similarity(task.text, message)
-            if simile > 0.62:
-                reply_text = (
-                    'Очень похожее напоминание присутствует в задачах.\n'
-                    'Запись отклонена.'
+        message = pars.only_message
+
+        del_id = (context.user_data['del_message'], update.message.message_id)
+        for id in del_id:
+            context.bot.delete_message(chat.id, id)
+
+        if pars.server_date:
+            start_datetime = pars.server_date - timedelta(minutes=60)
+            end_datetime = pars.server_date + timedelta(minutes=60)
+            if group:
+                tasks = group.tasks.filter(
+                    server_datetime__range=[start_datetime, end_datetime],
+                    group=group)
+            else:
+                tasks = user.tasks.filter(
+                    server_datetime__range=[start_datetime, end_datetime]
                 )
-                send_service_message(chat.id, reply_text)
-                return ConversationHandler.END
+            for task in tasks:
+                simile = similarity(task.text, message)
+                if simile > 0.62:
+                    reply_text = (
+                        'Очень похожее напоминание присутствует в задачах.\n'
+                        'Запись отклонена.'
+                    )
+                    send_service_message(chat.id, reply_text)
+                    return ConversationHandler.END
 
-        birthday = pars.it_birthday()
-        repeat = 'Y' if birthday else pars.period_repeat
+            birthday = pars.birthday
+            repeat = 'Y' if birthday else pars.period_repeat
 
-        if pars.user_date.hour == 0 and pars.user_date.minute == 0:
-            text = ''
-            remind_at = pars.user_date + timedelta(hours=8)
-        else:
-            text = (
-                f'на время: *{datetime.strftime(pars.user_date, "%H:%M")}*\n'
+            if pars.user_date.hour == 0 and pars.user_date.minute == 0:
+                text = ''
+                remind_at = pars.user_date + timedelta(hours=8)
+            else:
+                text = (
+                    'на время: '
+                    f'*{datetime.strftime(pars.user_date, "%H:%M")}*\n'
+                )
+                remind_at = None
+
+            Task.objects.create(
+                user=user,
+                group=group,
+                server_datetime=pars.server_date,
+                text=message,
+                remind_at=remind_at,
+                reminder_period=repeat,
+                it_birthday=birthday
             )
-            remind_at = None
 
-        Task.objects.create(
-            user=user,
-            group=group,
-            server_datetime=pars.server_date,
-            text=message,
-            remind_at=remind_at,
-            reminder_period=repeat,
-            it_birthday=birthday
-        )
+            reply_text = (
+                f'Напоминание: *{pars.only_message}*\n'
+                'Создано на дату: '
+                f'*{datetime.strftime(pars.user_date, "%d.%m.%Y")}*\n'
+                f'{text}'
+            )
+        else:
+            reply_text = (
+                f'*{update.message.from_user.first_name}*, '
+                'не удалось разобрать что это за дата 🧐. Попробуйте снова 🙄.'
+            )
 
-        reply_text = (
-            f'Напоминание: *{pars.only_message}*\n'
-            'Создано на дату: '
-            f'*{datetime.strftime(pars.user_date, "%d.%m.%Y")}*\n'
-            f'{text}'
-        )
-    else:
-        reply_text = (
-            f'*{update.message.from_user.first_name}*, '
-            'не удалось разобрать что это за дата 🧐. Попробуйте снова 🙄.'
-        )
-
-    send_service_message(chat.id, reply_text, 'Markdown')
-    return ConversationHandler.END
+        send_service_message(chat.id, reply_text, 'Markdown')
+    except Exception as error:
+        raise KeyError(error)
+    finally:
+        return ConversationHandler.END

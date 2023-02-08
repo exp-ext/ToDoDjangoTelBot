@@ -23,7 +23,7 @@ app.conf.beat_schedule = {
     },
     'set_ip': {
         'task': 'core.tasks.set_ip_to_dns',
-        'schedule': crontab(minute='*/5'),
+        'schedule': crontab(hour='*/2'),
     },
     'send-birthdays': {
         'task': 'telbot.tasks.check_birthdays',

@@ -51,7 +51,7 @@ class Group(models.Model):
 
     def save(self, *args, **kwargs):
         self.slug = slugify(self.title)[:100]
-        if Group.objects.get(slug=self.slug) or not self.slug:
+        if not self.slug or Group.objects.get(slug=self.slug):
             self.slug = ''.join(
                 random.choices(string.ascii_lowercase, k=15)
             )

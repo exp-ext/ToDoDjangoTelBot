@@ -3,7 +3,7 @@ from django.core.management.base import BaseCommand, CommandError
 
 
 class Command(BaseCommand):
-    help = 'Конвертор данных cvs to db.sqlite3'
+    help = 'Проверка и назначение IP при ёго несоответствии с DNS'
 
     def handle(self, *args, **options):
         try:

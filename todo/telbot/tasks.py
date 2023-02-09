@@ -14,6 +14,10 @@ from .loader import bot
 
 User = get_user_model()
 Group = django_apps.get_model(app_label='users', model_name='Group')
+GroupMailing = django_apps.get_model(
+    app_label='users',
+    model_name='GroupMailing'
+)
 Task = django_apps.get_model(app_label='tasks', model_name='Task')
 GroupConnections = django_apps.get_model(
     app_label='users', model_name='GroupConnections'
@@ -118,7 +122,9 @@ def check_birthdays() -> str:
 @app.task
 def send_forismatic_quotes() -> str:
     """Рассылка цитат великих людей на русском языке от АПИ forismatic."""
-    groups = Group.objects.all()
+    mailing_list = GroupMailing.objects.select_related('group')
+    count = 0
+
     request = [
         'http://api.forismatic.com/api/1.0/',
         {
@@ -127,19 +133,21 @@ def send_forismatic_quotes() -> str:
             'lang': 'ru',
         }
     ]
-    for group in groups:
-        try:
-            response = requests.get(*request)
-            msg = (
-                '*Мысли великих людей:*\n'
-                + response.text
-            )
-            bot.send_message(
-                chat_id=group.chat_id,
-                text=msg,
-                parse_mode=ParseMode.MARKDOWN
-            )
-            time.sleep(5)
-        except Exception:
-            continue
-    return f'Quotes were sent to {len(groups)} groups'
+    for mailing_groups in mailing_list:
+        if mailing_groups.mailing_type == 'forismatic_quotes':
+            try:
+                response = requests.get(*request)
+                msg = (
+                    '*Мысли великих людей:*\n'
+                    + response.text
+                )
+                bot.send_message(
+                    chat_id=mailing_groups.group.chat_id,
+                    text=msg,
+                    parse_mode=ParseMode.MARKDOWN
+                )
+                count += 1
+                time.sleep(5)
+            except Exception:
+                continue
+    return f'Quotes were sent to {count} groups'

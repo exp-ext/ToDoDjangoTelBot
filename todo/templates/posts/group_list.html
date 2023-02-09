@@ -1,10 +1,13 @@
 {% extends "base.html" %}
 {% load thumbnail %}
+{% load static %}
+
 {% block title %} Записи сообщества {{ group.title }} {% endblock %}
 
 {% block style %}
   <meta name="description" content="Ваша группа, Ваши Заметки - Организуйте общие мысли с легкостью с Your ToDo!"/>
   <meta name="keywords" content="Telegram, заметки, организация заметок, Telegram инструмент, группа">
+  <link rel="stylesheet" href="{% static 'css/toggle-radio.css' %}">
 {% endblock %}
 
 {% block header %} 
@@ -13,6 +16,7 @@
     <div class="py-3">
 
       <div class="card shadow mb-3 rounded text-center bg-secondary">
+
         <div class="card-body">
           <h1 class="card-header">{{ group.title }}</h1>
           {% if group.description %}<p class="card-text p-3">Описание: "{{ group.description }}"</p>{% endif %}
@@ -21,24 +25,40 @@
       
 
         {% if is_admin %}
-          <ul class="list-group list-group-horizontal">
-            <li class="list-group-item bg-secondary">
-              <p>Рассылка "Мысли великих людей"</p>
-              <div class="btn-group" role="group" aria-label="Базовая группа переключателей радио">      
-                <input type="radio" class="btn-check" name="btnradio" id="btnradio1" autocomplete="off" checked>
-                <label class="btn btn-outline-dark" for="btnradio1">Включить</label>        
-                <input type="radio" class="btn-check" name="btnradio" id="btnradio2" autocomplete="off">
-                <label class="btn btn-outline-dark" for="btnradio2">Выключить</label>
-              </div>
-            </li>
-          </ul>
-        {% endif  %}
+          <form actions="{% url 'posts:group_list' group.slug %}" method="POST">
+            {% csrf_token %}
+
+            <fieldset>
+            <ul class="list-group list-group-horizontal">
+              <li class="list-group-item bg-secondary">
+                <p>Рассылка "Мысли великих людей"</p>
+                <div class="btn-group" role="group" aria-label="Базовая группа переключателей радио">
+                  {% for radio in form.forismatic_quotes %}
+                    <input type="radio" class="btn-check" id="{{ radio.id_for_label }}" autocomplete="off"                  
+                      {% if forism_check == False and radio.choice_label == "Выключена" %}
+                        checked
+                      {% elif forism_check == True and radio.choice_label == "Включена" %}
+                        checked
+                      {% endif %}
+                      {{ radio.tag }}
+
+                    <label class="btn btn-outline-dark" for="{{ radio.id_for_label }}">
+                      {{ radio.choice_label }}
+                    </label>
+                  {% endfor %}
+                </div>
+              </li>
+            </ul>
+            </fieldset>
+
+          </form>
+        {% endif %}
+
       </div>
 
     </div>
   </div>
   
-
 {% endblock %}
 
 {% block content %}

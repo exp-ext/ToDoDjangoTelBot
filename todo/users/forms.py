@@ -40,9 +40,9 @@ class ProfileForm(forms.ModelForm):
             'birthday',
         )
         widgets = {
-            'image': forms.FileInput(attrs={
-                'onchange': "form.submit()"
-            })
+            'image': forms.FileInput(
+                attrs={'onchange': 'form.submit()'}
+            )
         }
         labels = {
             'username': 'Your Telegram ID',

@@ -52,7 +52,15 @@ def get_answer_davinci(update: Update, context: CallbackContext):
             reply_to_message_id=update.message.message_id,
             text=answer.choices[0].text
         )
-    except Exception as error:
-        context.bot.send_message(225429268, error)
-        raise KeyError(error)
+    except Exception:
+        text = (
+            'Что-то пошло не так 🤷🏼\n'
+            'Возможно большой наплыв запросов, '
+            'которые я не успеваю обрабатывать 🤯'
+        )
+        context.bot.send_message(
+            chat_id=chat.id,
+            reply_to_message_id=update.message.message_id,
+            text=text
+        )
     return 'Done'

@@ -3,9 +3,9 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
 from django.shortcuts import get_object_or_404, redirect, render
-from users.models import Group
+from users.models import Group, GroupMailing
 
-from .forms import CommentForm, PostForm
+from .forms import CommentForm, GroupMailingForm, PostForm
 from .models import Follow, Post
 
 User = get_user_model()
@@ -85,10 +85,31 @@ def group_posts(request, slug):
     post_list = group.posts.all()
     page_obj = paginator_handler(request, post_list)
 
+    form = GroupMailingForm(request.POST or None)
+    forism_check = group.group_mailing.filter(
+        mailing_type='forismatic_quotes'
+    ).exists()
+
+    if request.method == "POST" and form.is_valid():
+        quotes = form.cleaned_data.get('forismatic_quotes')
+        if quotes:
+            GroupMailing.objects.get_or_create(
+                group=group,
+                mailing_type='forismatic_quotes'
+            )
+            forism_check = True
+        else:
+            group.group_mailing.filter(
+                mailing_type='forismatic_quotes'
+            ).delete()
+            forism_check = False
+
     context = {
         'group': group,
         'page_obj': page_obj,
-        'is_admin': is_admin
+        'is_admin': is_admin,
+        'form': form,
+        'forism_check': forism_check
     }
     template = 'posts/group_list.html'
     return render(request, template, context)
@@ -126,27 +147,6 @@ def profile(request, username):
         'following': following,
     }
     template = 'posts/profile.html'
-    return render(request, template, context)
-
-
-def post_detail(request, post_id):
-    post = get_object_or_404(
-        Post.objects.select_related('author'),
-        pk=post_id
-    )
-    authors_posts_count = post.author.posts.count()
-
-    comments = post.comments.all()
-
-    form = CommentForm(request.POST or None)
-
-    context = {
-        'post': post,
-        'authors_posts_count': authors_posts_count,
-        'comments': comments,
-        'form': form,
-    }
-    template = 'posts/post_detail.html'
     return render(request, template, context)
 
 
@@ -205,6 +205,27 @@ def post_edit(request, post_id):
         'form': form
     }
     template = 'posts/create_post.html'
+    return render(request, template, context)
+
+
+def post_detail(request, post_id):
+    post = get_object_or_404(
+        Post.objects.select_related('author'),
+        pk=post_id
+    )
+    authors_posts_count = post.author.posts.count()
+
+    comments = post.comments.all()
+
+    form = CommentForm(request.POST or None)
+
+    context = {
+        'post': post,
+        'authors_posts_count': authors_posts_count,
+        'comments': comments,
+        'form': form,
+    }
+    template = 'posts/post_detail.html'
     return render(request, template, context)
 
 

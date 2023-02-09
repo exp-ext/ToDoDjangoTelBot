@@ -5,6 +5,7 @@ import pytz
 from core.models import Create
 from django.contrib.auth.models import AbstractUser
 from django.db import models
+from django.db.models import Q
 from django.utils.translation import gettext_lazy as _
 from pytils.translit import slugify
 from sorl.thumbnail import ImageField
@@ -50,11 +51,17 @@ class Group(models.Model):
         return f'~ {self.title}'
 
     def save(self, *args, **kwargs):
-        self.slug = slugify(self.title)[:100]
-        if Group.objects.get(slug=self.slug) or not self.slug:
+        slug = slugify(self.title)[:30]
+        if (not slug or
+                Group.objects.filter(
+                    Q(slug=slug),
+                    ~Q(chat_id=self.chat_id)
+                ).exists()):
             self.slug = ''.join(
                 random.choices(string.ascii_lowercase, k=15)
             )
+        else:
+            self.slug = slug
         super().save(*args, **kwargs)
 
 
@@ -64,7 +71,8 @@ class GroupMailing(models.Model):
 
     group = models.ForeignKey(
         Group,
-        on_delete=models.CASCADE
+        on_delete=models.CASCADE,
+        related_name='group_mailing'
     )
     mailing_type = models.CharField(
         choices=GroupMailingTypes.choices,

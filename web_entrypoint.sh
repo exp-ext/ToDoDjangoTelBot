@@ -17,4 +17,10 @@ do
     sleep 2
 done
 
+until python manage.py set_ip_by_host
+do
+    echo "Waiting seting IP..."
+    sleep 2
+done
+
 gunicorn -c config/gunicorn/dev.py

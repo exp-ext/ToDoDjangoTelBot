@@ -6,6 +6,16 @@ from users.models import Group
 from .models import Comment, Post
 
 
+class GroupMailingForm(forms.Form):
+    forismatic_quotes = forms.TypedChoiceField(
+        coerce=lambda x: x == 'True',
+        choices=((False, 'Выключена'), (True, 'Включена')),
+        widget=forms.RadioSelect(
+                attrs={'onchange': 'form.submit();'}
+            )
+    )
+
+
 class PostForm(forms.ModelForm):
 
     class Meta:

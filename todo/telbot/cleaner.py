@@ -28,13 +28,12 @@ def clear_commands(update: Update) -> None:
         if text in COMMANDS['en'] or text == 'delete':
             bot.delete_message(chat_id, message_id)
 
-    except Exception as error:
+    except Exception:
         text = (
             'Для корректной работы, я должен быть администратором группы! '
             'Иначе я не смогу удалять подобные технические сообщения.'
         )
         bot.send_message(chat_id, text)
-        raise KeyError(error)
 
 
 def remove_keyboard(update: Update, context: CallbackContext) -> None:

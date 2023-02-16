@@ -1,44 +1,39 @@
-# pull official base image
+# Use the official lightweight Python image as the base image
 FROM python:3.11-slim-bullseye
 
-RUN apt-get update && apt-get upgrade -y
+# Set working directory
+WORKDIR /app
 
-# install psycopg dependencies
-RUN apt-get install -y \
-        python3-dev \
-        libpq-dev \
+# Install dependencies and clean up
+RUN apt-get update && \
+    apt-get install --no-install-recommends --no-install-suggests -y \
         gcc \
-        && rm -rf /var/lib/apt/lists/*
+        libpq-dev \
+        python3-dev && \
+    rm -rf /var/lib/apt/lists/*
 
-# collectstatic needs the secret key to be set. We store that in this environment variable.
-# Set this value in this project's .env file
-RUN pip install pipenv
-ARG DJANGO_SECRET_KEY
-
-# set environment variables
-ENV PYTHONDONTWRITEBYTECODE 1
-ENV PYTHONUNBUFFERED 1
-
-# create the appropriate directories
-ENV APP_HOME=/app
-RUN mkdir -p $APP_HOME
-RUN mkdir -p $APP_HOME/web/static
-RUN mkdir -p $APP_HOME/web/media
-WORKDIR $APP_HOME
-
-# upgrade pip
-RUN pip install --upgrade pip
-
-# psycopg2 for arm64
-RUN pip install psycopg2-binary --no-binary psycopg2-binary
+# Install pipenv and psycopg2-binary
+RUN pip install --upgrade pip && \
+    pip install \
+    pipenv psycopg2-binary --no-binary psycopg2-binary
 
 # install dependencies
-COPY requirements.txt $APP_HOME
-RUN pip install -r requirements.txt
+COPY requirements.txt /app/
+RUN --mount=type=cache,target=/root/.cache/pip/ \
+    pip install -r requirements.txt
 
-# copy project
-COPY . $APP_HOME
+# Copy the project to the container
+COPY . /app/
 
-RUN chmod +x $APP_HOME/web_entrypoint.sh
+# Set environment variables
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY}
+
+# Create the appropriate directories
+RUN mkdir -p /app/web/static /app/web/media
+
+# Set the entrypoint and make it executable
+RUN chmod +x /app/conf_sh/web_entrypoint.sh
 
 RUN python todo/manage.py collectstatic --no-input

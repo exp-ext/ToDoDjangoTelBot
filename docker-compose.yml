@@ -1,4 +1,4 @@
-version: '3.8'
+version: '3.9'
 
 services:
   db:
@@ -9,13 +9,23 @@ services:
       - postgresql_volume:/var/lib/postgresql/data/
     env_file:
       - ./.env
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -h ${POSTGRES_HOST} -p ${POSTGRES_PORT} -U ${POSTGRES_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
-  redis:
-    restart: always
-    image: redis:latest
+  redis:    
+    image: redis:6.2-alpine
     container_name: todo_redis
+    restart: always
     expose:
       - 6379
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   web:
     build:
@@ -25,39 +35,33 @@ services:
         - DJANGO_SECRET_KEY
     container_name: todo_django
     restart: always
-    command: ./web_entrypoint.sh
+    command: ./conf_sh/web_entrypoint.sh
     volumes:
-      - static_volume:/app/web/static
-      - /app/web/media:/app/web/media
+      - static_volume:/app/web/static/:rw
+      - /app/web/media:/app/web/media/:rw
+      - cache_pip_volume:/root/.cache/pip/:rw
+      - cache_apt_volume:/var/cache/apt/archives/:rw
     expose:
       - 8000
     env_file:
       - ./.env
     depends_on:
-      - db
-      - redis
-
-  nginx:
-    image: nginx:latest
-    volumes:
-      - ./nginx/:/etc/nginx/conf.d
-      - ./nginx/ssl/:/etc/ssl/
-      - static_volume:/app/web/static
-      - /app/web/media:/app/web/media 
-    ports:
-      - "80:80"
-      - "443:443"
-    depends_on:
-      - web
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
 
   celery:
     build:
       context: .
+      dockerfile: Dockerfile
     container_name: todo_celery
     restart: always
     command: bash -c "cd todo && celery -A todo worker --loglevel=INFO"
     volumes:
-      - .:/app
+      - .:/app/:rw
+      - cache_pip_volume:/root/.cache/pip/:rw
+      - cache_apt_volume:/var/cache/apt/archives/:rw
     env_file:
       - ./.env
     depends_on:
@@ -73,9 +77,40 @@ services:
     restart: always
     command: bash -c "cd todo && celery -A todo beat -l info --scheduler django_celery_beat.schedulers.DatabaseScheduler"
     volumes:
-      - .:/app
+      - .:/app/:rw
+      - cache_pip_volume:/root/.cache/pip/:rw
+      - cache_apt_volume:/var/cache/apt/archives/:rw
     env_file:
       - ./.env
+    depends_on:
+      - redis
+      - celery
+      - web
+      - db
+
+  nginx:
+    image: nginx:latest
+    container_name: todo_nginx
+    volumes:
+      - ./nginx/:/etc/nginx/conf.d/:ro
+      - ./nginx/ssl/:/etc/ssl/:ro
+      - static_volume:/app/web/static/:rw
+      - /app/web/media:/app/web/media/:rw
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      - web
+  
+  whisper:
+    image: onerahmet/openai-whisper-asr-webservice:latest
+    container_name: todo_whisper
+    expose:
+      - 9000
+    environment:
+      - ASR_MODEL=small
+    volumes:
+      - whisper_volume:/root/.cache/whisper
     depends_on:
       - redis
       - celery
@@ -85,3 +120,6 @@ services:
 volumes:
   static_volume:
   postgresql_volume:
+  cache_pip_volume:
+  cache_apt_volume:
+  whisper_volume:

@@ -53,7 +53,7 @@ def sending_messages(tasks: QuerySet[Task],
         if task.group:
             delta = task.server_datetime - this_datetime
             delta_min = int(delta.total_seconds() / 60 + 1)
-            if delta_min > 60:
+            if delta_min >= 60:
                 header = f'📝 через {delta_min // 60 }час {delta_min % 60 }мин'
             elif delta_min <= 0:
                 header = 'Время начала:'

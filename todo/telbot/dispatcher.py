@@ -15,7 +15,7 @@ from .message.add_notes import add_notes, first_step_add
 from .message.del_notes import del_notes, first_step_dell
 from .message.show_notes import (first_step_show, show_all_notes, show_at_date,
                                  show_birthday)
-from .message.stereography import conversion
+from .message.stereography import send_audio_transcription
 from .parse.jokes import show_joke
 from .service_message import cancel
 
@@ -114,7 +114,7 @@ def setup_dispatcher(dp: Dispatcher):
     )
     dp.add_handler(
         MessageHandler(
-            Filters.voice, conversion
+            Filters.voice, send_audio_transcription
         )
     )
 

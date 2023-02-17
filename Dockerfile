@@ -8,7 +8,8 @@ WORKDIR /app
 RUN apt-get update && apt-get install --no-install-recommends --no-install-suggests -y \
         gcc \
         libpq-dev \
-        python3-dev && \
+        python3-dev \
+        libsndfile1 && \
     rm -rf /var/lib/apt/lists/*
 
 # Install pipenv and psycopg2-binary

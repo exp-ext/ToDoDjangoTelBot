@@ -21,10 +21,6 @@ app.conf.beat_schedule = {
         'task': 'telbot.tasks.minute_by_minute_check',
         'schedule': crontab(),
     },
-    'set_ip': {
-        'task': 'core.tasks.set_ip_to_dns',
-        'schedule': crontab(hour='*/2', minute=0),
-    },
     'send-birthdays': {
         'task': 'telbot.tasks.check_birthdays',
         'schedule': crontab(hour=4, minute=30),

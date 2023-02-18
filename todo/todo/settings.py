@@ -64,10 +64,6 @@ INSTALLED_APPS = [
     'django_celery_beat',
     # debugger
     'debug_toolbar',
-    # api
-    'rest_framework',
-    'rest_framework.authtoken',
-    'djoser',
     # user agents parser
     'django_user_agents',
     # my app
@@ -216,25 +212,6 @@ MEDIA_URL = '/media/'
 
 UP_DIR = BASE_DIR.resolve().parent
 MEDIA_ROOT = f'{UP_DIR}/web/media' if DEBUG else '/app/web/media'
-
-# API
-REST_FRAMEWORK = {
-    'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.IsAuthenticated',
-    ],
-
-    'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework.authentication.TokenAuthentication',
-        'rest_framework.authentication.BasicAuthentication',
-        'rest_framework.authentication.SessionAuthentication',
-    ],
-
-    'DEFAULT_RENDERER_CLASSES': [
-        'rest_framework.renderers.JSONRenderer',
-        'rest_framework.renderers.BrowsableAPIRenderer',
-    ]
-}
-
 
 # Setting for working with Jupiter
 if DEBUG:

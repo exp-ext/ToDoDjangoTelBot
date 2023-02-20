@@ -5,6 +5,7 @@
 
 {% block title %} Редактор заметок {% endblock %}
 
+
 {% block content %}
   <div class="container py-5"> 
     <div class="row justify-content-center">
@@ -44,7 +45,7 @@
                     {% if field.field.required %}
                       <span class="reqired text-danger">*</span>
                     {% endif %}
-                    
+             
 
                     {{ field|addclass:"form-control" }}
 
@@ -87,4 +88,13 @@
       </div>
     </div>
   </div>
+{% endblock %}
+
+
+{% block javascript %}
+  <script src="{% static 'ckeditor/ckeditor-init.js' %}"></script>
+  <script src="{% static 'ckeditor/ckeditor/ckeditor.js' %}"></script>
+  <script>
+    CKEDITOR.replace('id_text');
+  </script>    
 {% endblock %}

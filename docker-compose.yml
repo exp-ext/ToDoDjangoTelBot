@@ -37,7 +37,7 @@ services:
     restart: always
     command: ./conf_sh/web_entrypoint.sh
     volumes:
-      - static_volume:/app/web/static/:rw
+      - static_volume:/app/todo/static/:rw
       - /app/web/media:/app/web/media/:rw
       - cache_pip_volume:/root/.cache/pip/:rw
       - cache_apt_volume:/var/cache/apt/archives/:rw
@@ -94,7 +94,7 @@ services:
     volumes:
       - ./nginx/:/etc/nginx/conf.d/:ro
       - ./nginx/ssl/:/etc/ssl/:ro
-      - static_volume:/app/web/static/:rw
+      - static_volume:/app/todo/static/:rw
       - /app/web/media:/app/web/media/:rw
     ports:
       - "80:80"

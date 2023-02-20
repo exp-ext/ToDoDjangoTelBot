@@ -66,6 +66,9 @@ INSTALLED_APPS = [
     'debug_toolbar',
     # user agents parser
     'django_user_agents',
+    # WYSIWYG editor
+    'ckeditor_uploader',
+    'ckeditor',
     # my app
     'core.apps.CoreConfig',
     'users.apps.UsersConfig',
@@ -192,26 +195,32 @@ USE_TZ = True
 # Для корректной работы виджета в форме профиля
 USE_L10N = False
 
-
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.1/howto/static-files/
-
-STATIC_URL = '/static/'
-
-STATIC_ROOT = '/app/web/static'
-
-STATICFILES_DIRS = (os.fspath(PurePath(BASE_DIR, 'static')),)
 
 STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.FileSystemFinder',
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
 )
 
+STATIC_URL = '/static/'
+
+STATIC_DIR = os.fspath(PurePath(BASE_DIR, 'static'))
+
+if DEBUG:
+    STATICFILES_DIRS = (STATIC_DIR,)
+else:
+    STATIC_ROOT = STATIC_DIR
+
 # MEDIA
 MEDIA_URL = '/media/'
 
 UP_DIR = BASE_DIR.resolve().parent
 MEDIA_ROOT = f'{UP_DIR}/web/media' if DEBUG else '/app/web/media'
+
+# Django-ckeditor
+CKEDITOR_UPLOAD_PATH = 'uploads/'
+CKEDITOR_BASEPATH = f'{STATIC_DIR}/ckeditor/ckeditor/'
 
 # Setting for working with Jupiter
 if DEBUG:

@@ -29,7 +29,7 @@ ENV PYTHONUNBUFFERED=1 \
     DJANGO_SECRET_KEY=DJANGO_SECRET_KEY
 
 # Create the appropriate directories
-RUN mkdir -p /app/web/static /app/web/media && \
+RUN mkdir -p /app/web/media && \
     chmod +x /app/conf_sh/web_entrypoint.sh
 
 RUN python todo/manage.py collectstatic --no-input

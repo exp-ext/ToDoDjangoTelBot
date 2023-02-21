@@ -1,6 +1,7 @@
 # Djando + util
 Django~=4.1.6
 django-defender~=0.9.6
+django-dbbackup~=4.0.2
 pillow~=9.4.0
 pytils~=0.4.1
 python-dotenv~=0.21.0

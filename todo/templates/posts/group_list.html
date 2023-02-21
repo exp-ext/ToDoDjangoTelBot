@@ -2,15 +2,15 @@
 {% load thumbnail %}
 {% load static %}
 
-{% block title %} Записи сообщества {{ group.title }} {% endblock %}
-
-{% block style %}
+{% block head %}
   <meta name="description" content="Ваша группа, Ваши Заметки - Организуйте общие мысли с легкостью с Your ToDo!"/>
   <meta name="keywords" content="Telegram, заметки, организация заметок, Telegram инструмент, группа">
   <link rel="stylesheet" href="{% static 'css/toggle-radio.css' %}">
 {% endblock %}
 
-{% block header %} 
+{% block title %} Записи сообщества {{ group.title }} {% endblock %}
+
+{% block headline %} 
 
   <div class="container py-5">
     <div class="py-3">

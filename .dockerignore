@@ -8,7 +8,10 @@ Dockerfile
 README.md
 LICENSE.md
 docker-compose.yml
+db.sqlite3
 **/.DS_Store
 **/venv
 **/web
+**/media
+**/backup
 **/__pycache__

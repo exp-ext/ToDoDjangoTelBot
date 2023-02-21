@@ -2,7 +2,7 @@
 {% load static %}
 {% load thumbnail %}
 
-{% block style %}  
+{% block head %}  
   <link rel="stylesheet" href="{% static 'css/hover-effects.css' %}">
   <link rel="stylesheet" href="{% static 'css/search.css' %}">
 {% endblock %}
@@ -20,7 +20,7 @@
         {% for post in group.list %}
           <li class="my-3">
             <a class="text_search" href="{% url 'posts:post_detail' post.pk %}">
-            {{ post.text|slice:":200" }} ... 
+            {{ post.text|striptags|slice:":200" }} ... 
             </a>
           </li>
         {% endfor %}

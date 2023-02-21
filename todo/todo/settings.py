@@ -58,6 +58,8 @@ INSTALLED_APPS = [
     'django.contrib.sitemaps',
     # login defender
     'defender',
+    # backup db & media
+    'dbbackup',
     # images
     'sorl.thumbnail',
     # celery
@@ -142,6 +144,11 @@ POSTGRES = {
 
 DATABASES = SQLITE if DEBUG else POSTGRES
 
+# django-dbbackup
+DBBACKUP_STORAGE = 'django.core.files.storage.FileSystemStorage'
+DBBACKUP_STORAGE_OPTIONS = {
+    'location': os.fspath(PurePath(BASE_DIR, 'backup')),
+}
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field
@@ -179,7 +186,6 @@ SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 # LOGOUT_REDIRECT_URL = 'index'
 LOGIN_URL = 'users:login'
 LOGIN_REDIRECT_URL = 'index'
-
 
 # Internationalization
 # https://docs.djangoproject.com/en/4.1/topics/i18n/

@@ -84,7 +84,7 @@ class Signup:
         length - password length
         """
         character_set = string.digits + string.ascii_letters
-        return ''.join(secrets.choice(character_set) for i in range(length))
+        return ''.join(secrets.choice(character_set) for _ in range(length))
 
 
 @login_required

@@ -3,7 +3,21 @@
 
 {% block title %}Ваш персональный менеджер задач{% endblock %}
 
-{% block style %}
+{% block head %}
+  <meta name="description" content="YourToDo - простой и удобный инструмент для управления вашими задачами. Организуйте свои дела и достигайте успеха!"/>
+  <meta name="keywords" content="менеджер задач, задачи, планирование, cписок дел, управление временем, напоминания, список дел, календарь событий, ежедневник, телеграмм бот">
+  <meta name="robots" content="index, follow">
+  <meta name="author" content="Your To-Do">
+
+  <html prefix="og: http://ogp.me/ns#">    
+  <meta property="og:site_name" content="YourToDo - это инновационное решение для управления вашими задачами и заметками."/>
+  <meta property="og:title" content="Простой и удобный интерфейс, который позволяет вам легко организовывать и управлять вашими задачами и заметками."/>
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://www.yourtodo.ru" />
+  <meta property="og:description" content="Это идеальное решение для людей, которые хотят быть более продуктивными и достичь своих целей."/>
+  <meta property="og:image" content="https://www.yourtodo.ru/static/img/index/2_func_ban.png">
+  <meta property="og:image:alt" content="city" />
+
   <style>
     .bd-placeholder-img {
       font-size: 1.125rem;
@@ -20,10 +34,6 @@
       }
     }
   </style>
-  <meta name="description" content="YourToDo - простой и удобный инструмент для управления вашими задачами. Организуйте свои дела и достигайте успеха!"/>
-  <meta name="keywords" content="менеджер задач, задачи, планирование, cписок дел, управление временем, напоминания, список дел, календарь событий, ежедневник, телеграмм бот">
-  <meta name="robots" content="index, follow">
-  <meta name="author" content="Your To-Do">
   <link rel="stylesheet" href="{% static 'css/carousel.css' %}">
 {% endblock %}
 

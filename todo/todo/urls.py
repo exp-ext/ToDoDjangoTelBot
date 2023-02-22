@@ -54,6 +54,7 @@ urlpatterns = [
         name='django.contrib.sitemaps.views.sitemap'
     ),
     path('robots.txt', views.robots_txt),
+    path('ckeditor/', include('ckeditor_uploader.urls')),
 ]
 
 if settings.DEBUG:

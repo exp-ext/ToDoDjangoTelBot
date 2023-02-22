@@ -1,3 +1,4 @@
+import re
 from datetime import datetime, timezone
 
 from core.views import linkages_check, paginator_handler
@@ -85,8 +86,10 @@ def task_create(request: HttpRequest) -> HttpResponseRedirect | HttpResponse:
         }
     )
     if request.method == "POST" and form.is_valid():
+        text = form.cleaned_data.get('text')
         form = form.save(commit=False)
         form.user = request.user
+        form.text = generating_correct_text(text)
         form.save()
         redirecting = 'tasks:birthdays' if form.it_birthday else 'tasks:notes'
         return redirect(redirecting)
@@ -125,7 +128,10 @@ def task_edit(request: HttpRequest,
     )
 
     if request.method == "POST" and form.is_valid():
-        task = form.save()
+        text = form.cleaned_data.get('text')
+        form = form.save(commit=False)
+        form.text = generating_correct_text(text)
+        form.save()
         return redirect(redirecting)
 
     context = {
@@ -146,3 +152,14 @@ def task_delete(request: HttpRequest,
     if task.user == request.user:
         task.delete()
     return redirect(redirecting)
+
+
+def generating_correct_text(text: str) -> str:
+    """Возвращает текст с якорем в ссылках."""
+    urls = re.findall(r'([^href=\"]https?://\S+)', text)
+    for url in urls:
+        text = text.replace(
+            url,
+            f' <a href="{url.strip()}">{url.split("//")[-1].split("/")[0]}</a>'
+        )
+    return text

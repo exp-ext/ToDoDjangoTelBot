@@ -1,16 +1,95 @@
 {% extends "base.html" %}
+{% load thumbnail %}
+{% load static %}
 
-{% block title %} Пост {{ post }} {% endblock %}
+{% block head %}
 
-{% block style %}
-  <meta name="description" content="Одна Заметка - множество возможностей!"/>
+  <meta name="description" content="Заметка это простой и удобный способ записывать и хранить важные мысли, идеи и задачи, чтобы ничего не потерять!"/>
   <meta name="keywords" content="Telegram, заметки, организация заметок, Telegram инструмент, автор">
+
+  <html prefix="og: http://ogp.me/ns#">    
+  <meta property="og:site_name" content="Заметка это простой и удобный способ записывать и хранить важные мысли, идеи и задачи, чтобы ничего не потерять!"/>
+  <meta property="og:title" content="{{ post.title }}"/>
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://www.yourtodo.ru{% url 'posts:post_detail' post.id %}" />
+  <meta property="og:description" content="{{ post.text|striptags|truncatechars_html:200 }}"/>
+  {% thumbnail post.image "x630" as im %}
+    <meta property="og:image" content="https://www.yourtodo.ru{{ im.url }}">
+  {% endthumbnail %}
+  <meta property="og:image:alt" content="{{ post.title }}" />
+
+  <link rel="stylesheet" href="{% static 'css/hover-effects.css' %}">
 {% endblock %}
 
+{% block title %} Запись: {{ post }} {% endblock %}
+
 {% block content %}
-<div class="container py-5">
   <div class="container py-5">
-    {% include 'posts/includes/detail_one_post.html' %} 
-  </div> 
-</div>
+    <div class="container py-5">      
+      <div class="row">  
+        <aside class="col-12 col-md-3">
+          <div class="hover-effects">
+            <ul class="list-group">
+              <li class="list-group-item bg-secondary">
+                Дата публикации: {{ post.created_at|date:"d E Y" }}
+              </li>        
+              {% if post.group %}
+                  <li class="list-group-item  bg-secondary">
+                  Группа: {{ post.group }}
+                  <p></p>
+                    <a type="button" class="button fast white" href="{% url 'posts:group_list' post.group.slug%}">
+                      все &#160 записи &#160 группы
+                    </a>
+                  </li>
+              {% endif %} 
+              <li class="list-group-item  bg-secondary">
+                Автор: {{ post.author.get_full_name }}
+              </li>
+              <li class="list-group-item justify-content-between align-items-center bg-secondary">
+                Всего постов автора:  <span > {{ authors_posts_count }} </span>
+                <p></p>
+                <a type="button" class="button fast white" href="{% url 'posts:profile' post.author %}">
+                  все &#160 посты &#160 пользователя            
+                </a>
+              </li>
+              <li class="list-group-item bg-secondary">
+                {% if post.author == user %}  
+                <li class="list-group-item bg-secondary">      
+                  <a class="button" href="{% url 'posts:post_edit' post.pk  %}">
+                    изменить&#160пост
+                  </a> 
+                </li>
+                <li class="list-group-item  bg-secondary">
+                  <a class="button reverse dark" href="{% url 'posts:post_delete' post.pk %}">
+                    удалить&#160пост
+                  </a> 
+                </li>
+                {% endif %}
+              </li>
+            </ul>
+          </div> 
+        </aside>
+    
+        <article class="col-12 col-md-9 bg-light rounded">
+          {% thumbnail post.image "x339" as im %}
+            <img class="card-img my-2" src="{{ im.url }}">
+          {% endthumbnail %}
+          <p>
+          {{ post.text|safe }} 
+          </p>
+          {% include 'posts/includes/comments.html' %}
+        </article>   
+      </div>
+    </div> 
+  </div>
+
+  <a class="dribbble"
+  href="https://dribbble.com/shots/7441241-Button-Hover-Effects"
+    target="_blank">
+  <img src="https://cdn.dribbble.com/assets/dribbble-ball-mark-2bd45f09c2fb58dbbfb44766d5d1d07c5a12972d602ef8b32204d28fa3dda554.svg"
+    alt=""></a>
+{% endblock %}
+
+{% block javascript %}
+  <script  src="{% static 'js/script.js' %}"></script>
 {% endblock %}

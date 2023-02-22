@@ -1,3 +1,4 @@
+from ckeditor.fields import RichTextField
 from django import forms
 from django.forms import Textarea
 from django.shortcuts import get_object_or_404
@@ -17,6 +18,7 @@ class GroupMailingForm(forms.Form):
 
 
 class PostForm(forms.ModelForm):
+    text = RichTextField(blank=True, null=True)
 
     class Meta:
         model = Post

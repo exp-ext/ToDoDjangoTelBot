@@ -146,8 +146,9 @@ dmypy.json
 
 .mypy_cache
 
-# папки со статикой и медиа
+# папки с дампами и медиа
+media/
+backup/
 web/
-
 # cert
 ssl/

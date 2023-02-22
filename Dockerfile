@@ -29,13 +29,18 @@ ENV PYTHONUNBUFFERED=1 \
     DJANGO_SECRET_KEY=DJANGO_SECRET_KEY
 
 # Create the appropriate directories
-RUN mkdir -p /app/web/static /app/web/media && \
+RUN mkdir -p /app/web/media && \
     chmod +x /app/conf_sh/web_entrypoint.sh
 
 RUN python todo/manage.py collectstatic --no-input
 
 # Create an unprivileged user to run the application
-RUN addgroup --system app && \
-    adduser --system --ingroup app app
+RUN addgroup --system apps-group && \
+    adduser --system --ingroup apps-group app-user
 
-USER app
+# Set permissions on the application directory
+RUN chown -R app-user:apps-group /app/ && \
+    chmod -R 770 /app/
+
+# Switch to the non-root user
+USER app-user

@@ -3,11 +3,11 @@
 {% load user_filters %}
 {% load tz %}
 
-{% block title %} Редактор напоминаний {% endblock %}
-
-{% block style %}
+{% block head %}
   <meta name="description" content="Создание записи о напоминании."/>  
 {% endblock %}
+
+{% block title %} Редактор напоминаний {% endblock %}
 
 {% block content %} 
 
@@ -62,8 +62,8 @@
 
                     {% else %}
 
-                      {{ field|addclass:"form-control" }}                    
-
+                      {{ field|addclass:"form-control" }}
+                     
                     {% endif %}
                     
                     {% if field.help_text %}

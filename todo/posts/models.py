@@ -43,6 +43,7 @@ class Post(Create):
     class Meta:
         verbose_name = 'Пост'
         verbose_name_plural = 'Посты'
+        ordering = ('-created_at',)
 
     def __str__(self) -> str:
         return self.title[:20]

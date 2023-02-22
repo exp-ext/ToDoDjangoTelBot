@@ -58,6 +58,8 @@ INSTALLED_APPS = [
     'django.contrib.sitemaps',
     # login defender
     'defender',
+    # backup db & media
+    'dbbackup',
     # images
     'sorl.thumbnail',
     # celery
@@ -66,6 +68,9 @@ INSTALLED_APPS = [
     'debug_toolbar',
     # user agents parser
     'django_user_agents',
+    # WYSIWYG editor
+    'ckeditor_uploader',
+    'ckeditor',
     # my app
     'core.apps.CoreConfig',
     'users.apps.UsersConfig',
@@ -139,6 +144,11 @@ POSTGRES = {
 
 DATABASES = SQLITE if DEBUG else POSTGRES
 
+# django-dbbackup
+DBBACKUP_STORAGE = 'django.core.files.storage.FileSystemStorage'
+DBBACKUP_STORAGE_OPTIONS = {
+    'location': os.fspath(PurePath(BASE_DIR, 'backup')),
+}
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field
@@ -177,7 +187,6 @@ SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 LOGIN_URL = 'users:login'
 LOGIN_REDIRECT_URL = 'index'
 
-
 # Internationalization
 # https://docs.djangoproject.com/en/4.1/topics/i18n/
 
@@ -192,26 +201,32 @@ USE_TZ = True
 # Для корректной работы виджета в форме профиля
 USE_L10N = False
 
-
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.1/howto/static-files/
-
-STATIC_URL = '/static/'
-
-STATIC_ROOT = '/app/web/static'
-
-STATICFILES_DIRS = (os.fspath(PurePath(BASE_DIR, 'static')),)
 
 STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.FileSystemFinder',
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
 )
 
+STATIC_URL = '/static/'
+
+STATIC_DIR = os.fspath(PurePath(BASE_DIR, 'static'))
+
+if DEBUG:
+    STATICFILES_DIRS = (STATIC_DIR,)
+else:
+    STATIC_ROOT = STATIC_DIR
+
 # MEDIA
 MEDIA_URL = '/media/'
 
 UP_DIR = BASE_DIR.resolve().parent
 MEDIA_ROOT = f'{UP_DIR}/web/media' if DEBUG else '/app/web/media'
+
+# Django-ckeditor
+CKEDITOR_UPLOAD_PATH = 'uploads/'
+CKEDITOR_BASEPATH = f'{STATIC_DIR}/ckeditor/ckeditor/'
 
 # Setting for working with Jupiter
 if DEBUG:

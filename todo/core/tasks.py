@@ -5,7 +5,9 @@ import urllib.request
 import requests
 from celery import Celery
 from django.conf import settings
+from django.core import management
 from dotenv import load_dotenv
+from telbot.loader import bot
 
 load_dotenv()
 
@@ -14,6 +16,9 @@ app = Celery()
 LOGIN_DNS_API = os.getenv('LOGIN_DNS_API')
 PASSWORD_DNS_API = os.getenv('PASSWORD_DNS_API')
 HOST_FOR_DNS = os.getenv('HOST_FOR_DNS')
+
+ADMIN_ID = os.getenv('ADMIN_ID')
+
 FILE_WITH_IP_DIR = settings.BASE_DIR
 
 
@@ -59,7 +64,17 @@ def set_ip_to_dns() -> str:
         'Authorization': 'Basic %s' % b64val
     }
     set_ip = requests.get(set_api_url, headers=headers, params=params)
-    return (
+
+    text = (
         f'На хост у DNS провайдера назначен новый IP: {current_local_ip}. '
         f'Ответ сервера DNS: {set_ip.text}'
     )
+    bot.send_message(chat_id=ADMIN_ID, text=text)
+    return text
+
+
+@app.task
+def backup():
+    """Дамп базы данных."""
+    management.call_command('dbbackup')
+    return 'Database backup has been created'

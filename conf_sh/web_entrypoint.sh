@@ -5,13 +5,13 @@ do
     echo "Waiting for server volume..."
 done
 
-until python manage.py migrate
+until python3 manage.py migrate
 do
     echo "Waiting for db to be ready... No migrate..."
     sleep 2
 done
 
-until python manage.py set_ip_by_host
+until python3 manage.py set_ip_by_host
 do
     echo "Waiting seting IP..."
     sleep 2

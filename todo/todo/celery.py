@@ -29,4 +29,8 @@ app.conf.beat_schedule = {
         'task': 'telbot.tasks.send_forismatic_quotes',
         'schedule': crontab(hour=7, minute=0),
     },
+    'backup': {
+        'task': 'core.tasks.backup',
+        'schedule': crontab(hour=1, minute=0),
+    },
 }

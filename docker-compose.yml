@@ -39,6 +39,7 @@ services:
     volumes:
       - static_volume:/app/todo/static/:rw
       - media_volume:/app/web/media/:rw
+      - backup_volume:/app/web/backup/:rw
       - cache_pip_volume:/root/.cache/pip/:rw
       - cache_apt_volume:/var/cache/apt/archives/:rw
     expose:
@@ -108,7 +109,7 @@ services:
     expose:
       - 9000
     environment:
-      - ASR_MODEL=small
+      - ASR_MODEL=base
     volumes:
       - whisper_volume:/root/.cache/whisper
     depends_on:
@@ -120,6 +121,7 @@ services:
 volumes:
   static_volume:
   media_volume:
+  backup_volume:
   postgresql_volume:
   cache_pip_volume:
   cache_apt_volume:

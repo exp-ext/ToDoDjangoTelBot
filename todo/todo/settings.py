@@ -37,6 +37,8 @@ EMAIL_PORT = 587
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+WEB_DIR = f'{BASE_DIR.resolve().parent}/web/'
+
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.getenv('DJANGO_SECRET_KEY')
 
@@ -147,7 +149,7 @@ DATABASES = SQLITE if DEBUG else POSTGRES
 # django-dbbackup
 DBBACKUP_STORAGE = 'django.core.files.storage.FileSystemStorage'
 DBBACKUP_STORAGE_OPTIONS = {
-    'location': os.fspath(PurePath(BASE_DIR, 'backup')),
+    'location': os.fspath(PurePath(WEB_DIR, 'backup')),
 }
 
 # Default primary key field type
@@ -221,8 +223,7 @@ else:
 # MEDIA
 MEDIA_URL = '/media/'
 
-UP_DIR = BASE_DIR.resolve().parent
-MEDIA_ROOT = f'{UP_DIR}/web/media' if DEBUG else '/app/web/media'
+MEDIA_ROOT = os.fspath(PurePath(WEB_DIR, 'media'))
 
 # Django-ckeditor
 CKEDITOR_UPLOAD_PATH = 'uploads/'

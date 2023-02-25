@@ -11,12 +11,12 @@ status ()
 
 start()
 {
-	docker-compose up -d --build >> $PROJECT_DIR/restart/docker-application.log 2>&1
+	docker compose up -d --build >> $PROJECT_DIR/restart/docker-application.log 2>&1
 }
 
 stop()
 {
-	docker-compose down &
+	docker stop $(docker ps -a -q) &
 }
 
 remove()

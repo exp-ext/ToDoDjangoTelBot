@@ -10,7 +10,8 @@ RUN --mount=type=cache,target=/var/cache/apt/archives/ \
         gcc \
         libpq-dev \
         python3-dev \
-        pipenv && \
+        pipenv \
+        postgresql-client && \
     rm -rf /var/lib/apt/lists/*
 
 # install dependencies

@@ -61,16 +61,20 @@
                 </li>
                 <li class="list-group-item  bg-secondary">
                   <a class="button reverse dark" href="{% url 'posts:post_delete' post.pk %}">
-                    удалить&#160пост
+                    удалить&#160пост                    
                   </a> 
-                </li>
+                </li>                
                 {% endif %}
               </li>
             </ul>
           </div> 
         </aside>
     
-        <article class="col-12 col-md-9 bg-light rounded">
+        <article class="col-12 col-md-9 bg-light rounded">  
+          <div class="lobster"> 
+            <h1>{{ post.title }}</h1>
+          </div>
+
           {% thumbnail post.image "x339" as im %}
             <img class="card-img my-2" src="{{ im.url }}">
           {% endthumbnail %}

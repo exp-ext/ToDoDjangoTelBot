@@ -2,7 +2,7 @@ version: '3.9'
 
 services:
   db:
-    image: postgres:15-alpine
+    image: postgres:13.10-alpine
     container_name: db
     restart: unless-stopped
     volumes:
@@ -79,6 +79,7 @@ services:
     command: bash -c "cd todo && celery -A todo beat -l info --scheduler django_celery_beat.schedulers.DatabaseScheduler"
     volumes:
       - .:/app/:rw
+      - backup_volume:/app/web/backup/:rw
       - cache_pip_volume:/root/.cache/pip/:rw
       - cache_apt_volume:/var/cache/apt/archives/:rw
     env_file:

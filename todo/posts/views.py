@@ -1,8 +1,18 @@
+from typing import Any, Dict
+
 from core.views import get_status_in_group, linkages_check, paginator_handler
 from django.contrib.auth import get_user_model
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.core.paginator import Paginator
 from django.db.models import Q
+from django.db.models.query import QuerySet
+from django.http import HttpRequest, HttpResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse_lazy
+from django.views import View
+from django.views.generic import CreateView, ListView, UpdateView
+from django.views.generic.detail import DetailView
+from django.views.generic.edit import FormView
 from users.models import Group, GroupMailing
 
 from .forms import CommentForm, GroupMailingForm, PostForm
@@ -10,274 +20,357 @@ from .models import Follow, Post
 
 User = get_user_model()
 
+PAGINATE_BY = 10
 
-def search(request):
-    keyword = request.GET.get("q", "")
 
-    if not keyword:
-        return redirect('posts:index_posts')
+class SearchView(View):
+    """
+    Возвращает :obj:`Paginator` с результатом поиска в постах.
+    """
+    template_name = 'posts/search_result.html'
 
-    post_list = (
-        Post.objects
-        .filter(text__icontains=keyword)
-        .exclude(group=True, group__link__isnull=True)
-        .order_by('group')
-        .select_related('author', 'group')
-    )
-    if request.user.is_authenticated:
-        items = request.user.groups_connections.prefetch_related(
-            'group__posts'
+    def get(self, request: HttpRequest, *args: Any, **kwargs: Any
+            ) -> HttpResponse:
+        keyword = request.GET.get('q', '')
+
+        if not keyword:
+            return redirect('posts:index_posts')
+
+        post_list = (
+            Post.objects
+            .select_related('author', 'group')
+            .exclude(group__link=None)
+            .filter(text__icontains=keyword)
+            .order_by('group')
         )
-        for item in items:
-            posts = item.group.posts.filter(text__icontains=keyword)
-            post_list = post_list | posts
-
-    page_obj = paginator_handler(request, post_list)
-
-    context = {
-        'page_obj': page_obj,
-        'keyword': keyword,
-        'post_list': post_list,
-    }
-    template = 'posts/search_result.html'
-    return render(request, template, context)
-
-
-def index_posts(request):
-    post_list = (
-        Post.objects
-        .exclude(group=True, group__link__isnull=True)
-        .select_related('author', 'group')
-    )
-    if request.user.is_authenticated:
-        items = request.user.groups_connections.prefetch_related(
-            'group__posts'
-        )
-        for item in items:
-            posts = item.group.posts.all()
-            post_list = post_list | posts
-
-    page_obj = paginator_handler(request, post_list)
-
-    context = {
-        'page_obj': page_obj,
-    }
-    template = 'posts/index_posts.html'
-    return render(request, template, context)
-
-
-@login_required
-def group_posts(request, slug):
-
-    group = get_object_or_404(Group, slug=slug)
-    status = get_status_in_group(group, request.user.username)
-
-    is_admin = False
-    admin_status = ['creator', 'administrator']
-
-    if status in admin_status:
-        is_admin = True
-    elif group.link:
-        pass    # группа публичная
-    elif status != 'member':
-        redirect('posts:index_posts')
-
-    post_list = group.posts.all()
-    page_obj = paginator_handler(request, post_list)
-
-    form = GroupMailingForm(request.POST or None)
-    forism_check = group.group_mailing.filter(
-        mailing_type='forismatic_quotes'
-    ).exists()
-
-    if request.method == "POST" and form.is_valid():
-        quotes = form.cleaned_data.get('forismatic_quotes')
-        if quotes:
-            GroupMailing.objects.get_or_create(
-                group=group,
-                mailing_type='forismatic_quotes'
+        if request.user.is_authenticated:
+            post_list |= Post.objects.filter(
+                group__in=(
+                    request.user
+                    .groups_connections
+                    .values_list('group', flat=True)
+                ),
+                text__icontains=keyword,
             )
-            forism_check = True
-        else:
-            group.group_mailing.filter(
-                mailing_type='forismatic_quotes'
-            ).delete()
-            forism_check = False
+        page_obj = paginator_handler(request, post_list, PAGINATE_BY)
 
-    context = {
-        'group': group,
-        'page_obj': page_obj,
-        'is_admin': is_admin,
-        'form': form,
-        'forism_check': forism_check
-    }
-    template = 'posts/group_list.html'
-    return render(request, template, context)
+        context = {
+            'page_obj': page_obj,
+            'keyword': keyword,
+            'post_list': post_list,
+        }
+        return render(request, self.template_name, context)
 
 
-def profile(request, username):
-    user = get_object_or_404(User, username=username)
+class IndexPostsView(View):
+    """
+    Возвращает :obj:`Paginator` с заметками для общей ленты.
+    """
+    template_name = 'posts/index_posts.html'
 
-    groups_id = []
-    if request.user.is_authenticated:
-        groups = request.user.groups_connections.values('group_id')
-        groups_id = tuple(x['group_id'] for x in groups)
+    def get(self, request: HttpRequest, *args: Any, **kwargs: Any
+            ) -> HttpResponse:
+        post_list = (
+            Post.objects
+            .exclude(Q(group=True) & Q(group__link__isnull=True))
+            .select_related('author', 'group')
+        )
+        if request.user.is_authenticated:
+            items = (
+                request.user
+                .groups_connections
+                .prefetch_related('group__posts')
+            )
+            for item in items:
+                posts = item.group.posts.all()
+                post_list = post_list | posts
 
-    user_posts = (
-        user.posts
-        .filter(
-            Q(group=None)
-            | Q(group_id__in=groups_id)
-            | Q(group__link__isnull=False))
+        page_obj = paginator_handler(request, post_list, PAGINATE_BY)
+        context = {
+            'page_obj': page_obj,
+        }
+        return render(request, self.template_name, context)
+
+
+class GroupPostsView(LoginRequiredMixin, ListView):
+    """
+    Возвращает:
+    - (:obj:`Paginator`) с заметками группы по slug;
+    - (:obj:`queryset`) Group;
+    - (:obj:`boolean`) is_admin, для отображения формы с переключателями
+    рассылок;
+    - form(:obj:`GroupMailingForm`) с переключателями рассылок;
+    - (:obj:`boolean`) forism_check, найдена ли запись в БД с рассылкой
+    для группы
+    """
+    model = Post
+    template_name = 'posts/group_list.html'
+    context_object_name = 'page_obj'
+
+    def dispatch(self, request: HttpRequest, *args: Any, **kwargs: Any
+                 ) -> HttpResponse:
+        self.group = get_object_or_404(Group, slug=self.kwargs['slug'])
+
+        status = get_status_in_group(self.group, request.user.username)
+        self.is_admin = False
+        admin_status = ['creator', 'administrator']
+        self.is_admin = status in admin_status
+        if not self.is_admin and not self.group.link and status != 'member':
+            return redirect('posts:index_posts')
+
+        self.form = GroupMailingForm(request.POST or None)
+        self.forism_check = self.group.group_mailing.filter(
+            mailing_type='forismatic_quotes'
+        ).exists()
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_queryset(self) -> Paginator:
+        post_list = self.group.posts.select_related('author', 'group')
+        return paginator_handler(self.request, post_list, PAGINATE_BY)
+
+    def get_context_data(self, **kwargs: Any) -> Dict[str, Any]:
+        context = super().get_context_data(**kwargs)
+        context |= {
+            'group': self.group,
+            'is_admin': self.is_admin,
+            'form': self.form,
+            'forism_check': self.forism_check,
+        }
+        return context
+
+    def post(self, request: HttpRequest, *args: Any, **kwargs: Any
+             ) -> HttpRequest:
+        if self.form.is_valid():
+            quotes = self.form.cleaned_data.get('forismatic_quotes')
+            if quotes:
+                GroupMailing.objects.get_or_create(
+                    group=self.group,
+                    mailing_type='forismatic_quotes'
+                )
+                self.forism_check = True
+            else:
+                self.group.group_mailing.filter(
+                    mailing_type='forismatic_quotes'
+                ).delete()
+                self.forism_check = False
+        return self.get(request, *args, **kwargs)
+
+
+class ProfileView(LoginRequiredMixin, DetailView):
+    """
+    Возвращает:
+    - (:obj:`Paginator`) все посты одного пользователя по его имени(id);
+    - (:obj:`int`) количество постов posts_count;
+    - (:obj:`boolean`) состояние подписки на того автора для пользователя;
+    """
+    model = User
+    template_name = 'posts/profile.html'
+    context_object_name = 'author'
+
+    def get_object(self, queryset: QuerySet = None) -> QuerySet(User):
+        queryset = (
+            super().get_queryset()
+            .prefetch_related('group', 'posts__author', 'posts__group')
+        )
+        return queryset.get(username=self.kwargs['username'])
+
+    def get_context_data(self, **kwargs: Any) -> Dict[str, Any]:
+        context = super().get_context_data(**kwargs)
+        post_list = self.get_user_posts().select_related('author', 'group')
+        page_obj = paginator_handler(self.request, post_list, PAGINATE_BY)
+        context |= {
+            'page_obj': page_obj,
+            'posts_count': page_obj.paginator.count,
+            'following': (
+                self.request.user.follower.filter(author=self.object).exists()
+            )
+        }
+        return context
+
+    def get_user_posts(self) -> QuerySet(Post):
+        groups = self.get_user_groups()
+        return (
+            self.object.posts
+            .filter(
+                Q(group=None)
+                | Q(group__in=groups)
+                | Q(group__link__isnull=False)
+            )
+            .select_related('author', 'group')
         )
 
-    page_obj = paginator_handler(request, user_posts)
-
-    posts_count = page_obj.paginator.count
-
-    following = False
-
-    if request.user.is_authenticated:
-        following = request.user.follower.filter(author=user).exists()
-
-    context = {
-        'author': user,
-        'page_obj': page_obj,
-        'posts_count': posts_count,
-        'following': following,
-    }
-    template = 'posts/profile.html'
-    return render(request, template, context)
+    def get_user_groups(self) -> QuerySet(Group):
+        if self.request.user.is_authenticated:
+            groups = (
+                self.request.user
+                .groups_connections.values_list('group_id', flat=True)
+            )
+            return Group.objects.filter(id__in=groups)
+        return Group.objects.none()
 
 
-@login_required
-def post_create(request):
-    linkages_check(request.user)
-    form = PostForm(
-        request.POST or None,
-        files=request.FILES or None,
-        initial={
-            'user': request.user,
-            'is_edit': False
-        }
-    )
+class PostCreateView(LoginRequiredMixin, CreateView):
+    """
+    Делает запись в БД и reverse в профиль автора.
+    """
+    model = Post
+    form_class = PostForm
+    template_name = 'posts/create_post.html'
 
-    if request.method == "POST" and form.is_valid():
-        form = form.save(commit=False)
-        form.author = request.user
-        form.save()
-        return redirect(
+    def get_initial(self) -> Dict[str, Any]:
+        initial = super().get_initial()
+        initial['user'] = self.request.user
+        initial['is_edit'] = False
+        return initial
+
+    def get(self, request: HttpRequest, *args, **kwargs) -> HttpRequest:
+        linkages_check(request.user)
+        return super().get(request, *args, **kwargs)
+
+    def form_valid(self, form: PostForm) -> HttpResponse:
+        form.instance.author = self.request.user
+        return super().form_valid(form)
+
+    def get_success_url(self) -> Dict[str, Any]:
+        return reverse_lazy(
             'posts:profile',
-            username=request.user.username
+            kwargs={'username': self.request.user.username}
         )
 
-    context = {
-        'form': form
-    }
-    template = 'posts/create_post.html'
-    return render(request, template, context)
 
+class PostUpdateView(LoginRequiredMixin, UpdateView):
+    """Изменяет запись в БД и делает redirect к представлению этого поста."""
+    model = Post
+    form_class = PostForm
+    template_name = 'posts/create_post.html'
+    pk_url_kwarg = 'post_id'
 
-@login_required
-def post_edit(request, post_id):
-    post = get_object_or_404(Post, pk=post_id)
+    def get_initial(self) -> Dict[str, Any]:
+        initial = super().get_initial()
+        initial['user'] = self.request.user
+        initial['is_edit'] = True
+        return initial
 
-    if post.author != request.user:
-        return redirect('posts:post_detail', post_id=post_id)
+    def get(self, request: HttpRequest, *args: Any, **kwargs: Any
+            ) -> HttpRequest:
+        linkages_check(request.user)
+        post = self.get_object()
+        if post.author != request.user:
+            return redirect('posts:post_detail', post_id=post.pk)
+        return super().get(request, *args, **kwargs)
 
-    linkages_check(request.user)
-
-    form = PostForm(
-        request.POST or None,
-        files=request.FILES or None,
-        instance=post,
-        initial={
-            'user': request.user,
-            'is_edit': True
-        }
-    )
-
-    if request.method == "POST" and form.is_valid():
+    def form_valid(self, form: PostForm) -> HttpResponseRedirect:
         post = form.save()
-        return redirect('posts:post_detail', post_id=post_id)
-
-    context = {
-        'form': form
-    }
-    template = 'posts/create_post.html'
-    return render(request, template, context)
+        return redirect('posts:post_detail', post_id=post.pk)
 
 
-def post_detail(request, post_id):
-    post = get_object_or_404(
-        Post.objects.select_related('author'),
-        pk=post_id
-    )
-    authors_posts_count = post.author.posts.count()
+class PostDetailView(DetailView):
+    """
+    Возвращает:
+    - (:obj:`QuerySet`) поста по его post_id;
+    - (:obj:`int`) количество постов автора authors_posts_count;
+    - (:obj:`CommentForm`) форму для добавления комментария.
+    """
+    model = Post
+    template_name = 'posts/post_detail.html'
+    context_object_name = 'post'
+    pk_url_kwarg = 'post_id'
 
-    comments = post.comments.all()
+    def get_queryset(self) -> QuerySet(Post):
+        return super().get_queryset().select_related('author')
 
-    form = CommentForm(request.POST or None)
-
-    context = {
-        'post': post,
-        'authors_posts_count': authors_posts_count,
-        'comments': comments,
-        'form': form,
-    }
-    template = 'posts/post_detail.html'
-    return render(request, template, context)
+    def get_context_data(self, **kwargs: Any) -> Dict[str, Any]:
+        context = super().get_context_data(**kwargs)
+        post = self.get_object()
+        context['authors_posts_count'] = post.author.posts.count()
+        context['comments'] = post.comments.all()
+        context['form'] = CommentForm(self.request.POST or None)
+        return context
 
 
-@login_required
-def add_comment(request, post_id):
-    post = get_object_or_404(Post, pk=post_id)
+class AddCommentView(LoginRequiredMixin, FormView):
+    """
+    Создаёт комментарий к посту по его post_id и
+    перенаправляет  обратно к посту.
+    """
+    form_class = CommentForm
+    template_name = 'posts/post_detail.html'
 
-    form = CommentForm(request.POST or None)
-
-    if form.is_valid():
+    def form_valid(self, form: CommentForm) -> HttpResponseRedirect:
+        post = get_object_or_404(Post, pk=self.kwargs['post_id'])
         comment = form.save(commit=False)
-        comment.author = request.user
+        comment.author = self.request.user
         comment.post = post
         comment.save()
-    return redirect('posts:post_detail', post_id=post_id)
+        return redirect('posts:post_detail', post_id=post.pk)
+
+    def form_invalid(self, form: CommentForm) -> HttpResponseRedirect:
+        post = get_object_or_404(Post, pk=self.kwargs['post_id'])
+        return render(
+            self.request,
+            self.template_name, {
+                'post': post,
+                'form': form,
+            }
+        )
 
 
-@login_required
-def follow_index(request):
-    post_list = (
-        Post.objects.
-        filter(author__following__user=request.user).
-        prefetch_related('group')
-    )
+class FollowIndexView(LoginRequiredMixin, View):
+    """
+    Возвращает :obj:`Paginator` с заметками авторов на которых
+    подписан авторизованный пользователь в запросе.
+    """
+    template_name = 'posts/follow.html'
 
-    page_obj = paginator_handler(request, post_list)
+    def get(self, request: HttpRequest, *args: Any, **kwargs: Any
+            ) -> HttpResponse:
+        post_list = (
+            Post.objects
+            .filter(author__following__user=request.user)
+            .exclude(Q(group=True) & Q(group__link__isnull=True))
+            .select_related('author', 'group')
+        )
+        if request.user.is_authenticated:
+            items = (
+                request.user
+                .groups_connections
+                .prefetch_related('group__posts')
+            )
+            for item in items:
+                posts = (
+                    item.group.posts
+                    .filter(author__following__user=request.user)
+                    )
+                post_list = post_list | posts
 
-    context = {
-        'page_obj': page_obj,
-    }
-    template = 'posts/follow.html'
-    return render(request, template, context)
+        page_obj = paginator_handler(request, post_list, PAGINATE_BY)
+        context = {
+            'page_obj': page_obj,
+        }
+        return render(request, self.template_name, context)
 
 
-@login_required
-def profile_follow(request, username):
-    author = get_object_or_404(User, username=username)
-    if author != request.user:
-        Follow.objects.get_or_create(user=request.user, author=author)
-    return redirect('posts:profile', username=username)
+class ProfileFollowView(LoginRequiredMixin, View):
+    """Подписка на пользователя в его профиле."""
+    def get(self, request: HttpRequest, username: str) -> HttpResponseRedirect:
+        author = get_object_or_404(User, username=username)
+        if author != request.user:
+            Follow.objects.get_or_create(user=request.user, author=author)
+        return redirect('posts:profile', username=username)
 
 
-@login_required
-def profile_unfollow(request, username):
-    author = get_object_or_404(User, username=username)
-    Follow.objects.filter(user=request.user, author=author).delete()
-    return redirect('posts:profile', username=username)
+class ProfileUnfollowView(LoginRequiredMixin, View):
+    """Отписка от пользователя в его профиле."""
+    def get(self, request: HttpRequest, username: str) -> HttpResponseRedirect:
+        author = get_object_or_404(User, username=username)
+        Follow.objects.filter(user=request.user, author=author).delete()
+        return redirect('posts:profile', username=username)
 
 
-@login_required
-def post_delete(request, post_id):
-    post = get_object_or_404(Post, pk=post_id)
-    if post.author == request.user:
-        post.delete()
-    return redirect('posts:profile', post.author.username)
+class PostDeleteView(LoginRequiredMixin, View):
+    """Удаление поста."""
+    def get(self, request: HttpRequest, post_id: int) -> HttpResponseRedirect:
+        post = get_object_or_404(Post, pk=post_id)
+        if post.author == request.user:
+            post.delete()
+        return redirect('posts:profile', post.author.username)

@@ -1,26 +1,31 @@
 from django.urls import include, path
 
-from .views import (add_comment, follow_index, group_posts, index_posts,
-                    post_create, post_delete, post_detail, post_edit, profile,
-                    profile_follow, profile_unfollow, search)
+from .views import (AddCommentView, FollowIndexView, GroupPostsView,
+                    IndexPostsView, PostCreateView, PostDeleteView,
+                    PostDetailView, PostUpdateView, ProfileFollowView,
+                    ProfileUnfollowView, ProfileView, SearchView)
 
 urlpatterns = [
-    path('', index_posts, name='index_posts'),
-    path('s', search, name='search'),
-    path('group/<slug:slug>/', group_posts, name='group_list'),
-    path('create/', post_create, name='post_create'),
+    path('', IndexPostsView.as_view(), name='index_posts'),
+    path('s', SearchView.as_view(), name='search'),
+    path('group/<slug:slug>/', GroupPostsView.as_view(), name='group_list'),
+    path('create/', PostCreateView.as_view(), name='post_create'),
     path('<int:post_id>/', include([
-        path('comment/', add_comment, name='add_comment'),
-        path('edit/', post_edit, name='post_edit'),
-        path('delete/', post_delete, name='post_delete'),
-        path('', post_detail, name='post_detail'),
+        path('comment/', AddCommentView.as_view(), name='add_comment'),
+        path('edit/', PostUpdateView.as_view(), name='post_edit'),
+        path('delete/', PostDeleteView.as_view(), name='post_delete'),
+        path('', PostDetailView.as_view(), name='post_detail'),
         ])
     ),
-    path('follow/', follow_index, name='follow_index'),
+    path('follow/', FollowIndexView.as_view(), name='follow_index'),
     path('profile/<str:username>/', include([
-        path('follow/', profile_follow, name='profile_follow'),
-        path('unfollow/', profile_unfollow, name='profile_unfollow'),
-        path('', profile, name='profile'),
+        path('follow/', ProfileFollowView.as_view(), name='profile_follow'),
+        path(
+            'unfollow/',
+            ProfileUnfollowView.as_view(),
+            name='profile_unfollow'
+        ),
+        path('', ProfileView.as_view(), name='profile'),
         ])
     ),
 ]

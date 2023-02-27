@@ -1,7 +1,12 @@
+import os
 import re
 
 import pytz
 from dateparser.search import search_dates
+
+from ..loader import bot
+
+ADMIN_ID = os.getenv('ADMIN_ID')
 
 
 class TaskParse:
@@ -28,9 +33,9 @@ class TaskParse:
     - `get_parameters` (:obj:`str`) - разделяет строку, возвращает параметр
     повтора и убирает параметр из атрибута message.
     """
-    birthday_list = ['ДР', 'День Рождения', 'День рождения', 'день рождения',
+    BIRTHDAY_LIST = ['ДР', 'День Рождения', 'День рождения', 'день рождения',
                      'Birthday', 'birthday']
-    period_dic = {
+    PERIOD_DIC = {
         'день': 'D',
         'недел': 'W',
         'месяц': 'M',
@@ -44,17 +49,9 @@ class TaskParse:
         self.user_date = None
         self.only_message = ''
         self.period_repeat = 'N'
-        self.birthday = False
-
-    def get_parameters(self) -> str:
-        """Разделяет строку на сообщение и параметры"""
-        message = self.message
-        division_message = message.split('&')
-        if len(division_message) > 1:
-            for key, item in TaskParse.period_dic.items():
-                if key in division_message[1]:
-                    self.period_repeat = item
-        return division_message[0]
+        self.birthday = any(
+            word in message for word in TaskParse.BIRTHDAY_LIST
+            )
 
     def _parse(self, message: str) -> None:
         """Дифференцирует текст определяя значения атрибутов класса."""
@@ -62,7 +59,7 @@ class TaskParse:
         try:
             match = re.search(pattern, message)
             if match:
-                date_ru = match[0]
+                date_ru = match.group()
                 date_parser = date_ru.replace('.', '-')
                 message = message.replace(date_ru, date_parser)
 
@@ -79,15 +76,13 @@ class TaskParse:
             )
             first_match = pars_tup[0] if pars_tup else None
 
-            if first_match:
+            if isinstance(first_match, tuple):
                 date = first_match[1]
-
                 user_tz = pytz.timezone(self.time_zone)
                 self.user_date = user_tz.localize(date)
-
                 utc = pytz.utc
 
-                if self.it_birthday:
+                if self.birthday:
                     self.server_date = utc.localize(
                         date.replace(hour=0, minute=0, second=0, microsecond=0)
                     )
@@ -95,13 +90,24 @@ class TaskParse:
                     self.server_date = self.user_date.astimezone(utc)
 
                 message = message.replace(first_match[0], '').strip()
-                if message == '':
-                    self.only_message = ''
-                else:
-                    self.only_message = message[:1].upper() + message[1:]
+                self.only_message = (
+                    message[:1].upper() + message[1:] if message else ''
+                )
 
         except Exception as error:
-            print(f'Не распарсил. Ошибка: {error}')
+            text = f'Не распарсил: {message}.\nОшибка: {error}'
+            bot.send_message(chat_id=ADMIN_ID, text=text)
+
+    def get_parameters(self) -> str:
+        """Разделяет строку на сообщение и параметры"""
+        message, *params = self.message.split('&')
+        if params:
+            for param in params:
+                for key, value in TaskParse.PERIOD_DIC.items():
+                    if key in param:
+                        self.period_repeat = value
+                        break
+        return message
 
     def parse_with_parameters(self) -> None:
         """Распарсит сообщение с параметрами."""
@@ -112,12 +118,3 @@ class TaskParse:
         """Распарсит сообщение без параметрами."""
         message = self.message
         self._parse(message)
-
-    @property
-    def it_birthday(self) -> bool:
-        """Определяет ДР в сообщении."""
-        for word in TaskParse.birthday_list:
-            if word in self.message:
-                self.birthday = True
-                break
-        return self.birthday

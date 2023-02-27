@@ -153,7 +153,9 @@ DBBACKUP_STORAGE_OPTIONS = {
 }
 
 DBBACKUP_CONNECTORS = {
-    'CONNECTOR': 'dbbackup.db.postgresql.PgDumpBinaryConnector',
+        'default': {
+            'CONNECTOR': 'dbbackup.db.postgresql.PgDumpBinaryConnector',
+        }
 }
 
 # Default primary key field type

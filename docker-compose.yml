@@ -61,6 +61,7 @@ services:
     command: bash -c "cd todo && celery -A todo worker --loglevel=INFO"
     volumes:
       - .:/app/:rw
+      - backup_volume:/app/web/backup/:rw
       - cache_pip_volume:/root/.cache/pip/:rw
       - cache_apt_volume:/var/cache/apt/archives/:rw
     env_file:

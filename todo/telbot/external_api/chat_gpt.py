@@ -64,7 +64,7 @@ def request_to_openai(prompt: str) -> str:
             raise ValueError("not text")
     except Exception:
         answer = openai.Completion.create(
-            engine='text-davinci-002',
+            engine='text-davinci-003',
             prompt=prompt,
             max_tokens=2048,
             temperature=0.7,

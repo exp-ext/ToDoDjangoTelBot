@@ -103,7 +103,7 @@ def get_answer_davinci(update: Update, context: CallbackContext):
     message_text = update.message.text.replace('#', '')
 
     this_datetime = datetime.now(timezone.utc)
-    start_datetime = this_datetime - timedelta(minutes=5)
+    start_datetime = this_datetime - timedelta(minutes=10)
     history = user.history_ai.filter(
         created_at__range=[start_datetime, this_datetime]
     )

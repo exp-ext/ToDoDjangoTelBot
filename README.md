@@ -6,10 +6,10 @@
 <div class="w-[30px] flex flex-col relative items-end">To deploy the project, you need to clone it to your server.&nbsp;</div>
 
 ```
-https://github.com/exp-ext/ToDoDjangoTelBot.git
+git clone https://github.com/exp-ext/ToDoDjangoTelBot.git
 ```
 
-<div class="w-[30px] flex flex-col relative items-end">```&nbsp;</div>
+<div class="w-[30px] flex flex-col relative items-end">&nbsp;</div>
 <div class="w-[30px] flex flex-col relative items-end">Add a .env file with tokens, passwords, and settings. Launch the project using Docker by running the following command:</div>
 
 ```

@@ -3,7 +3,6 @@ from typing import Any, Dict
 from core.views import get_status_in_group, linkages_check, paginator_handler
 from django.contrib.auth import get_user_model
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.core.paginator import Paginator
 from django.db.models import Q
 from django.db.models.query import QuerySet
 from django.http import HttpRequest, HttpResponse, HttpResponseRedirect
@@ -23,15 +22,23 @@ User = get_user_model()
 PAGINATE_BY = 10
 
 
-class SearchView(View):
+class SearchListView(ListView):
     """
-    Возвращает :obj:`Paginator` с результатом поиска в постах.
+    Возвращает
+    - (:obj:`Paginator`) с результатом поиска в постах;
+    - (:obj:`str`) поисковое слово keyword.
     """
     template_name = 'posts/search_result.html'
+    paginate_by = PAGINATE_BY
 
-    def get(self, request: HttpRequest, *args: Any, **kwargs: Any
-            ) -> HttpResponse:
-        keyword = request.GET.get('q', '')
+    def get_context_data(self, **kwargs) -> Dict[str, Any]:
+        context = super().get_context_data(**kwargs)
+        context['keyword'] = self.request.GET.get('q', '')
+        return context
+
+    def get_queryset(self) -> QuerySet(Post):
+        keyword = self.request.GET.get('q', '')
+        user = self.request.user
 
         if not keyword:
             return redirect('posts:index_posts')
@@ -43,56 +50,44 @@ class SearchView(View):
             .filter(text__icontains=keyword)
             .order_by('group')
         )
-        if request.user.is_authenticated:
+        if user.is_authenticated:
             post_list |= Post.objects.filter(
                 group__in=(
-                    request.user
+                    user
                     .groups_connections
                     .values_list('group', flat=True)
                 ),
                 text__icontains=keyword,
             )
-        page_obj = paginator_handler(request, post_list, PAGINATE_BY)
-
-        context = {
-            'page_obj': page_obj,
-            'keyword': keyword,
-            'post_list': post_list,
-        }
-        return render(request, self.template_name, context)
+        return post_list
 
 
-class IndexPostsView(View):
+class IndexPostsListView(ListView):
     """
     Возвращает :obj:`Paginator` с заметками для общей ленты.
     """
     template_name = 'posts/index_posts.html'
+    paginate_by = PAGINATE_BY
 
-    def get(self, request: HttpRequest, *args: Any, **kwargs: Any
-            ) -> HttpResponse:
+    def get_queryset(self) -> QuerySet(Post):
+        user = self.request.user
         post_list = (
             Post.objects
             .exclude(Q(group=True) & Q(group__link__isnull=True))
             .select_related('author', 'group')
         )
-        if request.user.is_authenticated:
-            items = (
-                request.user
-                .groups_connections
-                .prefetch_related('group__posts')
+        if user.is_authenticated:
+            post_list |= Post.objects.filter(
+                group__in=(
+                    user
+                    .groups_connections
+                    .values_list('group', flat=True)
+                ),
             )
-            for item in items:
-                posts = item.group.posts.all()
-                post_list = post_list | posts
-
-        page_obj = paginator_handler(request, post_list, PAGINATE_BY)
-        context = {
-            'page_obj': page_obj,
-        }
-        return render(request, self.template_name, context)
+        return post_list
 
 
-class GroupPostsView(LoginRequiredMixin, ListView):
+class GroupPostsListView(LoginRequiredMixin, ListView):
     """
     Возвращает:
     - (:obj:`Paginator`) с заметками группы по slug;
@@ -105,7 +100,7 @@ class GroupPostsView(LoginRequiredMixin, ListView):
     """
     model = Post
     template_name = 'posts/group_list.html'
-    context_object_name = 'page_obj'
+    paginate_by = PAGINATE_BY
 
     def dispatch(self, request: HttpRequest, *args: Any, **kwargs: Any
                  ) -> HttpResponse:
@@ -124,9 +119,8 @@ class GroupPostsView(LoginRequiredMixin, ListView):
         ).exists()
         return super().dispatch(request, *args, **kwargs)
 
-    def get_queryset(self) -> Paginator:
-        post_list = self.group.posts.select_related('author', 'group')
-        return paginator_handler(self.request, post_list, PAGINATE_BY)
+    def get_queryset(self) -> QuerySet(Post):
+        return self.group.posts.select_related('author', 'group')
 
     def get_context_data(self, **kwargs: Any) -> Dict[str, Any]:
         context = super().get_context_data(**kwargs)
@@ -156,7 +150,7 @@ class GroupPostsView(LoginRequiredMixin, ListView):
         return self.get(request, *args, **kwargs)
 
 
-class ProfileView(LoginRequiredMixin, DetailView):
+class ProfileDetailView(LoginRequiredMixin, DetailView):
     """
     Возвращает:
     - (:obj:`Paginator`) все посты одного пользователя по его имени(id);
@@ -315,39 +309,32 @@ class AddCommentView(LoginRequiredMixin, FormView):
         )
 
 
-class FollowIndexView(LoginRequiredMixin, View):
+class FollowIndexListView(LoginRequiredMixin, ListView):
     """
     Возвращает :obj:`Paginator` с заметками авторов на которых
     подписан авторизованный пользователь в запросе.
     """
     template_name = 'posts/follow.html'
+    paginate_by = PAGINATE_BY
 
-    def get(self, request: HttpRequest, *args: Any, **kwargs: Any
-            ) -> HttpResponse:
+    def get_queryset(self) -> QuerySet(Post):
+        user = self.request.user
         post_list = (
             Post.objects
-            .filter(author__following__user=request.user)
+            .filter(author__following__user=user)
             .exclude(Q(group=True) & Q(group__link__isnull=True))
             .select_related('author', 'group')
         )
-        if request.user.is_authenticated:
-            items = (
-                request.user
-                .groups_connections
-                .prefetch_related('group__posts')
+        if user.is_authenticated:
+            post_list |= Post.objects.filter(
+                author__following__user=user,
+                group__in=(
+                    user
+                    .groups_connections
+                    .values_list('group', flat=True)
+                ),
             )
-            for item in items:
-                posts = (
-                    item.group.posts
-                    .filter(author__following__user=request.user)
-                    )
-                post_list = post_list | posts
-
-        page_obj = paginator_handler(request, post_list, PAGINATE_BY)
-        context = {
-            'page_obj': page_obj,
-        }
-        return render(request, self.template_name, context)
+        return post_list
 
 
 class ProfileFollowView(LoginRequiredMixin, View):

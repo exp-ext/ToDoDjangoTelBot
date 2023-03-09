@@ -19,23 +19,23 @@ User = get_user_model()
 ADMIN_ID = os.getenv('ADMIN_ID')
 
 ERROR_TEXT = (
-        'Что-то пошло не так 🤷🏼\n'
-        'Возможно большой наплыв запросов, '
-        'которые я не успеваю обрабатывать 🤯'
-    )
+    'Что-то пошло не так 🤷🏼\n'
+    'Возможно большой наплыв запросов, '
+    'которые я не успеваю обрабатывать 🤯'
+)
 
 
-def add_history(history):
+def add_history(history, len_initial_text):
     """Возвращает форматированную историю."""
     prompt = ''
     count = 0
     for item in history:
-        if count > 3:
+        if not item.answer or item.answer == ERROR_TEXT:
+            continue
+        dialog = f'- {item.question}\n- {item.answer}\n\n'
+        if len(prompt) + len(dialog) + len_initial_text >= 2049:
             break
-        if item.answer and item.answer != ERROR_TEXT:
-            prompt += (
-                f'- {item.question}\n- {item.answer}\n\n'
-            )
+        prompt += dialog
         count += 1
     return prompt
 
@@ -49,7 +49,7 @@ def request_to_openai(prompt: str) -> str:
 
     Возвращает результат в виде текста или исключение.
     """
-
+    answer_text = ''
     try:
         answer = openai.Completion.create(
             engine='text-davinci-003',
@@ -88,8 +88,8 @@ def get_answer_davinci(update: Update, context: CallbackContext):
               f'[зарегистрируетесь]({context.bot.link}) 🧐'),
         '!': ('Я обязательно поддержу Вашу дискуссию, если '
               f'[зарегистрируетесь]({context.bot.link}) 🙃'),
-        '':  ('Какая интересная беседа, [зарегистрируетесь]'
-              f'({context.bot.link}) и я подключусь к ней 😇'),
+        '': ('Какая интересная беседа, [зарегистрируетесь]'
+             f'({context.bot.link}) и я подключусь к ней 😇'),
     }
 
     if check_registration(update, context, answers) is False:
@@ -100,7 +100,7 @@ def get_answer_davinci(update: Update, context: CallbackContext):
         User,
         username=update.effective_user.id
     )
-    message_text = update.message.text.replace('#', '')
+    message_text = update.message.text.replace('#', '', 1)
 
     this_datetime = datetime.now(timezone.utc)
     start_datetime = this_datetime - timedelta(minutes=10)
@@ -108,8 +108,10 @@ def get_answer_davinci(update: Update, context: CallbackContext):
         created_at__range=[start_datetime, this_datetime]
     )
     prompt = ''
+    answer = ''
+
     if history:
-        prompt = add_history(history)
+        prompt = add_history(history, len(message_text))
     prompt += f'- {message_text}'
 
     try:
@@ -118,7 +120,7 @@ def get_answer_davinci(update: Update, context: CallbackContext):
         HistoryAI.objects.create(
             user=user,
             question=message_text,
-            answer=answer
+            answer=answer.lstrip('\n')
         )
     except Exception as error:
         context.bot.send_message(

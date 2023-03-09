@@ -15,10 +15,10 @@ User = get_user_model()
 def first_step_dell(update: Update, context: CallbackContext):
     chat = update.effective_chat
     req_text = (
-            f'*{update.effective_user.first_name}*, '
-            'введите дату и часть текста заметки,\n'
-            'или del для отмены операции'
-        )
+        f'*{update.effective_user.first_name}*, '
+        'введите дату и часть текста заметки,\n'
+        'или del для отмены операции'
+    )
     message_id = context.bot.send_message(
         chat.id,
         req_text,

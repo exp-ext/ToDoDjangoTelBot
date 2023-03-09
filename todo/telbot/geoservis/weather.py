@@ -12,7 +12,7 @@ from .support import status_weather
 
 
 def current_weather(update: Update, context: CallbackContext):
-    """Выводит в чат текущую погоду по геокоординатам."""
+    """Выводит в чат текущую погоду по координатам."""
     chat = update.effective_chat
     user_id = chat.id
     coordinates = get_coordinates(user_id)
@@ -41,7 +41,7 @@ def current_weather(update: Update, context: CallbackContext):
         )
         wind_speed = int(data['wind']['speed'])
         direction = int((wind_speed + 22.5) // 45 % 8)
-        pressure = round(int(data['main']['pressure']*0.750063755419211))
+        pressure = round(int(data['main']['pressure'] * 0.750063755419211))
 
         weather = [
             f" *{status_weather(data['weather'][0]['description'])}*",
@@ -66,7 +66,7 @@ def current_weather(update: Update, context: CallbackContext):
 
 
 def weather_forecast(update: Update, context: CallbackContext):
-    """Выводит прогноз погоды на 4 дня по последним User геокоординатам."""
+    """Выводит прогноз погоды на 4 дня по последним User координатам."""
     chat = update.effective_chat
     user_id = chat.id
     coordinates = get_coordinates(user_id)
@@ -142,7 +142,7 @@ def weather_forecast(update: Update, context: CallbackContext):
                 )
             coeff_celsia = 0.750063755419211
             pressure_c = int(
-                data['list'][record]['main']['pressure']*coeff_celsia
+                data['list'][record]['main']['pressure'] * coeff_celsia
             )
             text_weather += f"давление *{pressure_c}*мм рт.ст\n"
 

@@ -50,11 +50,11 @@ class TasksListView(LoginRequiredMixin, ListView):
                     timediff=Case(
                         When(
                             server_datetime__gte=now,
-                            then=F('server_datetime')-now
+                            then=F('server_datetime') - now
                         ),
                         When(
                             server_datetime__lt=now,
-                            then=now-F('server_datetime')
+                            then=now - F('server_datetime')
                         ),
                         output_field=DurationField(),
                     )
@@ -70,7 +70,7 @@ class TasksListView(LoginRequiredMixin, ListView):
                     .exclude(it_birthday=False)
                     .order_by('server_datetime__month', 'server_datetime__day')
                     .select_related('user')
-                )
+            )
         return note_list
 
 

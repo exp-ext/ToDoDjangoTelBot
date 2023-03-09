@@ -72,7 +72,7 @@ def linkages_check(user: QuerySet[User]) -> None:
             result = bot.get_chat_member(
                 entry.group.chat_id,
                 user.username
-                )
+            )
             if result.status in exit_status:
                 entry.delete()
         except Exception:

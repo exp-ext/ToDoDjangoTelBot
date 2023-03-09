@@ -21,9 +21,9 @@ User = get_user_model()
 def first_step_get_image(update: Update, context: CallbackContext):
     chat = update.effective_chat
     req_text = (
-            f'*{update.effective_user.first_name}*, '
-            'введите текст для генерации картинки на английском языке'
-        )
+        f'*{update.effective_user.first_name}*, '
+        'введите текст для генерации картинки на английском языке'
+    )
     message_id = context.bot.send_message(
         chat.id,
         req_text,
@@ -40,9 +40,9 @@ def get_image_dall_e(update: Update, context: CallbackContext):
     Предварительно вызвав функцию проверки регистрации.
     """
     answers = {
-        '':  ('К сожалению данная функция доступна только для '
-              '[зарегистрированных пользователей]'
-              f'({context.bot.link})'),
+        '': ('К сожалению данная функция доступна только для '
+             '[зарегистрированных пользователей]'
+             f'({context.bot.link})'),
     }
     if check_registration(update, context, answers) is False:
         return 'Bad register'

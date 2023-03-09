@@ -17,7 +17,7 @@ urlpatterns = [
         path('edit/', PostUpdateView.as_view(), name='post_edit'),
         path('delete/', PostDeleteView.as_view(), name='post_delete'),
         path('', PostDetailView.as_view(), name='post_detail'),
-        ])
+    ])
     ),
     path('follow/', FollowIndexListView.as_view(), name='follow_index'),
     path('profile/<str:username>/', include([
@@ -28,6 +28,6 @@ urlpatterns = [
             name='profile_unfollow'
         ),
         path('', ProfileDetailView.as_view(), name='profile'),
-        ])
+    ])
     ),
 ]

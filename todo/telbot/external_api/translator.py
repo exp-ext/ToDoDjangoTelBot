@@ -38,10 +38,10 @@ def translate_translator(text: str, to_language: str) -> str:
 
     try:
         response = requests.post(
-                url=url,
-                headers=headers,
-                json=payload
-            )
+            url=url,
+            headers=headers,
+            json=payload
+        )
         answer = response.json().get('data').get('translation')
     except Exception as error:
         raise KeyError(error)
@@ -125,9 +125,9 @@ def send_translation(update: Update, context: CallbackContext):
     Описание.
     """
     answers = {
-        '':  ('К сожалению перевод доступен только для  '
-              '[зарегистрированных пользователей]'
-              f'({context.bot.link}).'),
+        '': ('К сожалению перевод доступен только для  '
+             '[зарегистрированных пользователей]'
+             f'({context.bot.link}).'),
     }
     if check_registration(update, context, answers) is False:
         return 'Bad register'

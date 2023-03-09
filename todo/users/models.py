@@ -52,11 +52,10 @@ class Group(models.Model):
 
     def save(self, *args, **kwargs):
         slug = slugify(self.title)[:30]
-        if (not slug or
-                Group.objects.filter(
-                    Q(slug=slug),
-                    ~Q(chat_id=self.chat_id)
-                ).exists()):
+        if (not slug
+            or Group.objects.filter(
+                Q(slug=slug),
+                ~Q(chat_id=self.chat_id)).exists()):
             self.slug = ''.join(
                 random.choices(string.ascii_lowercase, k=15)
             )

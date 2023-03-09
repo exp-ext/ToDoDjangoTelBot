@@ -110,9 +110,9 @@ def check_birthdays() -> str:
     this_datetime = datetime.now(timezone.utc)
 
     tasks = Task.objects.filter(
-       server_datetime__day=this_datetime.day,
-       server_datetime__month=this_datetime.month,
-       it_birthday=True
+        server_datetime__day=this_datetime.day,
+        server_datetime__month=this_datetime.month,
+        it_birthday=True
     ).select_related('user', 'group')
 
     reply_text = '<b>Сегодня не забудьте поздравить с праздником:</b>\n'

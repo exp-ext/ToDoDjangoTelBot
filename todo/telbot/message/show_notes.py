@@ -18,10 +18,10 @@ User = get_user_model()
 def first_step_show(update: Update, context: CallbackContext):
     chat = update.effective_chat
     req_text = (
-            f'*{update.effective_user.first_name}*, '
-            'введите дату, на которую хотите вывести заметки\n'
-            'или *end* для отмены операции'
-        )
+        f'*{update.effective_user.first_name}*, '
+        'введите дату, на которую хотите вывести заметки\n'
+        'или *end* для отмены операции'
+    )
     message_id = context.bot.send_message(
         chat.id,
         req_text,
@@ -91,9 +91,9 @@ def show(update: Update, context: CallbackContext,
     user_id = update.effective_user.id
 
     user = get_object_or_404(
-            User,
-            username=user_id
-        )
+        User,
+        username=user_id
+    )
     user_locally = user.locations.first()
     user_tz = pytz.timezone(user_locally.timezone)
     group = None

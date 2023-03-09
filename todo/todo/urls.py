@@ -33,13 +33,13 @@ urlpatterns = [
     path('admin/', include([
         path('', admin.site.urls),
         path('defender/', include('defender.urls')),
-        ])
+    ])
     ),
     path('about/', include(('about.urls', 'about'), namespace='about')),
     path('auth/', include([
         path('', include(('users.urls', 'users'), namespace='users')),
         path('', include('django.contrib.auth.urls')),
-        ])
+    ])
     ),
     path('bot/', include(('telbot.urls', 'telbot'))),
     path('tasks/', include(('tasks.urls', 'tasks'), namespace='tasks')),

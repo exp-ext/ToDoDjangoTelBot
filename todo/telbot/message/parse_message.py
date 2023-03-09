@@ -51,7 +51,7 @@ class TaskParse:
         self.period_repeat = 'N'
         self.birthday = any(
             word in message for word in TaskParse.BIRTHDAY_LIST
-            )
+        )
 
     def _parse(self, message: str) -> None:
         """Дифференцирует текст определяя значения атрибутов класса."""

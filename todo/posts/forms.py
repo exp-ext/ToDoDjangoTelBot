@@ -12,8 +12,8 @@ class GroupMailingForm(forms.Form):
         coerce=lambda x: x == 'True',
         choices=((False, 'Выключена'), (True, 'Включена')),
         widget=forms.RadioSelect(
-                attrs={'onchange': 'form.submit();'}
-            )
+            attrs={'onchange': 'form.submit();'}
+        )
     )
 
 

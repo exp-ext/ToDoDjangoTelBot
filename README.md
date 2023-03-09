@@ -6,7 +6,7 @@
 <div class="w-[30px] flex flex-col relative items-end">To deploy the project, you need to clone it to your server.&nbsp;</div>
 
 ```
-git clone https://github.com/exp-ext/ToDoDjangoTelBot.git
+$ git clone https://github.com/exp-ext/ToDoDjangoTelBot.git
 ```
 
 <div class="w-[30px] flex flex-col relative items-end">&nbsp;</div>
@@ -53,7 +53,7 @@ SENTRY_KEY=...
 <div class="w-[30px] flex flex-col relative items-end">Launch the project using Docker by running the following command:</div>
 
 ```
-docker-compose up 
+$ docker-compose up 
 ```
 
 <p><em>Note: Before running the above command, make sure that you have Docker and Docker Compose installed on your server. You may also need to adjust the Docker Compose file to fit your specific configuration needs.</em></p>

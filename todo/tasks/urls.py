@@ -18,6 +18,6 @@ urlpatterns = [
             TaskDeleteView.as_view(),
             name='task_delete'
         ),
-        ])
+    ])
     ),
 ]

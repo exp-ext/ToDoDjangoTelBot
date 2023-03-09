@@ -64,16 +64,14 @@ class Signup:
             'Ниже ссылка, логин и пароль для входа в личный кабинет:\n'
             f'⤵️\n',
             f'{tel_user.id}\n',
-            f'{password}\n',
-            # 'А сейчас, можно просто нажать на [ВХОД🕋]'
-            # f'(https://{settings.DOMEN}/auth/login/{tel_user.id}/{password}/'
-            ]
+            f'{password}\n'
+        ]
 
         for text in reply_text:
             update.message.reply_text(
-                    text=text,
-                    parse_mode='Markdown'
-                )
+                text=text,
+                parse_mode='Markdown'
+            )
         set_up_commands(context.bot)
         return JsonResponse({"ok": "User created."})
 

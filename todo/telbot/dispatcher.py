@@ -69,7 +69,7 @@ def setup_dispatcher(dp: Dispatcher):
         CallbackQueryHandler(show_all_notes, pattern='^show_all_notes$')
     )
     dp.add_handler(
-       CallbackQueryHandler(show_birthday, pattern='^show_birthday$')
+        CallbackQueryHandler(show_birthday, pattern='^show_birthday$')
     )
     dp.add_handler(
         ConversationHandler(

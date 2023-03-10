@@ -18,7 +18,7 @@ def check_registration(update: Update,
     user_tel = update.effective_user
     user = User.objects.filter(username=user_tel.id)
     text = None
-    prompt = update.message.text
+    prompt = update.effective_message.text
     if not user:
         for key, _ in answers.items():
             if key in prompt:

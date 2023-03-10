@@ -100,7 +100,7 @@ def get_answer_davinci(update: Update, context: CallbackContext):
         User,
         username=update.effective_user.id
     )
-    message_text = update.message.text.replace('#', '', 1)
+    message_text = update.effective_message.text.replace('#', '', 1)
 
     this_datetime = datetime.now(timezone.utc)
     start_datetime = this_datetime - timedelta(minutes=10)

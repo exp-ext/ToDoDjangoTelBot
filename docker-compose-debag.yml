@@ -30,18 +30,21 @@ services:
   web:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: dev/Dockerfile
       args:
         - DJANGO_SECRET_KEY
     container_name: todo_django
     restart: always
-    command: ./conf_sh/web_entrypoint.sh
+    command: bash -c "cd todo && gunicorn -c config/gunicorn/dev.py"
+    stdin_open: true
+    tty: true
     volumes:
       - static_volume:/app/todo/static/:rw
       - media_volume:/app/web/media/:rw
       - backup_volume:/app/web/backup/:rw
       - cache_pip_volume:/root/.cache/pip/:rw
       - cache_apt_volume:/var/cache/apt/archives/:rw
+      - .:/app/:rw
     expose:
       - 8000
     env_file:
@@ -55,15 +58,15 @@ services:
   celery:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: dev/Dockerfile
     container_name: todo_celery
     restart: always
     command: bash -c "cd todo && celery -A todo worker --loglevel=INFO"
-    volumes:
-      - .:/app/:rw
+    volumes:      
       - backup_volume:/app/web/backup/:rw
       - cache_pip_volume:/root/.cache/pip/:rw
       - cache_apt_volume:/var/cache/apt/archives/:rw
+      - .:/app/:rw
     env_file:
       - ./.env
     depends_on:
@@ -74,15 +77,15 @@ services:
   celery-beat:
     build:
       context: .
-      dockerfile: Dockerfile    
+      dockerfile: dev/Dockerfile   
     container_name: todo_beat
     restart: always
     command: bash -c "cd todo && celery -A todo beat -l info --scheduler django_celery_beat.schedulers.DatabaseScheduler"
     volumes:
-      - .:/app/:rw
       - backup_volume:/app/web/backup/:rw
       - cache_pip_volume:/root/.cache/pip/:rw
       - cache_apt_volume:/var/cache/apt/archives/:rw
+      - .:/app/:rw
     env_file:
       - ./.env
     depends_on:
@@ -128,3 +131,4 @@ volumes:
   cache_pip_volume:
   cache_apt_volume:
   whisper_volume:
+  

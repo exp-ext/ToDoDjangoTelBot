@@ -69,14 +69,14 @@ def get_answer_davinci(update: Update, context: CallbackContext):
         Return:
             (:obj:`str`) ответ ИИ
         """
-        # answer = openai.ChatCompletion.create(
-        #     model='gpt-3.5-turbo',
-        #     messages=prompt
-        # )
-        # answer_text = answer.choices[0].message.get('content')
+        answer = openai.ChatCompletion.create(
+            model='gpt-3.5-turbo',
+            messages=prompt
+        )
+        answer_text = answer.choices[0].message.get('content')
         # для теста
-        await asyncio.sleep(10)
-        answer_text = '\n'.join([w.get('content') for w in prompt])
+        # await asyncio.sleep(10)
+        # answer_text = '\n'.join([w.get('content') for w in prompt])
         return answer_text
 
     async def get_answer(prompt: list, chat_id: int, context: CallbackContext):

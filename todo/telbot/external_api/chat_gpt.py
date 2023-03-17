@@ -69,14 +69,14 @@ def get_answer_davinci(update: Update, context: CallbackContext):
         Return:
             (:obj:`str`) ответ ИИ
         """
-        answer = openai.ChatCompletion.create(
-            model='gpt-3.5-turbo',
-            messages=prompt
-        )
-        answer_text = answer.choices[0].message.get('content')
+        # answer = openai.ChatCompletion.create(
+        #     model='gpt-3.5-turbo',
+        #     messages=prompt
+        # )
+        # answer_text = answer.choices[0].message.get('content')
         # для теста
-        # await asyncio.sleep(20)
-        # answer_text = '\n'.join([w.get('content') for w in prompt])
+        await asyncio.sleep(10)
+        answer_text = '\n'.join([w.get('content') for w in prompt])
         return answer_text
 
     async def get_answer(prompt: list, chat_id: int, context: CallbackContext):
@@ -122,17 +122,28 @@ def get_answer_davinci(update: Update, context: CallbackContext):
     prompt = add_history(history) if history else []
     prompt.append({'role': 'user', 'content': message_text})
 
-    answer = asyncio.run(get_answer(prompt, chat_id, context))
+    try:
+        answer = asyncio.run(get_answer(prompt, chat_id, context))
 
-    HistoryAI.objects.create(
-        user=user,
-        question=message_text,
-        answer=answer.lstrip('\n')
-    )
-    answer_text = answer if answer else ERROR_TEXT
-    context.bot.send_message(
-        chat_id=chat_id,
-        reply_to_message_id=update.message.message_id,
-        text=answer_text
-    )
+        if isinstance(answer, str):
+            answer_text = answer if answer else ERROR_TEXT
+            HistoryAI.objects.create(
+                user=user,
+                question=message_text,
+                answer=answer.lstrip('\n')
+            )
+        else:
+            answer_text = ERROR_TEXT
+
+    except Exception as err:
+        context.bot.send_message(
+            chat_id=ADMIN_ID,
+            text=f'Ошибка в ChatGPT: {err}'
+        )
+    finally:
+        context.bot.send_message(
+            chat_id=chat_id,
+            reply_to_message_id=update.message.message_id,
+            text=answer_text
+        )
     return 'Done'

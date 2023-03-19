@@ -1,4 +1,3 @@
-
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from telegram import ParseMode, Update
@@ -18,7 +17,7 @@ def check_registration(update: Update,
     user_tel = update.effective_user
     user = User.objects.filter(username=user_tel.id)
     text = None
-    prompt = update.message.text
+    prompt = update.effective_message.text
     if not user:
         for key, _ in answers.items():
             if key in prompt:

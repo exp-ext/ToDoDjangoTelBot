@@ -19,8 +19,6 @@ from .message.stereography import send_audio_transcription
 from .parse.jokes import show_joke
 from .service_message import cancel
 
-# from .text_handlers.echo import do_echo
-
 
 def setup_dispatcher(dp: Dispatcher):
     """
@@ -102,7 +100,8 @@ def setup_dispatcher(dp: Dispatcher):
     dp.add_handler(
         MessageHandler(
             Filters.regex('#'),
-            get_answer_davinci)
+            get_answer_davinci
+        )
     )
     dp.add_handler(
         MessageHandler(
@@ -126,7 +125,7 @@ def setup_dispatcher(dp: Dispatcher):
     return dp
 
 
-n_workers = 0 if settings.DEBUG else 4
+n_workers = 0 if settings.LOCAL_DEV else 4
 dispatcher = setup_dispatcher(
     Dispatcher(bot, update_queue=None, workers=n_workers, use_context=True)
 )

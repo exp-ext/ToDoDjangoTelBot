@@ -1,11 +1,13 @@
 import os
+import threading
+import time
 from datetime import datetime, timedelta, timezone
 
 import openai
 from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
 from dotenv import load_dotenv
-from telegram import Update
+from telegram import ChatAction, Update
 from telegram.ext import CallbackContext
 
 from ..checking import check_registration
@@ -25,57 +27,13 @@ ERROR_TEXT = (
 )
 
 
-def add_history(history, len_initial_text):
+def add_history(history):
     """Возвращает форматированную историю."""
-    prompt = ''
-    count = 0
-    for item in history:
-        if not item.answer or item.answer == ERROR_TEXT:
-            continue
-        dialog = f'- {item.question}\n- {item.answer}\n\n'
-        if len(prompt) + len(dialog) + len_initial_text >= 2049:
-            break
-        prompt += dialog
-        count += 1
+    prompt = []
+    for item in history.exclude(answer__in=[None, ERROR_TEXT]):
+        prompt.append({'role': 'user', 'content': item.question})
+        prompt.append({'role': 'assistant', 'content': item.answer})
     return prompt
-
-
-def request_to_openai(prompt: str) -> str:
-    """
-    Делает запрос в OpenAI.
-
-    На входе принимает:
-    - текст для запроса (:obj:`str`)
-
-    Возвращает результат в виде текста или исключение.
-    """
-    answer_text = ''
-    try:
-        answer = openai.Completion.create(
-            engine='text-davinci-003',
-            prompt=prompt,
-            max_tokens=2048,
-            temperature=0.3,
-            frequency_penalty=0,
-            presence_penalty=0
-        )
-        answer_text = answer.choices[0].text
-        if not answer_text:
-            raise ValueError("not text")
-    except Exception:
-        answer = openai.Completion.create(
-            engine='text-davinci-003',
-            prompt=prompt,
-            max_tokens=2048,
-            temperature=0.7,
-            frequency_penalty=0,
-            presence_penalty=0
-        )
-        answer_text = answer.choices[0].text
-    finally:
-        if not answer_text:
-            raise ValueError("not text")
-        return answer_text
 
 
 def get_answer_davinci(update: Update, context: CallbackContext):
@@ -83,6 +41,67 @@ def get_answer_davinci(update: Update, context: CallbackContext):
     Возвращает ответ от API ИИ ChatGPT.
     Предварительно вызвав функцию проверки регистрации.
     """
+    def send_typing_periodically(chat_id: str, context: CallbackContext,
+                                 stop_event: threading.Event) -> None:
+        """"
+        Передаёт TYPING в чат Телеграм откуда пришёл запрос.
+        Args:
+            (:obj:`int`) id чата
+            (:CallbackContext:`int`) context
+        Return:
+            None
+        """
+        while not stop_event.is_set():
+            context.bot.send_chat_action(
+                chat_id=chat_id,
+                action=ChatAction.TYPING
+            )
+            time.sleep(6)
+
+    def request_to_openai(prompt: str) -> str:
+        """
+        Делает запрос в OpenAI.
+
+        Args:
+            (:obj:`str`) текст для запроса
+
+        Return:
+            (:obj:`str`) ответ ИИ
+        # """
+        answer = openai.ChatCompletion.create(
+            model='gpt-3.5-turbo',
+            messages=prompt
+        )
+        answer_text = answer.choices[0].message.get('content')
+        # для теста
+        # time.sleep(10)
+        # answer_text = '\n'.join([w.get('content') for w in prompt])
+        return answer_text
+
+    def get_answer(prompt: list, chat_id: int, context: CallbackContext):
+        """
+        Асинхронно запускает 2 функции и при выполнении запроса в openai
+
+        Args:
+            (:obj:`str`) текст для запроса
+            (:obj:`int`) ID чата откуда пришёл вызов
+            (:obj:`CallbackContext`) CallbackContext
+        Return
+            (:obj:`str`): answer
+        """
+        stop_event = threading.Event()
+        task = threading.Thread(
+            target=send_typing_periodically,
+            args=(chat_id, context, stop_event)
+        )
+        task.start()
+        answer = request_to_openai(prompt)
+
+        stop_event.set()
+        task.join()
+
+        return answer
+
     answers = {
         '?': ('Я мог бы ответить Вам, если '
               f'[зарегистрируетесь]({context.bot.link}) 🧐'),
@@ -91,46 +110,47 @@ def get_answer_davinci(update: Update, context: CallbackContext):
         '': ('Какая интересная беседа, [зарегистрируетесь]'
              f'({context.bot.link}) и я подключусь к ней 😇'),
     }
-
     if check_registration(update, context, answers) is False:
         return 'Bad register'
 
-    chat = update.effective_chat
+    chat_id = update.effective_chat.id
     user = get_object_or_404(
         User,
         username=update.effective_user.id
     )
-    message_text = update.message.text.replace('#', '', 1)
+    message_text = update.effective_message.text.replace('#', '', 1)
 
     this_datetime = datetime.now(timezone.utc)
-    start_datetime = this_datetime - timedelta(minutes=10)
+    start_datetime = this_datetime - timedelta(minutes=5)
     history = user.history_ai.filter(
         created_at__range=[start_datetime, this_datetime]
     )
-    prompt = ''
-    answer = ''
-
-    if history:
-        prompt = add_history(history, len(message_text))
-    prompt += f'- {message_text}'
+    answer_text = ''
+    prompt = add_history(history) if history else []
+    prompt.append({'role': 'user', 'content': message_text})
 
     try:
-        answer = request_to_openai(prompt)
+        answer = get_answer(prompt, chat_id, context)
 
-        HistoryAI.objects.create(
-            user=user,
-            question=message_text,
-            answer=answer.lstrip('\n')
-        )
-    except Exception as error:
+        if isinstance(answer, str):
+            answer_text = answer if answer else ERROR_TEXT
+            HistoryAI.objects.create(
+                user=user,
+                question=message_text,
+                answer=answer.lstrip('\n')
+            )
+        else:
+            answer_text = ERROR_TEXT
+
+    except Exception as err:
         context.bot.send_message(
             chat_id=ADMIN_ID,
-            text=f'Ошибка в ChatGPT: {str(error)}'
+            text=f'Ошибка в ChatGPT: {err}'
         )
+        answer_text = ERROR_TEXT
     finally:
-        answer_text = answer if answer else ERROR_TEXT
         context.bot.send_message(
-            chat_id=chat.id,
+            chat_id=chat_id,
             reply_to_message_id=update.message.message_id,
             text=answer_text
         )

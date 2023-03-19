@@ -1,0 +1,12 @@
+[Unit]
+Description=Docker containers restart
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/docker compose -f /home/pi/ToDoDjangoTelBot/docker-compose.yml up -d
+ExecStop=/usr/bin/docker compose -f /home/pi/ToDoDjangoTelBot/docker-compose.yml down
+
+[Install]
+WantedBy=multi-user.target

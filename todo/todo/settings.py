@@ -44,6 +44,7 @@ SECRET_KEY = os.getenv('DJANGO_SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = int(os.environ.get('DEBUG', default=0))
+LOCAL_DEV = int(os.environ.get('LOCAL_DEV', default=0))
 
 ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS").split(" ")
 
@@ -144,7 +145,7 @@ POSTGRES = {
     }
 }
 
-DATABASES = SQLITE if DEBUG else POSTGRES
+DATABASES = SQLITE if LOCAL_DEV else POSTGRES
 
 # django-dbbackup
 DBBACKUP_STORAGE = 'django.core.files.storage.FileSystemStorage'
@@ -221,7 +222,7 @@ STATIC_URL = '/static/'
 
 STATIC_DIR = os.fspath(PurePath(BASE_DIR, 'static'))
 
-if DEBUG:
+if LOCAL_DEV:
     STATICFILES_DIRS = (STATIC_DIR,)
 else:
     STATIC_ROOT = STATIC_DIR
@@ -236,7 +237,7 @@ CKEDITOR_UPLOAD_PATH = 'uploads/'
 CKEDITOR_BASEPATH = f'{STATIC_DIR}/ckeditor/ckeditor/'
 
 # Setting for working with Jupiter
-if DEBUG:
+if LOCAL_DEV:
     hostname, _, ips = socket.gethostbyname_ex(socket.gethostname())
     INTERNAL_IPS = ([ip[: ip.rfind(".")] + ".1" for ip in ips]
                     + ["127.0.0.1", "10.0.2.2"])
@@ -277,7 +278,7 @@ LOCMEMCACHE = {
     }
 }
 
-CACHES = LOCMEMCACHE if DEBUG else REDISCACHE
+CACHES = LOCMEMCACHE if LOCAL_DEV else REDISCACHE
 
 # USER AGENTS PARSING
 # Cache backend is optional, but recommended to speed up user agent parsing
@@ -289,7 +290,7 @@ USER_AGENTS_CACHE = 'default'
 
 #  DJANGO-DEFENDER
 # https://django-defender.readthedocs.io/en/latest/#
-DEFENDER_REDIS_URL = None if DEBUG else REDIS_URL
+DEFENDER_REDIS_URL = None if LOCAL_DEV else REDIS_URL
 DEFENDER_LOCKOUT_URL = 'block'
 DEFENDER_COOLOFF_TIME = 600
 

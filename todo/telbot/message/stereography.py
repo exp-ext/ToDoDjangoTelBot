@@ -33,7 +33,7 @@ def send_audio_transcription(update: Update, context: CallbackContext) -> str:
         ]
         url = (
             'http://localhost:9000/asr'
-            if settings.DEBUG else 'http://todo_whisper:9000/asr'
+            if settings.LOCAL_DEV else 'http://todo_whisper:9000/asr'
         )
         params = {
             'task': 'transcribe',

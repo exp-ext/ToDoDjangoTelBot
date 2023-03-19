@@ -40,15 +40,11 @@ class GetAnswerDavinci():
         self.context = context
 
     def get_answer_davinci(self):
-        answers = {
-            '?': ('Я мог бы ответить Вам, если '
-                  f'[зарегистрируетесь]({self.context.bot.link}) 🧐'),
-            '!': ('Я обязательно поддержу Вашу дискуссию, если '
-                  f'[зарегистрируетесь]({self.context.bot.link}) 🙃'),
-            '': ('Какая интересная беседа, [зарегистрируетесь]'
-                 f'({self.context.bot.link}) и я подключусь к ней 😇'),
-        }
-        if check_registration(self.update, self.context, answers) is False:
+        """Основная логика класса."""
+
+        if check_registration(self.update,
+                              self.context,
+                              self.answers_for_check) is False:
             return {'code': 401}
 
         try:
@@ -80,13 +76,18 @@ class GetAnswerDavinci():
             self.user.history_ai
             .filter(created_at__range=[start_datetime, this_datetime])
             .exclude(answer__in=[None, GetAnswerDavinci.ERROR_TEXT])
+            .values('question', 'answer')
         )
         prompt = []
-        if history:
-            for item in history:
-                prompt.append({'role': 'user', 'content': item.question})
-                prompt.append({'role': 'assistant', 'content': item.answer})
-
+        count_value = 0
+        for item in history:
+            count_value += len(item['question']) + len(item['answer'])
+            if count_value + len(self.message_text) >= 2049:
+                break
+            prompt.extend([
+                {'role': 'user', 'content': item['question']},
+                {'role': 'assistant', 'content': item['answer']}
+            ])
         prompt.append({'role': 'user', 'content': self.message_text})
         return prompt
 
@@ -122,8 +123,8 @@ class GetAnswerDavinci():
             messages=prompt
         )
         answer_text = answer.choices[0].message.get('content')
-        # для теста
-        # time.sleep(10)
+        # для теста без запроса
+        # time.sleep(5)
         # answer_text = '\n'.join([w.get('content') for w in prompt])
         return answer_text
 
@@ -176,6 +177,17 @@ class GetAnswerDavinci():
     @property
     def message_text(self):
         return self.update.effective_message.text.replace('#', '', 1)
+
+    @property
+    def answers_for_check(self):
+        return {
+            '?': ('Я мог бы ответить Вам, если '
+                  f'[зарегистрируетесь]({self.context.bot.link}) 🧐'),
+            '!': ('Я обязательно поддержу Вашу дискуссию, если '
+                  f'[зарегистрируетесь]({self.context.bot.link}) 🙃'),
+            '': ('Какая интересная беседа, [зарегистрируетесь]'
+                 f'({self.context.bot.link}) и я подключусь к ней 😇'),
+        }
 
 
 def get_answer_davinci(update: Update, context: CallbackContext):

@@ -1,5 +1,6 @@
-import asyncio
 import os
+import threading
+import time
 from datetime import datetime, timedelta, timezone
 
 import openai
@@ -40,26 +41,24 @@ def get_answer_davinci(update: Update, context: CallbackContext):
     Возвращает ответ от API ИИ ChatGPT.
     Предварительно вызвав функцию проверки регистрации.
     """
-    async def send_typing_periodically(chat_id: str,
-                                       context: CallbackContext) -> None:
+    def send_typing_periodically(chat_id: str, context: CallbackContext,
+                                 stop_event: threading.Event) -> None:
         """"
-        TYPING в чат Телеграм откуда пришёл запрос.
+        Передаёт TYPING в чат Телеграм откуда пришёл запрос.
         Args:
-            (:obj:`str`) текст для запроса
+            (:obj:`int`) id чата
+            (:CallbackContext:`int`) context
         Return:
             None
         """
-        while True:
-            try:
-                context.bot.send_chat_action(
-                    chat_id=chat_id,
-                    action=ChatAction.TYPING
-                )
-                await asyncio.sleep(6)
-            except asyncio.CancelledError:
-                break
+        while not stop_event.is_set():
+            context.bot.send_chat_action(
+                chat_id=chat_id,
+                action=ChatAction.TYPING
+            )
+            time.sleep(6)
 
-    async def request_to_openai(prompt: str) -> str:
+    def request_to_openai(prompt: str) -> str:
         """
         Делает запрос в OpenAI.
 
@@ -68,18 +67,18 @@ def get_answer_davinci(update: Update, context: CallbackContext):
 
         Return:
             (:obj:`str`) ответ ИИ
-        """
+        # """
         answer = openai.ChatCompletion.create(
             model='gpt-3.5-turbo',
             messages=prompt
         )
         answer_text = answer.choices[0].message.get('content')
         # для теста
-        # await asyncio.sleep(10)
+        # time.sleep(10)
         # answer_text = '\n'.join([w.get('content') for w in prompt])
         return answer_text
 
-    async def get_answer(prompt: list, chat_id: int, context: CallbackContext):
+    def get_answer(prompt: list, chat_id: int, context: CallbackContext):
         """
         Асинхронно запускает 2 функции и при выполнении запроса в openai
 
@@ -90,9 +89,17 @@ def get_answer_davinci(update: Update, context: CallbackContext):
         Return
             (:obj:`str`): answer
         """
-        task = asyncio.create_task(send_typing_periodically(chat_id, context))
-        answer = await request_to_openai(prompt)
-        task.cancel()
+        stop_event = threading.Event()
+        task = threading.Thread(
+            target=send_typing_periodically,
+            args=(chat_id, context, stop_event)
+        )
+        task.start()
+        answer = request_to_openai(prompt)
+
+        stop_event.set()
+        task.join()
+
         return answer
 
     answers = {
@@ -123,7 +130,7 @@ def get_answer_davinci(update: Update, context: CallbackContext):
     prompt.append({'role': 'user', 'content': message_text})
 
     try:
-        answer = asyncio.run(get_answer(prompt, chat_id, context))
+        answer = get_answer(prompt, chat_id, context)
 
         if isinstance(answer, str):
             answer_text = answer if answer else ERROR_TEXT
@@ -140,6 +147,7 @@ def get_answer_davinci(update: Update, context: CallbackContext):
             chat_id=ADMIN_ID,
             text=f'Ошибка в ChatGPT: {err}'
         )
+        answer_text = ERROR_TEXT
     finally:
         context.bot.send_message(
             chat_id=chat_id,

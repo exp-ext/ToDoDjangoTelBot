@@ -5,6 +5,7 @@ from datetime import datetime, timedelta, timezone
 
 import openai
 from django.contrib.auth import get_user_model
+from django.db.models.query import QuerySet
 from django.shortcuts import get_object_or_404
 from dotenv import load_dotenv
 from telegram import ChatAction, Update
@@ -39,7 +40,7 @@ class GetAnswerDavinci():
         self.update = update
         self.context = context
 
-    def get_answer_davinci(self):
+    def get_answer_davinci(self) -> dict:
         """Основная логика класса."""
 
         if check_registration(self.update,
@@ -48,12 +49,12 @@ class GetAnswerDavinci():
             return {'code': 401}
 
         try:
-            answer = self.get_answer().lstrip('\n')
+            answer, user = self.get_answer()
             answer_text = answer if answer else GetAnswerDavinci.ERROR_TEXT
             HistoryAI.objects.create(
-                user=self.user,
+                user=user,
                 question=self.message_text,
-                answer=answer_text
+                answer=answer_text.lstrip('\n')
             )
         except Exception as err:
             self.send_message(
@@ -68,12 +69,18 @@ class GetAnswerDavinci():
             )
         return {'code': 200}
 
-    def get_prompt(self):
-        """Возвращает prompt для запроса в OpenAI."""
+    def get_prompt(self) -> str | QuerySet:
+        """
+        Возвращает prompt для запроса в OpenAI и модель user.
+        """
         this_datetime = datetime.now(timezone.utc)
         start_datetime = this_datetime - timedelta(minutes=5)
+        user = get_object_or_404(
+            User,
+            username=self.update.effective_user.id
+        )
         history = (
-            self.user.history_ai
+            user.history_ai
             .filter(created_at__range=[start_datetime, this_datetime])
             .exclude(answer__in=[None, GetAnswerDavinci.ERROR_TEXT])
             .values('question', 'answer')
@@ -89,16 +96,11 @@ class GetAnswerDavinci():
                 {'role': 'assistant', 'content': item['answer']}
             ])
         prompt.append({'role': 'user', 'content': self.message_text})
-        return prompt
+        return prompt, user
 
     def send_typing_periodically(self, stop_event: threading.Event) -> None:
         """"
         Передаёт TYPING в чат Телеграм откуда пришёл запрос.
-        Args:
-            (:obj:`int`) id чата
-            (:CallbackContext:`int`) context
-        Return:
-            None
         """
         while not stop_event.is_set():
             self.context.bot.send_chat_action(
@@ -107,37 +109,24 @@ class GetAnswerDavinci():
             )
             time.sleep(6)
 
-    def request_to_openai(self) -> str:
+    def request_to_openai(self) -> str | QuerySet:
         """
         Делает запрос в OpenAI.
-
-        Args:
-            (:obj:`str`) текст для запроса
-
-        Return:
-            (:obj:`str`) ответ ИИ
-        # """
-        prompt = self.get_prompt()
+        """
+        prompt, user = self.get_prompt()
         answer = openai.ChatCompletion.create(
             model='gpt-3.5-turbo',
             messages=prompt
         )
         answer_text = answer.choices[0].message.get('content')
-        # для теста без запроса
+        # для теста
         # time.sleep(5)
         # answer_text = '\n'.join([w.get('content') for w in prompt])
-        return answer_text
+        return answer_text, user
 
-    def get_answer(self):
+    def get_answer(self) -> str:
         """
         Асинхронно запускает 2 функции и при выполнении запроса в openai
-
-        Args:
-            (:obj:`str`) текст для запроса
-            (:obj:`int`) ID чата откуда пришёл вызов
-            (:obj:`CallbackContext`) CallbackContext
-        Return
-            (:obj:`str`): answer
         """
         stop_event = threading.Event()
         task = threading.Thread(
@@ -156,7 +145,9 @@ class GetAnswerDavinci():
                      text,
                      is_admin: bool = False,
                      is_reply: bool = False):
-        """Отправка сообщения в чат Telegram."""
+        """
+        Отправка сообщения в чат Telegram.
+        """
         params = {
             'chat_id': ADMIN_ID if is_admin else self.update.effective_chat.id,
             'text': text,
@@ -165,14 +156,6 @@ class GetAnswerDavinci():
             params['reply_to_message_id'] = self.update.message.message_id
 
         self.context.bot.send_message(**params)
-
-    @property
-    def user(self):
-        user = get_object_or_404(
-            User,
-            username=self.update.effective_user.id
-        )
-        return user
 
     @property
     def message_text(self):

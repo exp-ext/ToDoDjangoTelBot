@@ -39,6 +39,7 @@ class GetAnswerDavinci():
                  context: CallbackContext) -> None:
         self.update = update
         self.context = context
+        self.user = None
 
     def get_answer_davinci(self) -> dict:
         """Основная логика класса."""
@@ -48,11 +49,15 @@ class GetAnswerDavinci():
                               self.answers_for_check) is False:
             return {'code': 401}
 
+        self.user = get_object_or_404(
+            User,
+            username=self.update.effective_user.id
+        )
         try:
-            answer, user = self.get_answer()
+            answer = self.get_answer()
             answer_text = answer if answer else GetAnswerDavinci.ERROR_TEXT
             HistoryAI.objects.create(
-                user=user,
+                user=self.user,
                 question=self.message_text,
                 answer=answer_text.lstrip('\n')
             )
@@ -68,61 +73,6 @@ class GetAnswerDavinci():
                 is_reply=True
             )
         return {'code': 200}
-
-    def get_prompt(self) -> str | QuerySet:
-        """
-        Возвращает prompt для запроса в OpenAI и модель user.
-        """
-        this_datetime = datetime.now(timezone.utc)
-        start_datetime = this_datetime - timedelta(minutes=5)
-        user = get_object_or_404(
-            User,
-            username=self.update.effective_user.id
-        )
-        history = (
-            user.history_ai
-            .filter(created_at__range=[start_datetime, this_datetime])
-            .exclude(answer__in=[None, GetAnswerDavinci.ERROR_TEXT])
-            .values('question', 'answer')
-        )
-        prompt = []
-        count_value = 0
-        for item in history:
-            count_value += len(item['question']) + len(item['answer'])
-            if count_value + len(self.message_text) >= 2049:
-                break
-            prompt.extend([
-                {'role': 'user', 'content': item['question']},
-                {'role': 'assistant', 'content': item['answer']}
-            ])
-        prompt.append({'role': 'user', 'content': self.message_text})
-        return prompt, user
-
-    def send_typing_periodically(self, stop_event: threading.Event) -> None:
-        """"
-        Передаёт TYPING в чат Телеграм откуда пришёл запрос.
-        """
-        while not stop_event.is_set():
-            self.context.bot.send_chat_action(
-                chat_id=self.update.effective_chat.id,
-                action=ChatAction.TYPING
-            )
-            time.sleep(6)
-
-    def request_to_openai(self) -> str | QuerySet:
-        """
-        Делает запрос в OpenAI.
-        """
-        prompt, user = self.get_prompt()
-        answer = openai.ChatCompletion.create(
-            model='gpt-3.5-turbo',
-            messages=prompt
-        )
-        answer_text = answer.choices[0].message.get('content')
-        # для теста
-        # time.sleep(5)
-        # answer_text = '\n'.join([w.get('content') for w in prompt])
-        return answer_text, user
 
     def get_answer(self) -> str:
         """
@@ -141,12 +91,67 @@ class GetAnswerDavinci():
 
         return answer
 
+    def send_typing_periodically(self, stop_event: threading.Event) -> None:
+        """"
+        Передаёт TYPING в чат Телеграм откуда пришёл запрос.
+        """
+        while not stop_event.is_set():
+            self.context.bot.send_chat_action(
+                chat_id=self.update.effective_chat.id,
+                action=ChatAction.TYPING
+            )
+            time.sleep(6)
+
+    def request_to_openai(self) -> str | QuerySet:
+        """
+        Делает запрос в OpenAI.
+        """
+        prompt = self.get_prompt()
+        answer = openai.ChatCompletion.create(
+            model='gpt-3.5-turbo',
+            messages=prompt
+        )
+        answer_text = answer.choices[0].message.get('content')
+        # для теста без запроса в openAI
+        # time.sleep(5)
+        # answer_text = '\n'.join([w.get('content') for w in prompt])
+        return answer_text
+
+    def get_prompt(self) -> str | QuerySet:
+        """
+        Возвращает prompt для запроса в OpenAI и модель user.
+        """
+        this_datetime = datetime.now(timezone.utc)
+        start_datetime = this_datetime - timedelta(minutes=5)
+        history = (
+            self.user.history_ai
+            .filter(created_at__range=[start_datetime, this_datetime])
+            .exclude(answer__in=[None, GetAnswerDavinci.ERROR_TEXT])
+            .values('question', 'answer')
+        )
+        prompt = []
+        count_value = 0
+        for item in history:
+            count_value += len(item['question']) + len(item['answer'])
+            if count_value + len(self.message_text) >= 2049:
+                break
+            prompt.extend([
+                {'role': 'user', 'content': item['question']},
+                {'role': 'assistant', 'content': item['answer']}
+            ])
+        prompt.append({'role': 'user', 'content': self.message_text})
+        return prompt
+
     def send_message(self,
                      text,
                      is_admin: bool = False,
                      is_reply: bool = False):
         """
         Отправка сообщения в чат Telegram.
+        args:
+            text(:obj:`str`): текст сообщения
+            is_admin(:obj:`bool`): отправка только админу
+            is_reply(:obj:`bool`): отправлять ответом на сообщение
         """
         params = {
             'chat_id': ADMIN_ID if is_admin else self.update.effective_chat.id,

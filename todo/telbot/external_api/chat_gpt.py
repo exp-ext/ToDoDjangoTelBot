@@ -33,6 +33,8 @@ class GetAnswerDavinci():
         'Возможно большой наплыв запросов, '
         'которые я не успеваю обрабатывать 🤯'
     )
+    MAX_LONG_MESSAGE = 600
+    MAX_LONG_REQUEST = 2049
 
     def __init__(self,
                  update: Update,
@@ -40,19 +42,28 @@ class GetAnswerDavinci():
         self.update = update
         self.context = context
         self.user = None
+        self.message_text = None
 
     def get_answer_davinci(self) -> dict:
         """Основная логика класса."""
-
         if check_registration(self.update,
                               self.context,
                               self.answers_for_check) is False:
             return {'code': 401}
 
-        self.user = get_object_or_404(
-            User,
-            username=self.update.effective_user.id
-        )
+        self.set_user()
+        self.set_message_text()
+
+        if self.check_long_query:
+            answer_text = (
+                f'{self.user.first_name}, у Вас слишком большой текст запроса.'
+                ' Попробуйте сформулировать его короче.'
+            )
+            self.send_message(
+                text=answer_text,
+                is_reply=True
+            )
+            return {'code': 400}
         try:
             answer = self.get_answer()
             answer_text = answer if answer else GetAnswerDavinci.ERROR_TEXT
@@ -85,10 +96,8 @@ class GetAnswerDavinci():
         )
         task.start()
         answer = self.request_to_openai()
-
         stop_event.set()
         task.join()
-
         return answer
 
     def send_typing_periodically(self, stop_event: threading.Event) -> None:
@@ -112,9 +121,6 @@ class GetAnswerDavinci():
             messages=prompt
         )
         answer_text = answer.choices[0].message.get('content')
-        # для теста без запроса в openAI
-        # time.sleep(5)
-        # answer_text = '\n'.join([w.get('content') for w in prompt])
         return answer_text
 
     def get_prompt(self) -> str | QuerySet:
@@ -133,7 +139,8 @@ class GetAnswerDavinci():
         count_value = 0
         for item in history:
             count_value += len(item['question']) + len(item['answer'])
-            if count_value + len(self.message_text) >= 2049:
+            if (count_value + len(self.message_text)
+                    >= GetAnswerDavinci.MAX_LONG_REQUEST):
                 break
             prompt.extend([
                 {'role': 'user', 'content': item['question']},
@@ -162,9 +169,22 @@ class GetAnswerDavinci():
 
         self.context.bot.send_message(**params)
 
+    def set_user(self) -> None:
+        """Определяем и назначаем юзера."""
+        self.user = get_object_or_404(
+            User,
+            username=self.update.effective_user.id
+        )
+
+    def set_message_text(self) -> str:
+        """Определяем и назначаем текст сообщения."""
+        self.message_text = (
+            self.update.effective_message.text.replace('#', '', 1)
+        )
+
     @property
-    def message_text(self):
-        return self.update.effective_message.text.replace('#', '', 1)
+    def check_long_query(self) -> bool:
+        return len(self.message_text) > GetAnswerDavinci.MAX_LONG_MESSAGE
 
     @property
     def answers_for_check(self):

@@ -122,7 +122,7 @@ class GetAnswerDavinci():
                 chat_id=self.update.effective_chat.id,
                 action=ChatAction.TYPING
             )
-            time.sleep(6)
+            time.sleep(2)
             if datetime.now() > time_stop:
                 break
 
@@ -148,7 +148,9 @@ class GetAnswerDavinci():
             .exclude(answer__in=[None, GetAnswerDavinci.ERROR_TEXT])
             .values('question', 'answer')
         )
-        prompt = [{'role': 'system', 'content': self.message_text}]
+        prompt = [
+            {'role': 'system', 'content': "You are a helpful assistant."}
+        ]
         count_value = 0
         for item in history:
             count_value += len(item['question']) + len(item['answer'])

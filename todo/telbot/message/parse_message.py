@@ -1,5 +1,6 @@
 import os
 import re
+from datetime import datetime
 
 import pytz
 from dateparser.search import search_dates
@@ -41,23 +42,24 @@ class TaskParse:
         'месяц': 'M',
         'год': 'Y',
     }
+    PATTERN = r'(\d+)[\.](\d+)[\.]?'
 
-    def __init__(self, message: str, time_zone: str):
-        self.message = message
+    def __init__(self, inbox_message: str, time_zone: str):
+        self.inbox_message = inbox_message
         self.time_zone = time_zone
         self.server_date = None
         self.user_date = None
         self.only_message = ''
         self.period_repeat = 'N'
+        self.utc = pytz.utc
         self.birthday = any(
-            word in message for word in TaskParse.BIRTHDAY_LIST
+            word in inbox_message for word in TaskParse.BIRTHDAY_LIST
         )
 
     def _parse(self, message: str) -> None:
         """Дифференцирует текст определяя значения атрибутов класса."""
-        pattern = r'(\d+)[\.](\d+)[\.]?'
         try:
-            match = re.search(pattern, message)
+            match = re.search(TaskParse.PATTERN, message)
             if match:
                 date_ru = match.group()
                 date_parser = date_ru.replace('.', '-')
@@ -78,29 +80,40 @@ class TaskParse:
 
             if isinstance(first_match, tuple):
                 date = first_match[1]
-                user_tz = pytz.timezone(self.time_zone)
-                self.user_date = user_tz.localize(date)
-                utc = pytz.utc
+                string_date = first_match[0]
 
-                if self.birthday:
-                    self.server_date = utc.localize(
-                        date.replace(hour=0, minute=0, second=0, microsecond=0)
-                    )
-                else:
-                    self.server_date = self.user_date.astimezone(utc)
-
-                message = message.replace(first_match[0], '').strip()
-                self.only_message = (
-                    message[:1].upper() + message[1:] if message else ''
-                )
+                self.set_user_date(date)
+                self.set_server_date(date)
+                self.set_only_message(message, string_date)
 
         except Exception as error:
             text = f'Не распарсил: {message}.\nОшибка: {error}'
             bot.send_message(chat_id=ADMIN_ID, text=text)
 
+    def set_only_message(self, message: str, string_date: str):
+        """Удаляет дату из текста сообщения и назначает его only_message."""
+        message = message.replace(string_date, '').strip()
+        self.only_message = (
+            message[:1].upper() + message[1:] if message else ''
+        )
+
+    def set_user_date(self, date: datetime):
+        """Назначает datetime user_date относительно его ТЗ."""
+        user_tz = pytz.timezone(self.time_zone)
+        self.user_date = user_tz.localize(date)
+
+    def set_server_date(self, date: datetime):
+        """Назначает datetime server_date по UTC."""
+        if self.birthday:
+            self.server_date = self.utc.localize(
+                date.replace(hour=0, minute=0, second=0, microsecond=0)
+            )
+        else:
+            self.server_date = self.user_date.astimezone(self.utc)
+
     def get_parameters(self) -> str:
-        """Разделяет строку на сообщение и параметры"""
-        message, *params = self.message.split('&')
+        """Разделяет строку на сообщение и параметры."""
+        message, *params = self.inbox_message.split('&')
         if params:
             for param in params:
                 for key, value in TaskParse.PERIOD_DIC.items():
@@ -116,5 +129,4 @@ class TaskParse:
 
     def parse_without_parameters(self) -> None:
         """Распарсит сообщение без параметрами."""
-        message = self.message
-        self._parse(message)
+        self._parse(self.inbox_message)

@@ -48,12 +48,12 @@ class GetAnswerDavinci():
         self.message_text = None
         self.current_time = None
         self.time_start = None
-
-    def get_answer_davinci(self) -> dict:
-        """Основная логика класса."""
         self.set_user()
         self.set_message_text()
         self.set_windows_time()
+
+    def get_answer_davinci(self) -> dict:
+        """Основная логика класса."""
 
         if self.check_in_works():
             return {'code': 423}
@@ -235,5 +235,11 @@ class GetAnswerDavinci():
         }
 
 
-def get_answer_davinci(update: Update, context: CallbackContext):
+def get_answer_davinci_public(update: Update, context: CallbackContext):
     GetAnswerDavinci(update, context).get_answer_davinci()
+
+
+def get_answer_davinci_person(update: Update, context: CallbackContext):
+    if update.effective_chat.type == 'private':
+        GetAnswerDavinci(update, context).get_answer_davinci()
+    return {'code': 406}

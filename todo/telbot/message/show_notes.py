@@ -46,7 +46,7 @@ def show_at_date(update: Update, context: CallbackContext):
     user_locally = user.locations.first()
 
     pars = TaskParse(update.message.text, user_locally.timezone)
-    pars.parse_without_parameters()
+    pars.parse_message()
 
     try:
         del_id = (context.user_data['del_message'], update.message.message_id)

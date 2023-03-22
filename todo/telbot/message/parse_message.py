@@ -21,18 +21,15 @@ class TaskParse:
     - time_zone: (:obj:`str`)
     - server_date: (:obj:`datetime` with pytz | `None`)
     - user_date: (:obj:`datetime` with pytz | `None`)
-    -period_repeat: str (default = N)
-    -birthday: bool (default = False)
+    - period_repeat: str (default = N)
+    - birthday: bool (default = False)
+    - get_parameters(): получает параметры в сообщении
 
     Имеет методы:
-    - `parse_with_parameters` - разбирает сообщение с параметрами,
-    изменяя значения атрибутов класса.
-    - `parse_without_parameters` - разбирает сообщение без параметров,
-    изменяя значения атрибутов класса.
     - `it_birthday` (:obj:`bool`) - возвращает результат совпадения
     с birthday_list.
-    - `get_parameters` (:obj:`str`) - разделяет строку, возвращает параметр
-    повтора и убирает параметр из атрибута message.
+    - `parse_message` (:obj:`str`) - разделяет строку, вызывая методы
+    и заполняя атрибуты.
     """
     BIRTHDAY_LIST = ['ДР', 'День Рождения', 'День рождения', 'день рождения',
                      'Birthday', 'birthday']
@@ -55,15 +52,17 @@ class TaskParse:
         self.birthday = any(
             word in inbox_message for word in TaskParse.BIRTHDAY_LIST
         )
+        self.get_parameters()
 
-    def _parse(self, message: str) -> None:
+    def parse_message(self) -> None:
         """Дифференцирует текст определяя значения атрибутов класса."""
+        initial_message = self.inbox_message
         try:
-            match = re.search(TaskParse.PATTERN, message)
+            match = re.search(TaskParse.PATTERN, initial_message)
             if match:
                 date_ru = match.group()
                 date_parser = date_ru.replace('.', '-')
-                message = message.replace(date_ru, date_parser)
+                initial_message = initial_message.replace(date_ru, date_parser)
 
             settings = {
                 'TIMEZONE': self.time_zone,
@@ -72,7 +71,7 @@ class TaskParse:
                 'PREFER_DATES_FROM': 'future'
             }
             pars_tup = search_dates(
-                message,
+                initial_message,
                 add_detected_language=True,
                 settings=settings
             )
@@ -84,15 +83,15 @@ class TaskParse:
 
                 self.set_user_date(date)
                 self.set_server_date(date)
-                self.set_only_message(message, string_date)
+                self.set_only_message(initial_message, string_date)
 
         except Exception as error:
-            text = f'Не распарсил: {message}.\nОшибка: {error}'
+            text = f'Не распарсил: {initial_message}.\nОшибка: {error}'
             bot.send_message(chat_id=ADMIN_ID, text=text)
 
-    def set_only_message(self, message: str, string_date: str):
+    def set_only_message(self, initial_message: str, string_date: str):
         """Удаляет дату из текста сообщения и назначает его only_message."""
-        message = message.replace(string_date, '').strip()
+        message = initial_message.replace(string_date, '').strip()
         self.only_message = (
             message[:1].upper() + message[1:] if message else ''
         )
@@ -112,21 +111,14 @@ class TaskParse:
             self.server_date = self.user_date.astimezone(self.utc)
 
     def get_parameters(self) -> str:
-        """Разделяет строку на сообщение и параметры."""
+        """
+        Разделяет строку на сообщение и параметры и назначаем
+        соответствующие атрибуты, если параметры получены.
+        """
         message, *params = self.inbox_message.split('&')
-        if params:
-            for param in params:
-                for key, value in TaskParse.PERIOD_DIC.items():
-                    if key in param:
-                        self.period_repeat = value
-                        break
-        return message
-
-    def parse_with_parameters(self) -> None:
-        """Распарсит сообщение с параметрами."""
-        message = self.get_parameters()
-        self._parse(message)
-
-    def parse_without_parameters(self) -> None:
-        """Распарсит сообщение без параметрами."""
-        self._parse(self.inbox_message)
+        for param in params:
+            for key, value in TaskParse.PERIOD_DIC.items():
+                if key in param:
+                    self.period_repeat = value
+                    self.inbox_message = message.strip()
+                    break

@@ -45,7 +45,7 @@ def add_notes(update: Update, context: CallbackContext):
 
     try:
         pars = TaskParse(update.message.text, user_locally.timezone)
-        pars.parse_with_parameters()
+        pars.parse_message()
 
         if chat.type == 'private':
             group = None

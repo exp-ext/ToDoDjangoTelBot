@@ -199,20 +199,20 @@ class GetAnswerDavinci():
         return False
 
     def set_user(self) -> None:
-        """Определяем и назначаем юзера."""
+        """Определяем и назначаем  атрибут user."""
         self.user = get_object_or_404(
             User,
             username=self.update.effective_user.id
         )
 
     def set_message_text(self) -> str:
-        """Определяем и назначаем текст сообщения."""
+        """Определяем и назначаем атрибут message_text."""
         self.message_text = (
             self.update.effective_message.text.replace('#', '', 1)
         )
 
     def set_windows_time(self) -> None:
-        """Определяем и назначаем окно времени истории."""
+        """Определяем и назначаем атрибуты current_time и time_start."""
         self.current_time = datetime.now(timezone.utc)
         self.time_start = (
             self.current_time

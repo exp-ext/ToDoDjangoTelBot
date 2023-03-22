@@ -44,7 +44,7 @@ def del_notes(update: Update, context: CallbackContext):
 
     try:
         pars = TaskParse(text, user_locally.timezone)
-        pars.parse_without_parameters()
+        pars.parse_message()
 
         del_id = (context.user_data['del_message'], update.message.message_id)
         for id in del_id:
@@ -58,12 +58,12 @@ def del_notes(update: Update, context: CallbackContext):
                 ]
                 tasks = user.tasks.filter(
                     server_datetime__range=time_range,
-                    text__icontains=pars.only_message
+                    text__icontains=pars.only_message[1:]
                 )
             else:
                 tasks = user.tasks.filter(
                     server_datetime=pars.server_date,
-                    text__icontains=pars.only_message
+                    text__icontains=pars.only_message[1:]
                 )
             count = len(tasks)
 

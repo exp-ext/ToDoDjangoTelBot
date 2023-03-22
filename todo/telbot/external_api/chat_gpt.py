@@ -48,12 +48,12 @@ class GetAnswerDavinci():
         self.message_text = None
         self.current_time = None
         self.time_start = None
-
-    def get_answer_davinci(self) -> dict:
-        """Основная логика класса."""
         self.set_user()
         self.set_message_text()
         self.set_windows_time()
+
+    def get_answer_davinci(self) -> dict:
+        """Основная логика класса."""
 
         if self.check_in_works():
             return {'code': 423}
@@ -199,20 +199,20 @@ class GetAnswerDavinci():
         return False
 
     def set_user(self) -> None:
-        """Определяем и назначаем юзера."""
+        """Определяем и назначаем  атрибут user."""
         self.user = get_object_or_404(
             User,
             username=self.update.effective_user.id
         )
 
     def set_message_text(self) -> str:
-        """Определяем и назначаем текст сообщения."""
+        """Определяем и назначаем атрибут message_text."""
         self.message_text = (
             self.update.effective_message.text.replace('#', '', 1)
         )
 
     def set_windows_time(self) -> None:
-        """Определяем и назначаем окно времени истории."""
+        """Определяем и назначаем атрибуты current_time и time_start."""
         self.current_time = datetime.now(timezone.utc)
         self.time_start = (
             self.current_time
@@ -235,5 +235,11 @@ class GetAnswerDavinci():
         }
 
 
-def get_answer_davinci(update: Update, context: CallbackContext):
+def get_answer_davinci_public(update: Update, context: CallbackContext):
     GetAnswerDavinci(update, context).get_answer_davinci()
+
+
+def get_answer_davinci_person(update: Update, context: CallbackContext):
+    if update.effective_chat.type == 'private':
+        GetAnswerDavinci(update, context).get_answer_davinci()
+    return {'code': 406}

@@ -1,7 +1,7 @@
 from django.conf import settings
 from telegram import Bot
 
-DOMEN_URL = settings.DOMEN
+DOMAIN_URL = settings.DOMAIN
 TOKEN = settings.TOKEN
 
 
@@ -10,7 +10,7 @@ def check_tokens():
     env_vars = {
         'TOKEN': TOKEN,
         'OW_API_ID': settings.OW_API_ID,
-        'DOMEN': DOMEN_URL,
+        'DOMAIN': DOMAIN_URL,
     }
     for key, value in env_vars.items():
         if not value or value == '':

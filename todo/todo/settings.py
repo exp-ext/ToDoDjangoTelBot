@@ -14,9 +14,7 @@ import os
 import socket
 from pathlib import Path, PurePath
 
-import sentry_sdk
 from dotenv import load_dotenv
-from sentry_sdk.integrations.django import DjangoIntegration
 
 load_dotenv()
 
@@ -24,7 +22,7 @@ load_dotenv()
 TOKEN = os.getenv('TOKEN')
 OW_API_ID = os.getenv('OW_API_ID')
 YANDEX_GEO_API = os.getenv('YANDEX_GEO_API')
-DOMEN = os.getenv('DOMEN')
+DOMAIN = os.getenv('DOMAIN')
 DATABASE_URL = os.getenv('DATABASE_URL')
 
 # mail service
@@ -37,8 +35,6 @@ EMAIL_PORT = 587
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-WEB_DIR = f'{BASE_DIR.resolve().parent}/web/'
-
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.getenv('DJANGO_SECRET_KEY')
 
@@ -46,9 +42,10 @@ SECRET_KEY = os.getenv('DJANGO_SECRET_KEY')
 DEBUG = int(os.environ.get('DEBUG', default=0))
 LOCAL_DEV = int(os.environ.get('LOCAL_DEV', default=0))
 
-ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS").split(" ")
-
-SENTRY_KEY = os.getenv('SENTRY_KEY')
+ALLOWED_HOSTS = os.environ.get(
+    "DJANGO_ALLOWED_HOSTS",
+    default='localhost'
+).split(" ")
 
 # Application definition
 INSTALLED_APPS = [
@@ -150,7 +147,7 @@ DATABASES = SQLITE if LOCAL_DEV else POSTGRES
 # django-dbbackup
 DBBACKUP_STORAGE = 'django.core.files.storage.FileSystemStorage'
 DBBACKUP_STORAGE_OPTIONS = {
-    'location': os.fspath(PurePath(WEB_DIR, 'backup')),
+    'location': os.fspath(PurePath(BASE_DIR, 'backup')),
 }
 
 DBBACKUP_CONNECTORS = {
@@ -230,7 +227,7 @@ else:
 # MEDIA
 MEDIA_URL = '/media/'
 
-MEDIA_ROOT = os.fspath(PurePath(WEB_DIR, 'media'))
+MEDIA_ROOT = os.fspath(PurePath(BASE_DIR, 'media'))
 
 # Django-ckeditor
 CKEDITOR_UPLOAD_PATH = 'uploads/'
@@ -294,17 +291,37 @@ DEFENDER_REDIS_URL = None if LOCAL_DEV else REDIS_URL
 DEFENDER_LOCKOUT_URL = 'block'
 DEFENDER_COOLOFF_TIME = 600
 
-# SENTRY MONITORING
-sentry_sdk.init(
-    dsn=f'https://{SENTRY_KEY}',
-    integrations=(DjangoIntegration(),),
+LOGS_DIR = os.path.join(BASE_DIR, 'logs')
 
-    # Set traces_sample_rate to 1.0 to capture 100%
-    # of transactions for performance monitoring.
-    # We recommend adjusting this value in production.
-    traces_sample_rate=1.0,
-
-    # If you wish to associate users to errors (assuming you are using
-    # django.contrib.auth) you may enable sending PII data.
-    send_default_pii=True
-)
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'filters': {
+        'require_debug_false': {
+            '()': 'django.utils.log.RequireDebugFalse'
+        }
+    },
+    'formatters': {
+        'verbose': {
+            'format': '%(levelname)s|%(asctime)s|%(module)s|%(process)d|%(thread)d|%(message)s',
+            'datefmt': "%d/%b/%Y %H:%M:%S"
+        },
+    },
+    'handlers': {
+        'default': {
+            'level': 'INFO',
+            'class': 'logging.handlers.TimedRotatingFileHandler',
+            'filename': os.path.join(LOGS_DIR, 'django.log'),
+            'formatter': 'verbose',
+            'when': 'midnight',
+            'backupCount': '30',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['default'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+    }
+}

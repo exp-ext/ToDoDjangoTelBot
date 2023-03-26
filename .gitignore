@@ -152,3 +152,10 @@ backup/
 web/
 # cert
 ssl/
+
+
+docker-compose-debug.yml
+Dockerfile_dev
+conf/
+conf_sh/
+logs

@@ -15,25 +15,21 @@ RUN --mount=type=cache,target=/var/cache/apt/archives/ \
     rm -rf /var/lib/apt/lists/*
 
 # install dependencies
-COPY requirements.txt /app/
+COPY requirements.txt .
 RUN --mount=type=cache,target=/root/.cache/pip/ \
     pip install --upgrade pip && \
     pip install -r requirements.txt && \
     pip install psycopg2-binary --no-binary psycopg2-binary
 
 # Copy the project to the container
-COPY . /app/
+COPY . .
 
 # Set environment variables
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     DJANGO_SECRET_KEY=DJANGO_SECRET_KEY
 
-# Create the appropriate directories
-RUN mkdir -p /app/web/media /app/web/backup && \
-    chmod +x /app/conf_sh/web_entrypoint.sh
-
-RUN python3 todo/manage.py collectstatic --no-input
+RUN python3 manage.py collectstatic --no-input
 
 # Create an unprivileged user to run the application
 RUN addgroup --system apps-group && \

@@ -175,7 +175,7 @@ def show_my_links(update: Update, context: CallbackContext):
         InlineKeyboardButton(text='Телеграмм',
                              url=context.bot.link),
         InlineKeyboardButton(text='Вебсайт',
-                             url=f'https://{settings.DOMEN}/')
+                             url=f'https://www.{settings.DOMAIN}/')
     ]
     reply_markup = InlineKeyboardMarkup(build_menu(button_list, n_cols=1))
     menu_text = 'личный кабинет системы -->'

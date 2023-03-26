@@ -106,12 +106,6 @@ def setup_dispatcher(dp: Dispatcher):
     )
     dp.add_handler(
         MessageHandler(
-            Filters.text,
-            get_answer_davinci_person
-        )
-    )
-    dp.add_handler(
-        MessageHandler(
             Filters.regex('->'),
             send_translation
         )
@@ -122,6 +116,12 @@ def setup_dispatcher(dp: Dispatcher):
     dp.add_handler(
         MessageHandler(
             Filters.voice, send_audio_transcription
+        )
+    )
+    dp.add_handler(
+        MessageHandler(
+            Filters.text,
+            get_answer_davinci_person
         )
     )
     return dp

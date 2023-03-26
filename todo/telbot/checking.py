@@ -28,7 +28,7 @@ def check_registration(update: Update,
             'Я мог бы ответить, но не знаю как к Вам обращаться?\n'
             'Есть 2 варианта решения.\n'
             '1 - добавить имя в личном кабинете '
-            f'[WEB версии](https://{settings.DOMEN}/\n'
+            f'[WEB версии](https://www.{settings.DOMAIN}/\n'
             '2 - в настройках Телеграмма и заново пройти регистрацию'
         )
     if text:

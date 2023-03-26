@@ -3,9 +3,9 @@ from telegram import Bot
 
 from ...loader import check_tokens
 
-DOMEN_URL = settings.DOMEN
+DOMAIN_URL = settings.DOMAIN
 TOKEN = settings.TOKEN
-WEBHOOK_URL = f'{DOMEN_URL}/bot/{TOKEN}/webhooks/'
+WEBHOOK_URL = f'www.{DOMAIN_URL}/bot/{TOKEN}/webhooks/'
 
 
 def set_webhook() -> bool:

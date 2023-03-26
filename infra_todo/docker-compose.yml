@@ -29,22 +29,20 @@ services:
 
   web:
     build:
-      context: .
-      dockerfile: dev/Dockerfile
+      context: ../todo
+      dockerfile: Dockerfile
       args:
-        - DJANGO_SECRET_KEY
+        - ${DJANGO_SECRET_KEY}
     container_name: todo_django
     restart: always
-    command: bash -c "cd todo && gunicorn -c config/gunicorn/dev.py"
-    stdin_open: true
-    tty: true
+    command: ./config/webtodo/entrypoint.sh
     volumes:
-      - static_volume:/app/todo/static/:rw
-      - media_volume:/app/web/media/:rw
-      - backup_volume:/app/web/backup/:rw
+      - static_volume:/app/static/:rw
+      - media_volume:/app/media/:rw
+      - log_volume:/app/logs/:rw
+      - backup_volume:/app/backup/:rw
       - cache_pip_volume:/root/.cache/pip/:rw
       - cache_apt_volume:/var/cache/apt/archives/:rw
-      - .:/app/:rw
     expose:
       - 8000
     env_file:
@@ -57,16 +55,15 @@ services:
 
   celery:
     build:
-      context: .
-      dockerfile: dev/Dockerfile
+      context: ../todo
+      dockerfile: Dockerfile
     container_name: todo_celery
     restart: always
-    command: bash -c "cd todo && celery -A todo worker --loglevel=INFO"
-    volumes:      
-      - backup_volume:/app/web/backup/:rw
+    command: bash -c "celery -A todo worker --loglevel=INFO"
+    volumes:
+      - backup_volume:/app/backup/:rw
       - cache_pip_volume:/root/.cache/pip/:rw
       - cache_apt_volume:/var/cache/apt/archives/:rw
-      - .:/app/:rw
     env_file:
       - ./.env
     depends_on:
@@ -76,16 +73,15 @@ services:
 
   celery-beat:
     build:
-      context: .
-      dockerfile: dev/Dockerfile   
+      context: ../todo
+      dockerfile: Dockerfile    
     container_name: todo_beat
     restart: always
-    command: bash -c "cd todo && celery -A todo beat -l info --scheduler django_celery_beat.schedulers.DatabaseScheduler"
+    command: bash -c "celery -A todo beat -l info --scheduler django_celery_beat.schedulers.DatabaseScheduler"
     volumes:
-      - backup_volume:/app/web/backup/:rw
+      - backup_volume:/app/backup/:rw
       - cache_pip_volume:/root/.cache/pip/:rw
       - cache_apt_volume:/var/cache/apt/archives/:rw
-      - .:/app/:rw
     env_file:
       - ./.env
     depends_on:
@@ -98,10 +94,12 @@ services:
     image: nginx:latest
     container_name: todo_nginx
     volumes:
-      - ./nginx/:/etc/nginx/conf.d/:ro
-      - ./nginx/ssl/:/etc/ssl/:ro
-      - static_volume:/app/todo/static/:rw
-      - media_volume:/app/web/media/:rw
+      - ./nginx/:/etc/nginx/templates:rw
+      - ./certbot/conf/:/etc/letsencrypt/:ro
+      - static_volume:/var/html/static/:rw
+      - media_volume:/var/html/media/:rw
+    env_file:
+      - ./.env
     ports:
       - "80:80"
       - "443:443"
@@ -124,11 +122,11 @@ services:
       - db
 
 volumes:
+  postgresql_volume:
   static_volume:
   media_volume:
   backup_volume:
-  postgresql_volume:
+  log_volume:
   cache_pip_volume:
   cache_apt_volume:
   whisper_volume:
-  

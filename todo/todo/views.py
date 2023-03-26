@@ -26,6 +26,6 @@ def robots_txt(request):
         "Disallow: /tasks/birthdays/",
         "Disallow: /profile/",
         "Disallow: /auth/",
-        f"Sitemap: https://{settings.DOMEN}/sitemap.xml",
+        f"Sitemap: https://www.{settings.DOMAIN}/sitemap.xml",
     ]
     return HttpResponse("\n".join(lines), content_type="text/plain")

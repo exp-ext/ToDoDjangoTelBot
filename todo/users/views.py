@@ -60,7 +60,7 @@ class Signup:
             )
         reply_text = [
             'Вы успешно зарегистрированы в [проекте Your To-Do]'
-            f'(https://{settings.DOMEN}/auth/login/).\n'
+            f'(https://www.{settings.DOMAIN}/auth/login/).\n'
             'Ниже ссылка, логин и пароль для входа в личный кабинет:\n'
             f'⤵️\n',
             f'{tel_user.id}\n',

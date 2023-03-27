@@ -1,8 +1,13 @@
-<h1 align="center">Django ToDo Telegram bot</h1>
+<h1 align="center">ToDo Telegram bot</h1>
+
+![статус](https://github.com/exp-ext/ToDoDjangoTelBot/actions/workflows/main.yml/badge.svg?event=push)
 <p align="center"><img src="https://github.com/exp-ext/GitProjects/blob/main/pythons.png" width="700" /></p>
-<div><h3><em>The project is a task and note manager integrated with Telegram. Its goals include:</em></h3>
-<p><em>&nbsp; &nbsp; This application is a system of reminders and notes integrated into the Telegram bot. </em><br /><em>Reminders can be created both in chat, using dialog interaction with the bot, and on the website, where it is possible to add a picture to the reminder. A handy text editor is integrated into the memo form, allowing</em><br /><em> create beautiful posts.</em><br /><em>&nbsp; &nbsp; In addition the program works with API from OpenAI (Davinchi 3, Dall-E, Whisper). Answer generation includes previous dialogs for the last 5 minutes which gives you an opportunity to refine your request without creating a new one. Bot can parse sites with jokes, give the current weather forecast for 4 days by your location and also translate messages into your opponent's native language to help chat with a person who doesn't know your language. Makes audio transcription of your Telegram chat messages.</em></p>
-<div class="w-[30px] flex flex-col relative items-end">&nbsp;</div>
+<hr />
+<div><h3>The project is a task and note manager integrated with Telegram. Its goals include:</h3>
+<p>&nbsp; &nbsp;This application is a system of reminders and notes integrated into the Telegram bot.<br />Reminders can be created both in chat, using dialog interaction with the bot, and on the website, where it is possible to add a picture to the reminder. A handy text editor is integrated into the notes form, allowing<br />create beautiful posts in your public spaces.<br />&nbsp; &nbsp; Additionally the program works with API from OpenAI (Davinchi 3, Dall-E, Whisper). Answer generation includes previous dialogs for the last 10 minutes, which gives you an opportunity to refine your request without creating a new one. <br />&nbsp; &nbsp; The bot can tell jokes, give the current 4-day weather forecast for your location, and translate messages into your opponent's native language to help communicate with someone who doesn't know your language. Makes an audio transcription of your Telegram chat messages.</p>
+<hr />
+
+<h3>Deployment and project launch</h3>
 <div class="w-[30px] flex flex-col relative items-end">To deploy the project, you need to clone it to your server.&nbsp;</div>
 
 ```
@@ -10,51 +15,19 @@ $ git clone https://github.com/exp-ext/ToDoDjangoTelBot.git
 ```
 
 <div class="w-[30px] flex flex-col relative items-end">&nbsp;</div>
-<div class="w-[30px] flex flex-col relative items-end">Add a .env file with tokens, passwords, and settings.</div>
+<div class="w-[30px] flex flex-col relative items-end">Add a .env file with tokens, passwords, and settings. The template for filling the file is in /infra_todo/.env.example;</div>
+
+<div class="w-[30px] flex flex-col relative items-end">Go to the /infra_todo folder and run the project with Docker by running the following command:</div>
 
 ```
-# DJANGO
-DEBUG=0
-DOMAIN=...
-DJANGO_SECRET_KEY=...
-DJANGO_ALLOWED_HOSTS=localhost ...
-
-# TELEGRAM BOT
-TOKEN=...
-# Telegram
-ADMIN_ID=...
-# https://home.openweathermap.org/api_keys
-OW_API_ID=...
-# https://yandex.com/dev/maps/geocoder/
-YANDEX_GEO_API=...
-# email
-EMAIL_HOST_USER=...
-EMAIL_HOST_PASSWORD=...
-# redis
-REDIS_URL=redis://redis:6379
-# POSTGRESSQL
-POSTGRES_ENGINE=django.db.backends.postgresql
-POSTGRES_DB=...
-POSTGRES_USER=...
-POSTGRES_PASSWORD=...
-POSTGRES_HOST=db
-POSTGRES_PORT=5432
-# DNS
-LOGIN_DNS_API=...
-PASSWORD_DNS_API=...
-HOST_FOR_DNS=...
-# ChatGPT API
-CHAT_GP_TOKEN=...
-# Translaters
-X_RAPID_API_KEY=...
-# Monitoring
-SENTRY_KEY=...
+$ docker-compose up -d --build
 ```
-<div class="w-[30px] flex flex-col relative items-end">Launch the project using Docker by running the following command:</div>
-
-```
-$ docker-compose up 
-```
-
+<hr />
 <p><em>Note: Before running the above command, make sure that you have Docker and Docker Compose installed on your server. You may also need to adjust the Docker Compose file to fit your specific configuration needs.</em></p>
-<p>&nbsp;</p>
+<hr />
+<h3>Project author:</h3>
+<p>Borokin Andrey</p>
+
+GITHUB: [exp-ext](https://github.com/exp-ext)
+
+[![Join Telegram](https://img.shields.io/badge/My%20Telegram-Join-blue)](https://t.me/Borokin)

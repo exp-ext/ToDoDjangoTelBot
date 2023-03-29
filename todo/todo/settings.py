@@ -292,6 +292,9 @@ DEFENDER_LOCKOUT_URL = 'block'
 DEFENDER_COOLOFF_TIME = 600
 
 LOGS_DIR = os.path.join(BASE_DIR, 'logs')
+if not os.path.exists(LOGS_DIR):
+    os.makedirs(LOGS_DIR, exist_ok=True)
+    os.chmod(LOGS_DIR, 0o775)
 
 LOGGING = {
     'version': 1,
@@ -314,13 +317,13 @@ LOGGING = {
             'filename': os.path.join(LOGS_DIR, 'django.log'),
             'formatter': 'verbose',
             'when': 'midnight',
-            'backupCount': '30',
+            'backupCount': '5',
         },
     },
     'loggers': {
         'django': {
             'handlers': ['default'],
-            'level': 'DEBUG',
+            'level': 'ERROR',
             'propagate': True,
         },
     }

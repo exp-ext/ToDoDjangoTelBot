@@ -37,7 +37,8 @@ RUN addgroup --system apps-group && \
 
 # Set permissions on the application directory
 RUN chown -R app-user:apps-group /app/ && \
-    chmod -R 770 /app/
+    chmod -R 770 /app/ && \
+    chmod -R 777 /app/logs/
 
 # Switch to the non-root user
 USER app-user

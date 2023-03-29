@@ -3,7 +3,7 @@ version: '3.9'
 services:
   db:
     image: postgres:13.10-alpine
-    container_name: db
+    container_name: todo_db
     restart: unless-stopped
     volumes:
       - postgresql_volume:/var/lib/postgresql/data/

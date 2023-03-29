@@ -5,7 +5,7 @@ upstream todo_proj {
 server {
     listen 80;
     server_name ${DOMAIN} www.${DOMAIN};
-    # return 301 https://$server_name$request_uri;
+    return 301 https://$server_name$request_uri;
 
     location / {
         proxy_pass http://todo_proj;
@@ -29,7 +29,7 @@ server {
 
 server {
     listen 443      ssl;
-    server_name ${DOMAIN} www.${DOMAIN};
+    server_name www.${DOMAIN};
 
     ssl_certificate             /etc/letsencrypt/bundle.crt;
     ssl_certificate_key         /etc/letsencrypt/my_private.key;

@@ -9,8 +9,10 @@
 **/media
 **/backup
 **/__pycache__
+**/logs
 Dockerfile
 Dockerfile_dev
 README.md
 LICENSE.md
 db.sqlite3
+db.json

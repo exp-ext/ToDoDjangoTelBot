@@ -34,8 +34,8 @@ class GetAnswerDavinci():
         'которые я не успеваю обрабатывать 🤯'
     )
     MODEL = 'gpt-3.5-turbo-0301'
-    MAX_LONG_MESSAGE = 600
-    MAX_LONG_REQUEST = 2049
+    MAX_LONG_MESSAGE = 1024
+    MAX_LONG_REQUEST = 4096
     STORY_WINDOWS_TIME = 11
     MAX_TYPING_TIME = 10
 

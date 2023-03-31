@@ -62,6 +62,8 @@ services:
     command: bash -c "celery -A todo worker --loglevel=INFO"
     volumes:
       - backup_volume:/app/backup/:rw
+      - media_volume:/app/media/:rw
+      - log_volume:/app/logs/:rw
       - cache_pip_volume:/root/.cache/pip/:rw
       - cache_apt_volume:/var/cache/apt/archives/:rw
     env_file:
@@ -80,6 +82,8 @@ services:
     command: bash -c "celery -A todo beat -l info --scheduler django_celery_beat.schedulers.DatabaseScheduler"
     volumes:
       - backup_volume:/app/backup/:rw
+      - media_volume:/app/media/:rw
+      - log_volume:/app/logs/:rw
       - cache_pip_volume:/root/.cache/pip/:rw
       - cache_apt_volume:/var/cache/apt/archives/:rw
     env_file:

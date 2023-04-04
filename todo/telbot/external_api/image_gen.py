@@ -1,16 +1,17 @@
+import asyncio
 import os
-import threading
-import time
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 import openai
 from django.contrib.auth import get_user_model
+from django.shortcuts import get_object_or_404
 from dotenv import load_dotenv
 from telegram import ChatAction, InputMediaPhoto, ParseMode, Update
 from telegram.ext import CallbackContext, ConversationHandler
 
 from ..checking import check_registration
 from ..cleaner import remove_keyboard
+from ..models import HistoryDALLE
 
 load_dotenv()
 
@@ -35,65 +36,74 @@ class GetAnswerDallE():
         'которые я не успеваю обрабатывать 🤯'
     )
     MAX_TYPING_TIME = 10
+    STORY_WINDOWS_TIME = 15
 
     def __init__(self,
                  update: Update,
                  context: CallbackContext) -> None:
         self.update = update
         self.context = context
+        self.current_time = None
+        self.time_start = None
         self.chat_id = None
         self.message_text = None
+        self.media_group = []
+        self.event = asyncio.Event()
         self.set_message_text()
         self.set_chat_id()
+        self.set_user()
+        self.set_windows_time()
 
     def get_image_dall_e(self):
         """
         Возвращает серию картинок от АПИ Dall-e 2.
         Предварительно вызвав функцию проверки регистрации.
         """
+        if self.check_in_works():
+            return {'code': 423}
+
         answers = {
             '': ('К сожалению данная функция доступна только для '
                  '[зарегистрированных пользователей]'
                  f'({self.context.bot.link})'),
         }
 
-        del_id = self.context.user_data['image_gen']
-        self.context.bot.delete_message(self.chat_id, del_id)
-
         if check_registration(self.update, self.context, answers) is False:
             return {'code': 401}
-        try:
 
-            media_group = self.get_answer()
+        try:
+            asyncio.run(self.get_answer())
+
+            media_group_dict = [
+                {'media': item.media, 'caption': item.caption}
+                for item in self.media_group
+            ]
+            HistoryDALLE.objects.update(
+                user=self.user,
+                question=self.message_text,
+                answer=media_group_dict
+            )
 
         except Exception as err:
-            self.send_message(
+            self.context.bot.send_message(
+                chat_id=ADMIN_ID,
                 text=f'Ошибка в ChatGPT: {err}',
-                is_admin=True
             )
         finally:
-            self.send_message(
-                media_group=media_group,
-                is_reply=True
+            self.context.bot.send_media_group(
+                chat_id=self.chat_id,
+                media=self.media_group,
+                reply_to_message_id=self.update.message.message_id
             )
-            return ConversationHandler.END
 
-    def get_answer(self) -> list:
+    async def get_answer(self) -> list:
         """
-        Асинхронно запускает 2 функции и при выполнении запроса в openai
+        Асинхронно запускает 2 функции.
         """
-        stop_event = threading.Event()
-        typing = threading.Thread(
-            target=self.send_typing_periodically,
-            args=(stop_event,)
-        )
-        typing.start()
-        answer = self.request_to_openai()
-        stop_event.set()
-        typing.join()
-        return answer
+        asyncio.create_task(self.send_typing_periodically())
+        await asyncio.to_thread(self.request_to_openai)
 
-    def send_typing_periodically(self, stop_event: threading.Event) -> None:
+    async def send_typing_periodically(self) -> None:
         """"
         Передаёт TYPING в чат Телеграм откуда пришёл запрос.
         """
@@ -101,12 +111,12 @@ class GetAnswerDallE():
             datetime.now()
             + timedelta(minutes=GetAnswerDallE.MAX_TYPING_TIME)
         )
-        while not stop_event.is_set():
+        while not self.event.is_set():
             self.context.bot.send_chat_action(
                 chat_id=self.chat_id,
                 action=ChatAction.UPLOAD_PHOTO
             )
-            time.sleep(2)
+            await asyncio.sleep(2)
             if datetime.now() > time_stop:
                 break
 
@@ -114,50 +124,16 @@ class GetAnswerDallE():
         """
         Делает запрос в OpenAI.
         """
-        media_group = []
         response = openai.Image.create(
             prompt=self.message_text,
             n=5,
             size='1024x1024'
         )
         for number, url in enumerate(response['data']):
-            media_group.append(
+            self.media_group.append(
                 InputMediaPhoto(media=url['url'], caption=f'Gen № {number}')
             )
-        return media_group
-
-    def send_message(self,
-                     media_group: list = None,
-                     text: str = None,
-                     is_admin: bool = False,
-                     is_reply: bool = False) -> None:
-        """
-        Отправка сообщения в чат Telegram.
-        args:
-            text(:obj:`str`): текст сообщения
-            media_group(:obj:`list`): ссылки на картинки
-            is_admin(:obj:`bool`): отправка только админу
-            is_reply(:obj:`bool`): отправлять ответом на сообщение
-        """
-        params = {
-            'chat_id': ADMIN_ID if is_admin else self.chat_id,
-        }
-
-        if is_reply:
-            params['reply_to_message_id'] = self.update.message.message_id
-
-        if text:
-            params['text'] = text
-            self.context.bot.send_message(**params)
-            return None
-
-        if media_group:
-            params['media'] = media_group
-            self.context.bot.send_media_group(**params)
-            return None
-
-        params['text'] = GetAnswerDallE.ERROR_TEXT
-        self.context.bot.send_message(**params)
+        self.event.set()
 
     def set_message_text(self) -> str:
         """Определяем и назначаем атрибут message_text."""
@@ -170,6 +146,34 @@ class GetAnswerDallE():
         self.chat_id = (
             self.update.effective_chat.id
         )
+
+    def set_user(self) -> None:
+        """Определяем и назначаем  атрибут user."""
+        self.user = get_object_or_404(
+            User,
+            username=self.update.effective_user.id
+        )
+
+    def set_windows_time(self) -> None:
+        """Определяем и назначаем атрибуты current_time и time_start."""
+        self.current_time = datetime.now(timezone.utc)
+        self.time_start = (
+            self.current_time
+            - timedelta(minutes=GetAnswerDallE.STORY_WINDOWS_TIME)
+        )
+
+    def check_in_works(self) -> bool:
+        """Проверяет нет ли уже в работе этого запроса."""
+        if (self.user.history_dalle.filter(
+                created_at__range=[self.time_start, self.current_time],
+                question=self.message_text).exists()):
+            return True
+        HistoryDALLE.objects.create(
+            user=self.user,
+            question=self.message_text,
+            answer=[GetAnswerDallE.ERROR_TEXT]
+        )
+        return False
 
 
 def first_step_get_image(update: Update, context: CallbackContext):
@@ -189,4 +193,15 @@ def first_step_get_image(update: Update, context: CallbackContext):
 
 
 def get_image_dall_e(update: Update, context: CallbackContext):
-    GetAnswerDallE(update, context).get_image_dall_e()
+    """
+    Удаление и проверка сообщения от first_step_get_image.
+    Вход в класс GetAnswerDallE и в случае возврата любого
+    значения кроме с кодом 423, возврат ConversationHandler.
+    """
+    del_id = context.user_data.pop('image_gen', None)
+    if del_id:
+        context.bot.delete_message(update.effective_chat.id, del_id)
+
+    result = GetAnswerDallE(update, context).get_image_dall_e()
+    if not result or result.get('code') != 423:
+        return ConversationHandler.END

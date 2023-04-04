@@ -3,6 +3,7 @@ import os
 from datetime import datetime, timedelta, timezone
 
 import openai
+from asgiref.sync import sync_to_async
 from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
 from dotenv import load_dotenv
@@ -101,7 +102,7 @@ class GetAnswerDallE():
         Асинхронно запускает 2 функции.
         """
         asyncio.create_task(self.send_typing_periodically())
-        await asyncio.to_thread(self.request_to_openai)
+        await sync_to_async(self.request_to_openai)()
 
     async def send_typing_periodically(self) -> None:
         """"

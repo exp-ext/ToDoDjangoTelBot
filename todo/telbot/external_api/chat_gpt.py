@@ -3,6 +3,7 @@ import os
 from datetime import datetime, timedelta, timezone
 
 import openai
+from asgiref.sync import sync_to_async
 from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
 from dotenv import load_dotenv
@@ -55,9 +56,9 @@ class GetAnswerDavinci():
         self.set_message_text()
         self.set_windows_time()
 
-    async def get_answer_davinci(self) -> dict:
+    def get_answer_davinci(self) -> dict:
         """Основная логика."""
-        if await self.check_in_works():
+        if self.check_in_works():
             return {'code': 423}
 
         if check_registration(self.update,
@@ -78,8 +79,7 @@ class GetAnswerDavinci():
             return {'code': 400}
 
         try:
-            await self.get_prompt()
-            await self.get_answer()
+            asyncio.run(self.get_answer())
 
             HistoryAI.objects.update(
                 user=self.user,
@@ -104,7 +104,7 @@ class GetAnswerDavinci():
         Асинхронно запускает 2 функции.
         """
         asyncio.create_task(self.send_typing_periodically())
-        await asyncio.to_thread(self.request_to_openai)
+        await sync_to_async(self.request_to_openai)()
 
     async def send_typing_periodically(self) -> None:
         """"
@@ -127,6 +127,7 @@ class GetAnswerDavinci():
         """
         Делает запрос в OpenAI и выключает typing.
         """
+        self.get_prompt()
         answer = openai.ChatCompletion.create(
             model=GetAnswerDavinci.MODEL,
             messages=self.prompt
@@ -134,7 +135,7 @@ class GetAnswerDavinci():
         self.answer_text = answer.choices[0].message.get('content')
         self.event.set()
 
-    async def get_prompt(self) -> None:
+    def get_prompt(self) -> None:
         """
         Prompt для запроса в OpenAI и модель user.
         """
@@ -159,7 +160,7 @@ class GetAnswerDavinci():
             ])
         self.prompt.append({'role': 'user', 'content': self.message_text})
 
-    async def check_in_works(self) -> bool:
+    def check_in_works(self) -> bool:
         """Проверяет нет ли уже в работе этого запроса."""
         if (self.user.history_ai.filter(
                 created_at__range=[self.time_start, self.current_time],
@@ -209,17 +210,11 @@ class GetAnswerDavinci():
         }
 
 
-async def run_get_answer_davinci(update: Update, context: CallbackContext):
-    gad = GetAnswerDavinci(update, context)
-    await asyncio.sleep(0)
-    await gad.get_answer_davinci()
-
-
 def get_answer_davinci_public(update: Update, context: CallbackContext):
-    asyncio.run(run_get_answer_davinci(update, context))
+    GetAnswerDavinci(update, context).get_answer_davinci()
 
 
 def get_answer_davinci_person(update: Update, context: CallbackContext):
     if update.effective_chat.type == 'private':
-        asyncio.run(run_get_answer_davinci(update, context))
+        GetAnswerDavinci(update, context).get_answer_davinci()
     return {'code': 406}

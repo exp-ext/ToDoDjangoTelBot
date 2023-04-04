@@ -6,6 +6,7 @@ pillow~=9.4.0
 pytils~=0.4.1
 python-dotenv~=0.21.0
 sorl-thumbnail~=12.9.0
+asgiref~=3.6.0
 
 # WYSIWYG editor
 django-ckeditor~=6.5.1

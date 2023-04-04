@@ -1,11 +1,10 @@
+import asyncio
 import os
-import threading
-import time
 from datetime import datetime, timedelta, timezone
 
 import openai
+from asgiref.sync import sync_to_async
 from django.contrib.auth import get_user_model
-from django.db.models.query import QuerySet
 from django.shortcuts import get_object_or_404
 from dotenv import load_dotenv
 from telegram import ChatAction, Update
@@ -26,7 +25,7 @@ class GetAnswerDavinci():
     """
     Проверяет регистрацию.
     Делает запрос и в чат Telegram возвращает результат ответа
-    от API ИИ ChatGPT.
+    от API ИИ Dall-E.
     """
     ERROR_TEXT = (
         'Что-то пошло не так 🤷🏼\n'
@@ -48,13 +47,17 @@ class GetAnswerDavinci():
         self.message_text = None
         self.current_time = None
         self.time_start = None
+        self.answer_text = None
+        self.event = asyncio.Event()
+        self.prompt = [
+            {'role': 'system', 'content': 'You are a helpful assistant.'}
+        ]
         self.set_user()
         self.set_message_text()
         self.set_windows_time()
 
     def get_answer_davinci(self) -> dict:
-        """Основная логика класса."""
-
+        """Основная логика."""
         if self.check_in_works():
             return {'code': 423}
 
@@ -68,48 +71,42 @@ class GetAnswerDavinci():
                 f'{self.user.first_name}, у Вас слишком большой текст запроса.'
                 ' Попробуйте сформулировать его короче.'
             )
-            self.send_message(
+            self.context.bot.send_message(
+                chat_id=self.update.effective_chat.id,
                 text=answer_text,
-                is_reply=True
+                reply_to_message_id=self.update.message.message_id
             )
             return {'code': 400}
+
         try:
-            answer = self.get_answer()
-            answer_text = answer if answer else GetAnswerDavinci.ERROR_TEXT
+            asyncio.run(self.get_answer())
+
             HistoryAI.objects.update(
                 user=self.user,
                 question=self.message_text,
-                answer=answer_text.lstrip('\n')
+                answer=self.answer_text.lstrip('\n')
             )
         except Exception as err:
-            self.send_message(
+            self.context.bot.send_message(
+                chat_id=ADMIN_ID,
                 text=f'Ошибка в ChatGPT: {err}',
-                is_admin=True
             )
-            answer_text = GetAnswerDavinci.ERROR_TEXT
+            self.answer_text = GetAnswerDavinci.ERROR_TEXT
         finally:
-            self.send_message(
-                text=answer_text,
-                is_reply=True
+            self.context.bot.send_message(
+                chat_id=self.update.effective_chat.id,
+                text=self.answer_text,
+                reply_to_message_id=self.update.message.message_id
             )
-        return {'code': 200}
 
-    def get_answer(self) -> str:
+    async def get_answer(self) -> None:
         """
-        Асинхронно запускает 2 функции и при выполнении запроса в openai
+        Асинхронно запускает 2 функции.
         """
-        stop_event = threading.Event()
-        typing = threading.Thread(
-            target=self.send_typing_periodically,
-            args=(stop_event,)
-        )
-        typing.start()
-        answer = self.request_to_openai()
-        stop_event.set()
-        typing.join()
-        return answer
+        asyncio.create_task(self.send_typing_periodically())
+        await sync_to_async(self.request_to_openai)()
 
-    def send_typing_periodically(self, stop_event: threading.Event) -> None:
+    async def send_typing_periodically(self) -> None:
         """"
         Передаёт TYPING в чат Телеграм откуда пришёл запрос.
         """
@@ -117,79 +114,57 @@ class GetAnswerDavinci():
             datetime.now()
             + timedelta(minutes=GetAnswerDavinci.MAX_TYPING_TIME)
         )
-        while not stop_event.is_set():
+        while not self.event.is_set():
             self.context.bot.send_chat_action(
                 chat_id=self.update.effective_chat.id,
                 action=ChatAction.TYPING
             )
-            time.sleep(2)
+            await asyncio.sleep(2)
             if datetime.now() > time_stop:
                 break
 
-    def request_to_openai(self) -> str | QuerySet:
+    def request_to_openai(self) -> None:
         """
-        Делает запрос в OpenAI.
+        Делает запрос в OpenAI и выключает typing.
         """
-        prompt = self.get_prompt()
+        self.get_prompt()
         answer = openai.ChatCompletion.create(
             model=GetAnswerDavinci.MODEL,
-            messages=prompt
+            messages=self.prompt
         )
-        answer_text = answer.choices[0].message.get('content')
-        return answer_text
+        self.answer_text = answer.choices[0].message.get('content')
+        self.event.set()
 
-    def get_prompt(self) -> str | QuerySet:
+    def get_prompt(self) -> None:
         """
-        Возвращает prompt для запроса в OpenAI и модель user.
+        Prompt для запроса в OpenAI и модель user.
         """
         history = (
-            self.user.history_ai
-            .filter(created_at__range=[self.time_start, self.current_time])
+            self.user
+            .history_ai
+            .filter(
+                created_at__range=[self.time_start, self.current_time]
+            )
             .exclude(answer__in=[None, GetAnswerDavinci.ERROR_TEXT])
             .values('question', 'answer')
         )
-        prompt = [
-            {'role': 'system', 'content': "You are a helpful assistant."}
-        ]
         count_value = 0
         for item in history:
             count_value += len(item['question']) + len(item['answer'])
             if (count_value + len(self.message_text)
                     >= GetAnswerDavinci.MAX_LONG_REQUEST):
                 break
-            prompt.extend([
+            self.prompt.extend([
                 {'role': 'user', 'content': item['question']},
                 {'role': 'assistant', 'content': item['answer']}
             ])
-        prompt.append({'role': 'user', 'content': self.message_text})
-        return prompt
-
-    def send_message(self,
-                     text,
-                     is_admin: bool = False,
-                     is_reply: bool = False):
-        """
-        Отправка сообщения в чат Telegram.
-        args:
-            text(:obj:`str`): текст сообщения
-            is_admin(:obj:`bool`): отправка только админу
-            is_reply(:obj:`bool`): отправлять ответом на сообщение
-        """
-        params = {
-            'chat_id': ADMIN_ID if is_admin else self.update.effective_chat.id,
-            'text': text,
-        }
-        if is_reply:
-            params['reply_to_message_id'] = self.update.message.message_id
-
-        self.context.bot.send_message(**params)
+        self.prompt.append({'role': 'user', 'content': self.message_text})
 
     def check_in_works(self) -> bool:
-        if (self.user
-                .history_ai.filter(
-                    created_at__range=[self.time_start, self.current_time],
-                    question=self.message_text
-                ).exists()):
+        """Проверяет нет ли уже в работе этого запроса."""
+        if (self.user.history_ai.filter(
+                created_at__range=[self.time_start, self.current_time],
+                question=self.message_text).exists()):
             return True
         HistoryAI.objects.create(
             user=self.user,

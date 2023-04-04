@@ -25,3 +25,25 @@ class HistoryAI(Create):
 
     def __str__(self):
         return self.question
+
+
+class HistoryDALLE(Create):
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='history_dalle'
+    )
+    question = models.TextField(
+        verbose_name='Запрос'
+    )
+    answer = models.JSONField(
+        verbose_name='Ответ'
+    )
+
+    class Meta:
+        verbose_name = 'История запросов к Dalle'
+        verbose_name_plural = 'История запросов к Dalle'
+        ordering = ('created_at',)
+
+    def __str__(self):
+        return self.question

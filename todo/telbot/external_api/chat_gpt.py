@@ -61,11 +61,6 @@ class GetAnswerDavinci():
         if self.check_in_works():
             return {'code': 423}
 
-        if check_registration(self.update,
-                              self.context,
-                              self.answers_for_check) is False:
-            return {'code': 401}
-
         if self.check_long_query:
             answer_text = (
                 f'{self.user.first_name}, у Вас слишком большой текст запроса.'
@@ -198,23 +193,25 @@ class GetAnswerDavinci():
     def check_long_query(self) -> bool:
         return len(self.message_text) > GetAnswerDavinci.MAX_LONG_MESSAGE
 
-    @property
-    def answers_for_check(self):
-        return {
-            '?': ('Я мог бы ответить Вам, если '
-                  f'[зарегистрируетесь]({self.context.bot.link}) 🧐'),
-            '!': ('Я обязательно поддержу Вашу дискуссию, если '
-                  f'[зарегистрируетесь]({self.context.bot.link}) 🙃'),
-            '': ('Какая интересная беседа, [зарегистрируетесь]'
-                 f'({self.context.bot.link}) и я подключусь к ней 😇'),
-        }
+
+def for_check(update: Update, context: CallbackContext):
+    answers_for_check = {
+        '?': ('Я мог бы ответить Вам, если '
+              f'[зарегистрируетесь]({context.bot.link}) 🧐'),
+        '!': ('Я обязательно поддержу Вашу дискуссию, если '
+              f'[зарегистрируетесь]({context.bot.link}) 🙃'),
+        '': ('Какая интересная беседа, [зарегистрируетесь]'
+             f'({context.bot.link}) и я подключусь к ней 😇'),
+    }
+    if check_registration(update, context, answers_for_check) is False:
+        return {'code': 401}
+    GetAnswerDavinci(update, context).get_answer_davinci()
 
 
 def get_answer_davinci_public(update: Update, context: CallbackContext):
-    GetAnswerDavinci(update, context).get_answer_davinci()
+    for_check(update, context)
 
 
 def get_answer_davinci_person(update: Update, context: CallbackContext):
     if update.effective_chat.type == 'private':
-        GetAnswerDavinci(update, context).get_answer_davinci()
-    return {'code': 406}
+        for_check(update, context)

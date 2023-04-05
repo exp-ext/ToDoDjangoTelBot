@@ -56,7 +56,7 @@ class HistoryWhisper(Create):
         related_name='history_whisper'
     )
     file_id = models.CharField(
-        max_length=64,
+        max_length=128,
         verbose_name='Id файла'
     )
     transcription = models.TextField(

@@ -88,7 +88,7 @@ class GetAnswerDallE():
         except Exception as err:
             self.context.bot.send_message(
                 chat_id=ADMIN_ID,
-                text=f'Ошибка в ChatGPT: {err}',
+                text=f'Ошибка в Dall-E: {err}',
             )
         finally:
             self.context.bot.send_media_group(

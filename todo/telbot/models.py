@@ -47,3 +47,26 @@ class HistoryDALLE(Create):
 
     def __str__(self):
         return self.question
+
+
+class HistoryWhisper(Create):
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='history_whisper'
+    )
+    file_id = models.CharField(
+        max_length=64,
+        verbose_name='Id файла'
+    )
+    transcription = models.TextField(
+        verbose_name='Аудиотранскрибция'
+    )
+
+    class Meta:
+        verbose_name = 'История запросов к Whisper'
+        verbose_name_plural = 'История запросов к Whisper'
+        ordering = ('created_at',)
+
+    def __str__(self):
+        return self.question

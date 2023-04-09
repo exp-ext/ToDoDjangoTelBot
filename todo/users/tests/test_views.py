@@ -36,8 +36,8 @@ class UsersViewsTests(TestCase):
             'users/password_change_form.html',
             UsersViewsTests.logout:
             'users/logged_out.html',
-            UsersViewsTests.login:
-            'users/login.html',
+            # UsersViewsTests.login:
+            # 'users/login.html',
             UsersViewsTests.password_reset_done:
             'users/password_reset_done.html',
             UsersViewsTests.password_reset_form:

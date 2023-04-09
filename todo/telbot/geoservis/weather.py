@@ -5,7 +5,7 @@ from telegram import Update
 from telegram.ext import CallbackContext
 from users.views import get_coordinates
 
-from todo.settings import OW_API_ID
+from todo.settings import OW_API_TOKEN
 
 from ..cleaner import remove_keyboard
 from .support import status_weather
@@ -24,7 +24,7 @@ def current_weather(update: Update, context: CallbackContext):
                 'lon': coordinates.longitude,
                 'units': 'metric',
                 'lang': 'ru',
-                'APPID': OW_API_ID
+                'APPID': OW_API_TOKEN
             }
         )
         data = res.json()
@@ -79,7 +79,7 @@ def weather_forecast(update: Update, context: CallbackContext):
                 'lon': coordinates.longitude,
                 'units': 'metric',
                 'lang': 'ru',
-                'APPID': OW_API_ID
+                'APPID': OW_API_TOKEN
             }
         )
         data = res.json()

@@ -16,7 +16,7 @@ class TaskFormTests(TestCase):
     def setUpClass(cls):
         super().setUpClass()
         cls.user_author = User.objects.create_user(
-            username='author_auth_Task',
+            username='author_tasks_form',
             password='1234GLKLl5',
         )
         cls.group = Group.objects.create(

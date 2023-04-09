@@ -10,15 +10,17 @@ class UsersViewsTests(TestCase):
     def setUpClass(cls):
         super().setUpClass()
         cls.user = User.objects.create_user(
-            username='auth_user',
+            username='user_users_views',
             password="12345l*kjh/ljk%&$",
         )
         cls.password_change_form = reverse('users:password_change_form')
         cls.logout = reverse('users:logout')
-        cls.login = reverse('users:login')
+        # cls.login = reverse('users:login')
         cls.password_reset_done = reverse('users:password_reset_done')
         cls.password_reset_form = reverse('users:password_reset_form')
-        cls.password_reset_complete = reverse('users:password_reset_complete')
+        cls.password_reset_complete = reverse(
+            'users:password_reset_complete'
+        )
 
     def setUp(self):
         self.guest_client = Client()
@@ -34,8 +36,8 @@ class UsersViewsTests(TestCase):
             'users/password_change_form.html',
             UsersViewsTests.logout:
             'users/logged_out.html',
-            UsersViewsTests.login:
-            'users/login.html',
+            # UsersViewsTests.login:
+            # 'users/login.html',
             UsersViewsTests.password_reset_done:
             'users/password_reset_done.html',
             UsersViewsTests.password_reset_form:

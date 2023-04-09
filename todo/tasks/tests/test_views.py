@@ -11,12 +11,12 @@ from users.models import Group, GroupConnections, Location
 User = get_user_model()
 
 
-class PostViewsTests(TestCase):
+class TaskViewsTests(TestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
         cls.user_author = User.objects.create_user(
-            username='author_views',
+            username='author_tasks_views',
             password='1234GLKLl5',
         )
         cls.group = Group.objects.create(

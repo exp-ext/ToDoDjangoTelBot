@@ -11,7 +11,7 @@ from users.models import Group, GroupConnections, Location
 User = get_user_model()
 
 
-class PostViewsTests(TestCase):
+class TaskViewsTests(TestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()

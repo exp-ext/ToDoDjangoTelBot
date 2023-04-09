@@ -46,7 +46,7 @@ DEBUG = int(os.environ.get('DEBUG', default=0))
 LOCAL_DEV = int(os.environ.get('LOCAL_DEV', default=0))
 
 ALLOWED_HOSTS = os.environ.get(
-    "DJANGO_ALLOWED_HOSTS",
+    'DJANGO_ALLOWED_HOSTS',
     default='localhost'
 ).split(" ")
 
@@ -290,6 +290,8 @@ USER_AGENTS_CACHE = 'default'
 
 #  DJANGO-DEFENDER
 # https://django-defender.readthedocs.io/en/latest/#
+if LOCAL_DEV:
+    DEFENDER_ENABLED = False
 DEFENDER_REDIS_URL = None if LOCAL_DEV else REDIS_URL
 DEFENDER_LOCKOUT_URL = 'block'
 DEFENDER_COOLOFF_TIME = 600

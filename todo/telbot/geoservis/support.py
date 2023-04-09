@@ -2,7 +2,7 @@ from math import asin, cos, radians, sin, sqrt
 
 import requests
 
-from todo.settings import YANDEX_GEO_API
+from todo.settings import YANDEX_GEO_API_TOKEN
 
 
 def get_distance(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
@@ -27,7 +27,7 @@ def get_address_from_coords(coords: str) -> str:
     Возвращает адрес местонахождения, полученный через api geocode-maps.yandex.
     """
     params = {
-        "apikey": YANDEX_GEO_API,
+        "apikey": YANDEX_GEO_API_TOKEN,
         "format": "json",
         "lang": "ru_RU",
         "kind": "house",

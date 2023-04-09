@@ -31,11 +31,11 @@ class PostViewsTests(TestCase):
     def setUpClass(cls):
         super().setUpClass()
         cls.user_author = User.objects.create_user(
-            username='author_views',
+            username='author_posts_views',
             password='1234GLKLl5',
         )
         cls.user_action = User.objects.create_user(
-            username='action_author_views',
+            username='action_author_posts_views',
             password='123TKLDKlk45',
         )
         cls.group = Group.objects.create(

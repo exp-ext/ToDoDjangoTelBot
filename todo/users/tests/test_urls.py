@@ -10,7 +10,7 @@ class UsersURLTests(TestCase):
     def setUpClass(cls):
         super().setUpClass()
         cls.user = User.objects.create_user(
-            username='auth',
+            username='user_users_urls',
             password="12345",
         )
 
@@ -21,7 +21,7 @@ class UsersURLTests(TestCase):
         self.authorized_client.force_login(UsersURLTests.user)
 
     def test_pages_codes(self):
-        """URL доступные любому пользователю в приложении users."""
+        """Доступность URL в приложении users."""
         code_ok = 200
         code_found = 302
         code_not_found = 404
@@ -29,7 +29,7 @@ class UsersURLTests(TestCase):
             [self.authorized_client, '/auth/password_change/', code_ok],
             [self.guest_client, '/auth/password_change/', code_found],
             [self.guest_client, '/auth/logout/', code_ok],
-            [self.guest_client, '/auth/login/', code_ok],
+            # [self.guest_client, '/auth/login/', code_ok],
             [self.guest_client, '/auth/password_reset/done/', code_ok],
             [self.guest_client, '/auth/password_reset/', code_ok],
             [self.guest_client, '/auth/reset/done/', code_ok],

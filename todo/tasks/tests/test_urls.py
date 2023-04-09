@@ -1,4 +1,5 @@
 from datetime import datetime, timezone
+
 from django.contrib.auth import get_user_model
 from django.test import Client, TestCase
 from users.models import Group, GroupConnections, Location
@@ -13,11 +14,11 @@ class TaskURLTests(TestCase):
     def setUpClass(cls):
         super().setUpClass()
         cls.user = User.objects.create_user(
-            username='user_task_url_test',
+            username='user_tasks_url_test',
             password='1234GLKLl5',
         )
         cls.somebody = User.objects.create_user(
-            username='somebody_task_url_test',
+            username='somebody_tasks_url_test',
             password='54321',
         )
         cls.group = Group.objects.create(
@@ -64,7 +65,7 @@ class TaskURLTests(TestCase):
         self.authorized_somebody.force_login(self.somebody)
 
     def test_pages_codes_by_url(self):
-        """Страницы по URL недоступны любому пользователю."""
+        """Доступность URL в приложении tasks."""
         code_ok = 200
         code_found = 302
         code_not_found = 404

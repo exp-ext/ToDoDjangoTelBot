@@ -6,7 +6,7 @@ from . import views
 
 urlpatterns = [
     path(
-        f'{settings.TOKEN}/webhooks/',
+        f'{settings.TELEGRAM_TOKEN}/webhooks/',
         csrf_exempt(views.TelegramBotWebhookView.as_view())
     ),
 ]

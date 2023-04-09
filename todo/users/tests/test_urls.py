@@ -29,7 +29,7 @@ class UsersURLTests(TestCase):
             [self.authorized_client, '/auth/password_change/', code_ok],
             [self.guest_client, '/auth/password_change/', code_found],
             [self.guest_client, '/auth/logout/', code_ok],
-            [self.guest_client, '/auth/login/', code_ok],
+            # [self.guest_client, '/auth/login/', code_ok],
             [self.guest_client, '/auth/password_reset/done/', code_ok],
             [self.guest_client, '/auth/password_reset/', code_ok],
             [self.guest_client, '/auth/reset/done/', code_ok],

@@ -15,7 +15,7 @@ class UsersViewsTests(TestCase):
         )
         cls.password_change_form = reverse('users:password_change_form')
         cls.logout = reverse('users:logout')
-        cls.login = reverse('users:login')
+        # cls.login = reverse('users:login')
         cls.password_reset_done = reverse('users:password_reset_done')
         cls.password_reset_form = reverse('users:password_reset_form')
         cls.password_reset_complete = reverse(

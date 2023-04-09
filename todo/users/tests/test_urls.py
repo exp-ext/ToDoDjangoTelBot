@@ -21,7 +21,7 @@ class UsersURLTests(TestCase):
         self.authorized_client.force_login(UsersURLTests.user)
 
     def test_pages_codes(self):
-        """URL доступные любому пользователю в приложении users."""
+        """Доступность URL в приложении users."""
         code_ok = 200
         code_found = 302
         code_not_found = 404

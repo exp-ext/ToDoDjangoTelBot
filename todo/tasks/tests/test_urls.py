@@ -65,7 +65,7 @@ class TaskURLTests(TestCase):
         self.authorized_somebody.force_login(self.somebody)
 
     def test_pages_codes_by_url(self):
-        """Страницы по URL недоступны любому пользователю."""
+        """Доступность URL в приложении tasks."""
         code_ok = 200
         code_found = 302
         code_not_found = 404

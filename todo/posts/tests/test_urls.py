@@ -47,7 +47,7 @@ class PostURLTests(TestCase):
         self.authorized_somebody.force_login(self.somebody)
 
     def test_pages_codes_by_url(self):
-        """Страницы по URL доступны любому пользователю в приложении posts."""
+        """Доступность URL в приложении posts."""
         code_ok = 200
         code_found = 302
         code_not_found = 404

@@ -33,7 +33,7 @@ timezonefinder~=6.1.9
 tzlocal~=4.2
 
 # detect language
-langid>=1.1.6
+langdetect~=1.0.9
 
 # ChatGPT
 openai~=0.27.2

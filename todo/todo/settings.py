@@ -19,7 +19,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # bots settings
-TOKEN = os.getenv('TOKEN')
+TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
 OW_API_ID = os.getenv('OW_API_ID')
 YANDEX_GEO_API = os.getenv('YANDEX_GEO_API')
 DOMAIN = os.getenv('DOMAIN')

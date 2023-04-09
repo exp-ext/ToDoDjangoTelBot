@@ -2,14 +2,13 @@ from django.conf import settings
 from telegram import Bot
 
 DOMAIN_URL = settings.DOMAIN
-TOKEN = settings.TOKEN
+TELEGRAM_TOKEN = settings.TELEGRAM_TOKEN
 
 
 def check_tokens():
     """Проверка доступности переменных среды.."""
     env_vars = {
-        'TOKEN': TOKEN,
-        'OW_API_ID': settings.OW_API_ID,
+        'TELEGRAM_TOKEN': TELEGRAM_TOKEN,
         'DOMAIN': DOMAIN_URL,
     }
     for key, value in env_vars.items():
@@ -19,4 +18,4 @@ def check_tokens():
 
 
 if check_tokens():
-    bot = Bot(token=TOKEN)
+    bot = Bot(token=TELEGRAM_TOKEN)

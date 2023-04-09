@@ -14,16 +14,16 @@ import os
 import socket
 from pathlib import Path, PurePath
 
+from core.keygen import get_key
 from dotenv import load_dotenv
 
 load_dotenv()
 
 # bots settings
-TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
-OW_API_ID = os.getenv('OW_API_ID')
-YANDEX_GEO_API = os.getenv('YANDEX_GEO_API')
 DOMAIN = os.getenv('DOMAIN')
-DATABASE_URL = os.getenv('DATABASE_URL')
+TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
+OW_API_TOKEN = os.getenv('OW_API_TOKEN', default='some_token_to_pass_test')
+YANDEX_GEO_API_TOKEN = os.getenv('YANDEX_GEO_API_TOKEN', default='some_token_to_pass_test')
 
 # mail service
 EMAIL_USE_TLS = True
@@ -37,6 +37,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.getenv('DJANGO_SECRET_KEY')
+
+if not SECRET_KEY:
+    SECRET_KEY = get_key(50)
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = int(os.environ.get('DEBUG', default=0))

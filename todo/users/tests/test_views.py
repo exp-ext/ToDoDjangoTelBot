@@ -18,7 +18,9 @@
 #         cls.login = reverse('users:login')
 #         cls.password_reset_done = reverse('users:password_reset_done')
 #         cls.password_reset_form = reverse('users:password_reset_form')
-#         cls.password_reset_complete = reverse('users:password_reset_complete')
+#         cls.password_reset_complete = reverse(
+#             'users:password_reset_complete'
+#         )
 
 #     def setUp(self):
 #         self.guest_client = Client()

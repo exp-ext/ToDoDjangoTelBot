@@ -10,7 +10,7 @@ class PostModelTest(TestCase):
     def setUpClass(cls):
         super().setUpClass()
         cls.user = User.objects.create_user(
-            username='auth',
+            username='auth_posts_models',
             password='1234GLKLl5',
         )
         cls.post = Post.objects.create(

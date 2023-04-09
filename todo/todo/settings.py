@@ -290,8 +290,6 @@ USER_AGENTS_CACHE = 'default'
 
 #  DJANGO-DEFENDER
 # https://django-defender.readthedocs.io/en/latest/#
-if LOCAL_DEV:
-    DEFENDER_ENABLED = False
 DEFENDER_REDIS_URL = None if LOCAL_DEV else REDIS_URL
 DEFENDER_LOCKOUT_URL = 'block'
 DEFENDER_COOLOFF_TIME = 600

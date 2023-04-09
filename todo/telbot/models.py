@@ -69,4 +69,26 @@ class HistoryWhisper(Create):
         ordering = ('created_at',)
 
     def __str__(self):
-        return self.question
+        return self.transcription
+
+
+class HistoryTranslation(Create):
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='history_translation'
+    )
+    message = models.TextField(
+        verbose_name='Сообщение'
+    )
+    translation = models.TextField(
+        verbose_name='Перевод'
+    )
+
+    class Meta:
+        verbose_name = 'История запросов для перевода'
+        verbose_name_plural = 'История запросов для перевода'
+        ordering = ('created_at',)
+
+    def __str__(self):
+        return self.message

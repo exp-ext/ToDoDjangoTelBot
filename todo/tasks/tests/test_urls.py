@@ -1,4 +1,5 @@
 from datetime import datetime, timezone
+
 from django.contrib.auth import get_user_model
 from django.test import Client, TestCase
 from users.models import Group, GroupConnections, Location

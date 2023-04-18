@@ -4,7 +4,7 @@ django-defender~=0.9.6
 django-dbbackup~=4.0.2
 pillow~=9.4.0
 pytils~=0.4.1
-python-dotenv~=0.21.0
+python-dotenv~=1.0.0
 sorl-thumbnail~=12.9.0
 asgiref~=3.6.0
 

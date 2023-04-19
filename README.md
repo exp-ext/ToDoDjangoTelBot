@@ -1,7 +1,9 @@
 <h1 align="center">ToDo Telegram bot</h1>
 
 ![статус](https://github.com/exp-ext/ToDoDjangoTelBot/actions/workflows/main.yml/badge.svg?event=push)
-<p align="center"><img src="https://github.com/exp-ext/GitProjects/blob/main/pythons.png" width="700" /></p>
+
+<p align="center"><img src="https://github.com/exp-ext/ToDoDjangoTelBot/blob/master/todo/static/git/background.jpg" width="700" /></p>
+
 <hr />
 <div><h3>The project is a task and note manager integrated with Telegram. Its goals include:</h3>
 <p>&nbsp; &nbsp;This application is a system of reminders and notes integrated into the Telegram bot.<br />Reminders can be created both in chat, using dialog interaction with the bot, and on the website, where it is possible to add a picture to the reminder. A handy text editor is integrated into the notes form, allowing<br />create beautiful posts in your public spaces.<br />&nbsp; &nbsp; Additionally the program works with API from OpenAI (Davinchi 3, Dall-E, Whisper). Answer generation includes previous dialogs for the last 10 minutes, which gives you an opportunity to refine your request without creating a new one. <br />&nbsp; &nbsp; The bot can tell jokes, give the current 4-day weather forecast for your location, and translate messages into your opponent's native language to help communicate with someone who doesn't know your language. Makes an audio transcription of your Telegram chat messages.</p>

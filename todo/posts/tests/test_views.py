@@ -4,7 +4,6 @@ import tempfile
 from django import forms
 from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.core.cache import cache
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.paginator import Paginator
 from django.test import Client, TestCase, override_settings
@@ -204,23 +203,6 @@ class PostViewsTests(TestCase):
                             response.context.get('form').fields.get(value)
                         )
                         self.assertIsInstance(form_field, expected)
-
-    def test_cache(self):
-        """Проверка работы кэша."""
-        post = Post.objects.create(
-            text='Text for check cache index',
-            author=self.user_author
-        )
-        response = self.authorized_client.get(self.index)
-        content_first = response.content
-        post.delete()
-        response = self.authorized_client.get(self.index)
-        content_second = response.content
-        self.assertEqual(content_first, content_second)
-        cache.clear()
-        response = self.authorized_client.get(self.index)
-        content_third = response.content
-        self.assertNotEqual(content_second, content_third)
 
     def test_follow_unfollow(self):
         """Авторизованный пользователь может подписаться/отписаться

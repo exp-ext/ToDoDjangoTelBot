@@ -3,7 +3,7 @@ from django.contrib.auth import get_user_model
 from telegram import ParseMode, Update
 from telegram.ext import CallbackContext
 
-from .cleaner import process_to_delete_message
+from .cleaner import delete_messages_by_time
 from .menus import assign_group
 
 User = get_user_model()
@@ -38,8 +38,10 @@ def check_registration(update: Update,
             text=text,
             parse_mode=ParseMode.MARKDOWN
         ).message_id
-        *params, = chat.id, message_id, 20
-        process_to_delete_message(params)
+        delete_messages_by_time.apply_async(
+            args=[chat.id, message_id],
+            countdown=20
+        )
         return False
     assign_group(update)
     return True

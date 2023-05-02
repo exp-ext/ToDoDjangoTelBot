@@ -9,8 +9,7 @@ from django.db.models.query import QuerySet
 from django.http import (HttpRequest, HttpResponse, HttpResponseRedirect,
                          JsonResponse)
 from django.shortcuts import get_object_or_404, redirect, render
-from telbot.cleaner import process_to_delete_message
-from telbot.commands import set_up_commands
+from telbot.cleaner import delete_messages_by_time
 from telegram import Update
 from telegram.ext import CallbackContext
 from timezonefinder import TimezoneFinder
@@ -37,8 +36,10 @@ class Signup:
                 f'{tel_user.first_name}, '
                 'эта функция доступна только в "private"'
             ).message_id
-            *params, = tel_user.id, message_id, 20
-            process_to_delete_message(params)
+            delete_messages_by_time.apply_async(
+                args=[tel_user, message_id],
+                countdown=20
+            )
             return JsonResponse({"error": "Only in the private chat type."})
 
         password = self.get_password(length=15)
@@ -72,7 +73,6 @@ class Signup:
                 text=text,
                 parse_mode='Markdown'
             )
-        set_up_commands(context.bot)
         return JsonResponse({"ok": "User created."})
 
     @staticmethod

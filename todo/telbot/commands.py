@@ -21,11 +21,11 @@ COMMANDS: Mapping[str, Mapping[str, str]] = {
 def set_up_commands(bot_instance: Bot) -> None:
     """Переназначение команд бота."""
     bot_instance.delete_my_commands()
-    for lang_code in COMMANDS:
+    for lc in COMMANDS:
         bot_instance.set_my_commands(
-            language_code=lang_code,
+            language_code=lc,
             commands=[
-                BotCommand(c, d) for c, d in COMMANDS[lang_code].items()
+                BotCommand(key, item) for key, item in COMMANDS[lc].items()
             ]
         )
 

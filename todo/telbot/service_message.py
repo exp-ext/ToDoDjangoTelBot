@@ -1,7 +1,7 @@
 from telegram import Update
 from telegram.ext import CallbackContext, ConversationHandler
 
-from .cleaner import process_to_delete_message
+from .cleaner import delete_messages_by_time
 from .loader import bot
 
 
@@ -15,9 +15,10 @@ def send_service_message(chat_id: int, reply_text: str,
     - parse_mode (:obj:`str`) - Markdown or HTML.
     """
     message_id = bot.send_message(chat_id, reply_text, parse_mode).message_id
-    sec_before_del = 20
-    *params, = chat_id, message_id, sec_before_del
-    process_to_delete_message(params)
+    delete_messages_by_time.apply_async(
+        args=[chat_id, message_id],
+        countdown=20
+    )
 
 
 def cancel(update: Update, _: CallbackContext):

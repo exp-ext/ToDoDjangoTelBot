@@ -1,9 +1,9 @@
 import re
-import threading
-import time
 
 from telegram import Update
 from telegram.ext import CallbackContext
+
+from todo.celery import app
 
 from .commands import COMMANDS
 from .loader import bot
@@ -51,32 +51,15 @@ def remove_keyboard(update: Update, context: CallbackContext) -> None:
         raise KeyError(error)
 
 
-def delete_messages_by_time(params: list) -> None:
+@app.task(ignore_result=True)
+def delete_messages_by_time(chat_id: int, message_id: int) -> None:
     """
-    Удаление сообщения по таймеру.
-    Параметры:
+    Удаление сообщения.
+        Параметры:
     - chat id (:obj:`int` | :obj:`str`)
     - message id (:obj:`int` | :obj:`str`)
-    - seconds before deletion (:obj:`int`)
     """
-    chat_id: int
-    message_id: int
-    seconds: int
-    chat_id, message_id, seconds = params
-    time.sleep(seconds)
     try:
         bot.delete_message(chat_id, message_id)
     except Exception as error:
         raise KeyError(error)
-
-
-def process_to_delete_message(params):
-    """
-    Запускает дополнительный процесс для функции
-    :obj:`delete_messages_by_time`.
-    """
-    thread = threading.Thread(
-        target=delete_messages_by_time,
-        args=(params,)
-    )
-    thread.start()

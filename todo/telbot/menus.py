@@ -9,7 +9,7 @@ from telegram.ext import CallbackContext
 from users.models import Group, GroupConnections
 from users.views import Signup, set_coordinates
 
-from .cleaner import process_to_delete_message
+from .cleaner import delete_messages_by_time
 from .service_message import send_service_message
 
 User = get_user_model()
@@ -137,8 +137,10 @@ def private_menu(update: Update, context: CallbackContext) -> None:
             raise_text,
             parse_mode='Markdown'
         ).message_id
-        *params, = user_id, message_id, 20
-        process_to_delete_message(params)
+        delete_messages_by_time.apply_async(
+            args=[user_id, message_id],
+            countdown=20
+        )
         assign_group(update)
 
 
@@ -184,5 +186,7 @@ def show_my_links(update: Update, context: CallbackContext):
         menu_text,
         reply_markup=reply_markup
     ).message_id
-    *params, = chat.id, message_id, 40
-    process_to_delete_message(params)
+    delete_messages_by_time.apply_async(
+        args=[chat.id, message_id],
+        countdown=40
+    )

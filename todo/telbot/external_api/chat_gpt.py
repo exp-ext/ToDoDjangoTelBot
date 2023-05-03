@@ -79,9 +79,9 @@ class GetAnswerDavinci():
 
         try:
 
+            await self.get_prompt()
             asyncio.create_task(self.send_typing_periodically())
-
-            await sync_to_async(self.request_to_openai)()
+            await self.request_to_openai()
 
             asyncio.create_task(self.create_update_history_ai())
 
@@ -115,11 +115,11 @@ class GetAnswerDavinci():
             if datetime.now() > time_stop:
                 break
 
+    @sync_to_async
     def request_to_openai(self) -> None:
         """
         Делает запрос в OpenAI и выключает typing.
         """
-        self.get_prompt()
         answer = openai.ChatCompletion.create(
             model=GetAnswerDavinci.MODEL,
             messages=self.prompt
@@ -127,6 +127,7 @@ class GetAnswerDavinci():
         self.answer_text = answer.choices[0].message.get('content')
         self.event.set()
 
+    @sync_to_async
     def get_prompt(self) -> None:
         """
         Prompt для запроса в OpenAI и модель user.
@@ -140,11 +141,10 @@ class GetAnswerDavinci():
             .exclude(answer__in=[None, GetAnswerDavinci.ERROR_TEXT])
             .values('question', 'answer')
         )
-        count_value = 0
+        count_value = len(self.message_text)
         for item in history:
             count_value += len(item['question']) + len(item['answer'])
-            if (count_value + len(self.message_text)
-                    >= GetAnswerDavinci.MAX_LONG_REQUEST):
+            if count_value >= GetAnswerDavinci.MAX_LONG_REQUEST:
                 break
             self.prompt.extend([
                 {'role': 'user', 'content': item['question']},

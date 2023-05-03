@@ -1,8 +1,17 @@
+from asgiref.sync import sync_to_async
 from core.models import Create
 from django.contrib.auth import get_user_model
 from django.db import models
+from django.db.models.manager import BaseManager
 
 User = get_user_model()
+
+
+class AsyncManager(BaseManager.from_queryset(models.QuerySet)):
+    """
+    Менеджер модели, который добавляет поддержку асинхронных
+    операций с базой данных.
+    """
 
 
 class HistoryAI(Create):
@@ -25,6 +34,14 @@ class HistoryAI(Create):
 
     def __str__(self):
         return self.question
+
+    @sync_to_async
+    def save(self, *args, **kwargs):
+        """
+        Переопределение метода save() для поддержки асинхронного
+        сохранения объекта в базе данных.
+        """
+        return super().save(*args, **kwargs)
 
 
 class HistoryDALLE(Create):

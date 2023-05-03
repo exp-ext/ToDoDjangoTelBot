@@ -7,7 +7,7 @@ from asgiref.sync import sync_to_async
 from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
 from dotenv import load_dotenv
-from telegram import ChatAction, Update
+from telegram import ChatAction, ParseMode, Update
 from telegram.ext import CallbackContext
 
 from ..checking import check_registration
@@ -35,7 +35,7 @@ class GetAnswerDavinci():
     MODEL = 'gpt-3.5-turbo-0301'
     MAX_LONG_MESSAGE = 1024
     MAX_LONG_REQUEST = 4096
-    STORY_WINDOWS_TIME = 11
+    STORY_WINDOWS_TIME = 30
     MAX_TYPING_TIME = 10
 
     def __init__(self,
@@ -47,18 +47,22 @@ class GetAnswerDavinci():
         self.message_text = None
         self.current_time = None
         self.time_start = None
-        self.answer_text = None
+        self.answer_text = GetAnswerDavinci.ERROR_TEXT
         self.event = asyncio.Event()
         self.prompt = [
-            {'role': 'system', 'content': 'You are a helpful assistant.'}
+            {
+                'role': 'system',
+                'content': ('You are the best Python programming assistant '
+                            'giving answers only to Markdown.')
+            }
         ]
         self.set_user()
         self.set_message_text()
         self.set_windows_time()
 
-    def get_answer_davinci(self) -> dict:
+    async def get_answer_davinci(self) -> dict:
         """Основная логика."""
-        if self.check_in_works():
+        if await self.check_in_works():
             return {'code': 423}
 
         if self.check_long_query:
@@ -74,32 +78,25 @@ class GetAnswerDavinci():
             return {'code': 400}
 
         try:
-            asyncio.run(self.get_answer())
 
-            HistoryAI.objects.update(
-                user=self.user,
-                question=self.message_text,
-                answer=self.answer_text.lstrip('\n')
-            )
+            asyncio.create_task(self.send_typing_periodically())
+
+            await sync_to_async(self.request_to_openai)()
+
+            asyncio.create_task(self.create_update_history_ai())
+
         except Exception as err:
             self.context.bot.send_message(
                 chat_id=ADMIN_ID,
-                text=f'Ошибка в ChatGPT: {err}',
+                text=f'Ошибка в ChatGPT: {err.args[0]}',
             )
-            self.answer_text = GetAnswerDavinci.ERROR_TEXT
         finally:
             self.context.bot.send_message(
                 chat_id=self.update.effective_chat.id,
                 text=self.answer_text,
-                reply_to_message_id=self.update.message.message_id
+                reply_to_message_id=self.update.message.message_id,
+                parse_mode=ParseMode.MARKDOWN
             )
-
-    async def get_answer(self) -> None:
-        """
-        Асинхронно запускает 2 функции.
-        """
-        asyncio.create_task(self.send_typing_periodically())
-        await sync_to_async(self.request_to_openai)()
 
     async def send_typing_periodically(self) -> None:
         """"
@@ -155,18 +152,27 @@ class GetAnswerDavinci():
             ])
         self.prompt.append({'role': 'user', 'content': self.message_text})
 
-    def check_in_works(self) -> bool:
+    async def check_in_works(self) -> bool:
         """Проверяет нет ли уже в работе этого запроса."""
-        if (self.user.history_ai.filter(
+        exists = await sync_to_async(
+            self.user.history_ai.filter(
                 created_at__range=[self.time_start, self.current_time],
-                question=self.message_text).exists()):
+                question=self.message_text
+            ).exists
+        )()
+        if exists:
             return True
-        HistoryAI.objects.create(
+        asyncio.create_task(self.create_update_history_ai())
+        return False
+
+    async def create_update_history_ai(self):
+        """Создаём и обновляем запись в модели."""
+        history_ai = HistoryAI(
             user=self.user,
             question=self.message_text,
-            answer=GetAnswerDavinci.ERROR_TEXT
+            answer=self.answer_text
         )
-        return False
+        await history_ai.save()
 
     def set_user(self) -> None:
         """Определяем и назначаем  атрибут user."""
@@ -203,15 +209,16 @@ def for_check(update: Update, context: CallbackContext):
         '': ('Какая интересная беседа, [зарегистрируетесь]'
              f'({context.bot.link}) и я подключусь к ней 😇'),
     }
-    if check_registration(update, context, answers_for_check) is False:
-        return {'code': 401}
-    GetAnswerDavinci(update, context).get_answer_davinci()
+    return check_registration(update, context, answers_for_check)
 
 
 def get_answer_davinci_public(update: Update, context: CallbackContext):
-    for_check(update, context)
+    if for_check(update, context):
+        get_answer = GetAnswerDavinci(update, context)
+        asyncio.run(get_answer.get_answer_davinci())
 
 
 def get_answer_davinci_person(update: Update, context: CallbackContext):
-    if update.effective_chat.type == 'private':
-        for_check(update, context)
+    if update.effective_chat.type == 'private' and for_check(update, context):
+        get_answer = GetAnswerDavinci(update, context)
+        asyncio.run(get_answer.get_answer_davinci())

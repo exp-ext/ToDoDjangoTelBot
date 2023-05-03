@@ -32,7 +32,7 @@ services:
       context: ../todo
       dockerfile: Dockerfile
       args:
-        - ${DJANGO_SECRET_KEY}
+        DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY}
     container_name: todo_django
     restart: always
     command: ./config/webtodo/entrypoint.sh

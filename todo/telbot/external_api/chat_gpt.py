@@ -5,7 +5,6 @@ from datetime import datetime, timedelta, timezone
 import openai
 from asgiref.sync import sync_to_async
 from django.contrib.auth import get_user_model
-from django.shortcuts import get_object_or_404
 from dotenv import load_dotenv
 from telegram import ChatAction, ParseMode, Update
 from telegram.ext import CallbackContext
@@ -52,13 +51,18 @@ class GetAnswerDavinci():
         self.prompt = [
             {
                 'role': 'system',
-                'content': ('You are the best Python programming assistant '
-                            'giving answers only to Markdown.')
+                'content': (
+                    'You are a seasoned Senior Software Developer with '
+                    'extensive experience leading teams, mentoring junior '
+                    'developers, and providing high-quality software '
+                    'solutions to clients, providing answers only in '
+                    'Markdown format..'
+                )
             }
         ]
-        self.set_user()
-        self.set_message_text()
         self.set_windows_time()
+        self.set_message_text()
+        self.set_user()
 
     async def get_answer_davinci(self) -> dict:
         """Основная логика."""
@@ -78,8 +82,6 @@ class GetAnswerDavinci():
             return {'code': 400}
 
         try:
-
-            await self.get_prompt()
             asyncio.create_task(self.send_typing_periodically())
             await self.request_to_openai()
 
@@ -120,6 +122,7 @@ class GetAnswerDavinci():
         """
         Делает запрос в OpenAI и выключает typing.
         """
+        self.get_prompt()
         answer = openai.ChatCompletion.create(
             model=GetAnswerDavinci.MODEL,
             messages=self.prompt
@@ -127,7 +130,6 @@ class GetAnswerDavinci():
         self.answer_text = answer.choices[0].message.get('content')
         self.event.set()
 
-    @sync_to_async
     def get_prompt(self) -> None:
         """
         Prompt для запроса в OpenAI и модель user.
@@ -176,9 +178,10 @@ class GetAnswerDavinci():
 
     def set_user(self) -> None:
         """Определяем и назначаем  атрибут user."""
-        self.user = get_object_or_404(
-            User,
-            username=self.update.effective_user.id
+        self.user = (
+            User.objects
+            .prefetch_related('history_ai')
+            .get(username=self.update.effective_user.id)
         )
 
     def set_message_text(self) -> str:

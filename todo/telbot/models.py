@@ -23,8 +23,14 @@ class HistoryAI(Create):
     question = models.TextField(
         verbose_name='Вопрос'
     )
+    question_tokens = models.PositiveIntegerField(
+        null=True
+    )
     answer = models.TextField(
         verbose_name='Ответ'
+    )
+    answer_tokens = models.PositiveIntegerField(
+        null=True
     )
 
     class Meta:

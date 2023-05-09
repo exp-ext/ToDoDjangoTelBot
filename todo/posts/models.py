@@ -9,15 +9,14 @@ User = get_user_model()
 
 class Post(Create):
     title = models.CharField(
+        verbose_name='Заголовок поста',
         max_length=100,
         blank=False,
         null=False,
-        verbose_name='Заголовок поста',
-        help_text='максимально 100 символов'
     )
     text = models.TextField(
         verbose_name='Текст поста',
-        help_text='Введите текст поста'
+        blank=True,
     )
     author = models.ForeignKey(
         User,
@@ -31,8 +30,7 @@ class Post(Create):
         null=True,
         on_delete=models.SET_NULL,
         related_name='posts',
-        verbose_name='Группа',
-        help_text='Группа, к которой будет относиться пост'
+        verbose_name='Группа, к которой будет относиться пост'
     )
     image = ImageField(
         verbose_name='Картинка',

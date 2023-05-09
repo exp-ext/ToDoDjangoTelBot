@@ -31,8 +31,7 @@ class PostForm(forms.ModelForm):
             queryset=user.groups_connections.all()
         )
         self.fields['group'].required = False
-        self.fields['group'].label = ('Группа')
-        self.fields['group'].help_text = (
+        self.fields['group'].label = (
             'Группа, к которой будет относиться пост'
         )
 

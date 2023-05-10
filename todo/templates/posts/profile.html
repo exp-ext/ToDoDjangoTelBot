@@ -50,9 +50,11 @@
 {% block content %}
   <div class="container">
 
-    {% for post in page_obj %}
-      {% include 'posts/includes/post_list.html' %}
-    {% endfor %}
+    <div class="ck ck-content">
+      {% for post in page_obj %}
+        {% include 'posts/includes/post_list.html' %}
+      {% endfor %}
+    </div>
 
     {% include 'posts/includes/paginator.html' %}
 

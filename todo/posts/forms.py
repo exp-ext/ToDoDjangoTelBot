@@ -1,4 +1,3 @@
-from ckeditor.fields import RichTextField
 from django import forms
 from django.forms import Textarea
 from django.shortcuts import get_object_or_404
@@ -18,11 +17,10 @@ class GroupMailingForm(forms.Form):
 
 
 class PostForm(forms.ModelForm):
-    text = RichTextField(blank=True, null=True)
 
     class Meta:
         model = Post
-        fields = ('title', 'text', 'group', 'image')
+        fields = ('title', 'group', 'text', 'image')
 
     def __init__(self, *args, **kwargs):
         super(PostForm, self).__init__(*args, **kwargs)
@@ -31,8 +29,7 @@ class PostForm(forms.ModelForm):
             queryset=user.groups_connections.all()
         )
         self.fields['group'].required = False
-        self.fields['group'].label = ('Группа')
-        self.fields['group'].help_text = (
+        self.fields['group'].label = (
             'Группа, к которой будет относиться пост'
         )
 

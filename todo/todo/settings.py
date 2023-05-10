@@ -235,7 +235,7 @@ MEDIA_ROOT = os.fspath(PurePath(BASE_DIR, 'media'))
 
 CKEDITOR_5_FILE_STORAGE = "posts.storage.CustomStorage"
 
-customColorPalette = [
+CustomColorPalette = [
     {
         'color': 'hsl(4, 90%, 58%)',
         'label': 'Red'
@@ -298,12 +298,12 @@ CKEDITOR_5_CONFIGS = {
             'contentToolbar': ['tableColumn', 'tableRow', 'mergeTableCells',
                                'tableProperties', 'tableCellProperties'],
             'tableProperties': {
-                'borderColors': customColorPalette,
-                'backgroundColors': customColorPalette
+                'borderColors': CustomColorPalette,
+                'backgroundColors': CustomColorPalette
             },
             'tableCellProperties': {
-                'borderColors': customColorPalette,
-                'backgroundColors': customColorPalette
+                'borderColors': CustomColorPalette,
+                'backgroundColors': CustomColorPalette
             }
         },
         'heading': {

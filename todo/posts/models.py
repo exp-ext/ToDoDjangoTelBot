@@ -1,6 +1,7 @@
 from core.models import Create
 from django.contrib.auth import get_user_model
 from django.db import models
+from django_ckeditor_5.fields import CKEditor5Field
 from sorl.thumbnail import ImageField
 from users.models import Group
 
@@ -9,15 +10,15 @@ User = get_user_model()
 
 class Post(Create):
     title = models.CharField(
+        verbose_name='Заголовок поста',
         max_length=100,
         blank=False,
         null=False,
-        verbose_name='Заголовок поста',
-        help_text='максимально 100 символов'
     )
-    text = models.TextField(
+    text = CKEditor5Field(
         verbose_name='Текст поста',
-        help_text='Введите текст поста'
+        blank=True,
+        config_name='extends'
     )
     author = models.ForeignKey(
         User,
@@ -31,8 +32,7 @@ class Post(Create):
         null=True,
         on_delete=models.SET_NULL,
         related_name='posts',
-        verbose_name='Группа',
-        help_text='Группа, к которой будет относиться пост'
+        verbose_name='Группа, к которой будет относиться пост'
     )
     image = ImageField(
         verbose_name='Картинка',

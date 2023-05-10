@@ -2,7 +2,7 @@
 
 <!DOCTYPE html>
 <html lang="ru">
-  
+
 <head>  
   {% include 'includes/yacounter.html' %}  
   <meta charset="utf-8">
@@ -26,8 +26,11 @@
     crossorigin="anonymous"
     referrerpolicy="no-referrer" />
 
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.0.3/styles/default.min.css">
+  
+  <link rel="stylesheet" href="{% static 'django_ckeditor_5/dist/styles.css' %}" type="text/css" media="all">
   <link rel="stylesheet" href="{% static 'css/general-style.css' %}">
- 
+
   {% block head %} {% endblock %}
 
   <title>  {% block title %} {% endblock %} </title>
@@ -61,6 +64,10 @@
     integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4"
     crossorigin="anonymous">
   </script>
+
+  <script src="{% static 'django_ckeditor_5/dist/bundle.js' %}"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.0.3/highlight.min.js"></script>
+  <script>hljs.initHighlightingOnLoad();</script>
 
   {% block javascript %}
   {% endblock %}

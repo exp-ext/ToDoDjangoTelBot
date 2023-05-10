@@ -54,7 +54,11 @@ urlpatterns = [
         name='django.contrib.sitemaps.views.sitemap'
     ),
     path('robots.txt', views.robots_txt),
-    path('ckeditor/', include('ckeditor_uploader.urls')),
+    path(
+        'ckeditor5/',
+        include('django_ckeditor_5.urls'),
+        name='ck_editor_5_upload_file'
+    ),
 ]
 
 if settings.DEBUG:
@@ -63,6 +67,9 @@ if settings.DEBUG:
     urlpatterns += [
         path('__debug__/', include(debug_toolbar.urls)),
     ]
+    urlpatterns += static(
+        settings.STATIC_URL, document_root=settings.STATIC_ROOT
+    )
     urlpatterns += static(
         settings.MEDIA_URL, document_root=settings.MEDIA_ROOT
     )

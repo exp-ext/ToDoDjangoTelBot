@@ -17,10 +17,13 @@
     {% include 'posts/includes/switcher.html' %}
     {% include 'posts/includes/search.html' %}
 
-      {% for post in page_obj %}  
+    <div class="ck ck-content">
+
+      {% for post in page_obj %} 
         {% include 'posts/includes/post_list.html' %}        
       {% endfor %} 
-  
+
+    </div> 
     {% include 'posts/includes/paginator.html' %}
   </div> 
 

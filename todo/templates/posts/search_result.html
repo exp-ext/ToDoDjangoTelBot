@@ -5,15 +5,17 @@
 {% block content %}
   <div class="container py-5">
     <div class="py-5">
+      <div class="ck ck-content">
   
-      {% include 'posts/includes/search.html' %} 
-    
-      {% if page_obj %}
-        {% include 'posts/includes/search_group.html' %}
-      {% else %}
-        {% include 'posts/includes/thinking-hand.html' %}
-      {% endif %}
+        {% include 'posts/includes/search.html' %} 
+      
+        {% if page_obj %}
+          {% include 'posts/includes/search_group.html' %}
+        {% else %}
+          {% include 'posts/includes/thinking-hand.html' %}
+        {% endif %}
 
+      </div>
     </div>
   </div>
 

@@ -8,7 +8,7 @@ python-dotenv~=1.0.0
 sorl-thumbnail~=12.9.0
 
 # WYSIWYG editor
-django-ckeditor~=6.5.1
+django-ckeditor-5~=0.2.4
 
 # Django User Agents
 django-user-agents~=0.4.0

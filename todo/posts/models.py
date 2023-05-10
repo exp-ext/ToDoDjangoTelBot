@@ -1,6 +1,7 @@
 from core.models import Create
 from django.contrib.auth import get_user_model
 from django.db import models
+from django_ckeditor_5.fields import CKEditor5Field
 from sorl.thumbnail import ImageField
 from users.models import Group
 
@@ -14,9 +15,10 @@ class Post(Create):
         blank=False,
         null=False,
     )
-    text = models.TextField(
+    text = CKEditor5Field(
         verbose_name='Текст поста',
         blank=True,
+        config_name='extends'
     )
     author = models.ForeignKey(
         User,

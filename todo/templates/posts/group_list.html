@@ -64,11 +64,13 @@
 {% block content %}
 
   <div class="container">
-    {% for post in page_obj %}
+    <div class="ck ck-content">
+      {% for post in page_obj %}
 
-      {% include 'posts/includes/post_list.html' %}
+        {% include 'posts/includes/post_list.html' %}
 
-    {% endfor %}
+      {% endfor %}
+    </div>
 
     {% include 'posts/includes/paginator.html' %}
   </div>

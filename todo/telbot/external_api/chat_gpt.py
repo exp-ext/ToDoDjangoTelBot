@@ -32,7 +32,7 @@ class GetAnswerDavinci():
         'Возможно большой наплыв запросов, '
         'которые я не успеваю обрабатывать 🤯'
     )
-    MODEL = 'gpt-3.5-turbo-0301'
+    MODEL = 'gpt-3.5-turbo'
     MAX_LONG_MESSAGE = 1024
     MAX_LONG_REQUEST = 4096
     STORY_WINDOWS_TIME = 30

@@ -233,7 +233,7 @@ MEDIA_ROOT = os.fspath(PurePath(BASE_DIR, 'media'))
 
 # Django-ckeditor
 
-CKEDITOR_5_FILE_STORAGE = "posts.storage.CustomStorage"
+CKEDITOR_5_FILE_STORAGE = 'posts.storage.CustomStorage'
 
 CustomColorPalette = [
     {

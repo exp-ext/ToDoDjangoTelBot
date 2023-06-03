@@ -5,7 +5,7 @@ from .models import Post
 
 @admin.register(Post)
 class PostAdmin(admin.ModelAdmin):
-    list_display = ('pk', 'text', 'created_at', 'author', 'group')
+    list_display = ('pk', 'created_at', 'author', 'group')
     search_fields = ('text',)
     list_filter = ('created_at',)
     list_editable = ('group',)

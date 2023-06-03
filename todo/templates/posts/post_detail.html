@@ -25,29 +25,30 @@
 {% block title %} Запись: {{ post }} {% endblock %}
 
 {% block content %}
-  <div class="container py-5">    
-    <div class="row py-5">  
-      <aside class="col-2 col-md-3">
+
+  <div class="container-fluid py-5">
+    <div class="row py-5">
+
+      <aside class="col-lg-2 col-sm-12">
         <div class="hover-effects">
           <ul class="list-group">
             <li class="list-group-item bg-secondary">
-              Дата публикации: {{ post.created_at|date:"d E Y" }}
+              <p>Дата публикации:<br/>~ {{ post.created_at|date:"d E Y" }}</p>
             </li>        
             {% if post.group %}
                 <li class="list-group-item  bg-secondary">
-                Группа: {{ post.group }}
-                <p></p>
+                  <p>Группа:<br/>{{ post.group }}</p>
                   <a type="button" class="button fast white" href="{% url 'posts:group_list' post.group.slug%}">
                     все &#160 записи &#160 группы
                   </a>
                 </li>
             {% endif %} 
             <li class="list-group-item  bg-secondary">
-              Автор: {{ post.author.get_full_name }}
+              <p>Автор:<br/>~ {{ post.author.get_full_name }}</p>
             </li>
             <li class="list-group-item justify-content-between align-items-center bg-secondary">
-              Всего постов автора:  <span > {{ authors_posts_count }} </span>
-              <p></p>
+              <p>Всего постов автора:  <span> {{ authors_posts_count }} </span></p>
+              
               <a type="button" class="button fast white" href="{% url 'posts:profile' post.author %}">
                 все &#160 посты &#160 пользователя            
               </a>
@@ -69,12 +70,11 @@
           </ul>
         </div> 
       </aside>
-  
-      <article class="col-2 col-md-9 bg-light rounded">            
-          <div class="lobster"> 
-            <h1>{{ post.title }}</h1>
-          </div>
-        
+
+      <article class="col-lg-8 col-sm-12 bg-light rounded">            
+        <div class="lobster"> 
+          <h1>{{ post.title }}</h1>
+        </div>      
         {% thumbnail post.image "x339" as im %}
           <img class="card-img my-2" src="{{ im.url }}">
         {% endthumbnail %}
@@ -85,6 +85,7 @@
         </p>
         {% include 'posts/includes/comments.html' %}
       </article>   
+
     </div>
   </div>
 

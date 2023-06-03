@@ -100,7 +100,7 @@ def setup_dispatcher(dp: Dispatcher):
     )
     dp.add_handler(
         MessageHandler(
-            Filters.regex('#'),
+            Filters.regex(r'Ева|Eva'),
             get_answer_davinci_public
         )
     )

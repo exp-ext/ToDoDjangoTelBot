@@ -80,7 +80,8 @@ class TaskForm(forms.ModelForm):
         if group:
             tasks = group.tasks.filter(
                 server_datetime__range=[start_datetime, end_datetime],
-                group=group)
+                group=group
+            )
         else:
             tasks = user.tasks.filter(
                 server_datetime__range=[start_datetime, end_datetime]

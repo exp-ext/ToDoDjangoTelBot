@@ -3,6 +3,7 @@ import os
 from datetime import datetime, timedelta, timezone
 
 import openai
+import telegram
 import tiktoken
 from asgiref.sync import sync_to_async
 from django.contrib.auth import get_user_model
@@ -60,7 +61,11 @@ class GetAnswerDavinci():
                     'software developer with extensive experience leading '
                     'teams, mentoring junior developers, and delivering '
                     'high-quality software solutions to customers. You can '
-                    'only give answers in Markdown format.'
+                    'give answers in Markdown format using only:'
+                    '*bold text* _italic text_'
+                    '[inline URL](http://www.example.com/)'
+                    '`inline fixed-width code`'
+                    '``` pre-formatted fixed-width code block ```'
             }
         ]
         self.set_windows_time()
@@ -100,14 +105,33 @@ class GetAnswerDavinci():
         except Exception as err:
             self.context.bot.send_message(
                 chat_id=ADMIN_ID,
-                text=f'Ошибка в ChatGPT: {err.args[0]}',
+                text=f'Ошибка в получении ответа от ChatGPT: {err.args[0]}',
             )
         finally:
+            await self.reply_to_user()
+
+    @sync_to_async
+    def reply_to_user(self) -> None:
+        """
+        Делает запрос в OpenAI и выключает typing.
+        """
+        try:
             self.context.bot.send_message(
                 chat_id=self.update.effective_chat.id,
                 text=self.answer_text,
                 reply_to_message_id=self.update.message.message_id,
                 parse_mode=ParseMode.MARKDOWN
+            )
+        except telegram.error.BadRequest:
+            self.context.bot.send_message(
+                chat_id=self.update.effective_chat.id,
+                text=self.answer_text,
+                reply_to_message_id=self.update.message.message_id,
+            )
+        except Exception as err:
+            self.context.bot.send_message(
+                chat_id=ADMIN_ID,
+                text=f'Ошибка при отправке ответа ChatGPT: {err.args[0]}',
             )
 
     async def send_typing_periodically(self) -> None:

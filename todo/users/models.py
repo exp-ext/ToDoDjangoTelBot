@@ -4,6 +4,7 @@ import string
 import pytz
 from core.models import Create
 from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.db import models
 from django.db.models import Q
 from django.utils.translation import gettext_lazy as _
@@ -17,7 +18,7 @@ class Group(models.Model):
         max_length=50,
         unique=True
     )
-    title = models.TextField(
+    title = models.CharField(
         verbose_name='Название группы',
         max_length=150,
     )
@@ -32,11 +33,10 @@ class Group(models.Model):
     )
     description = models.TextField(
         verbose_name='Описание группы',
-        max_length=200,
         blank=True,
         null=True
     )
-    link = models.TextField(
+    link = models.CharField(
         verbose_name='Пригласительная ссылка для публичных групп',
         max_length=150,
         blank=True,
@@ -84,6 +84,21 @@ class User(AbstractUser):
         ADMIN = 'admin', _('Администратор')
         USER = 'user', _('Пользователь')
 
+    username_validator = UnicodeUsernameValidator()
+    username = models.CharField(
+        _('id полученное в Телеграмм'),
+        max_length=150,
+        unique=True,
+        help_text=_(
+            'Required. 150 characters or fewer. '
+            'Letters, digits and @/./+/-/_ only.'
+        ),
+        validators=[username_validator],
+        error_messages={
+            "unique": _("A user with that username already exists."),
+        },
+    )
+
     birthday = models.DateField(
         verbose_name='Дата рождения',
         blank=True,
@@ -100,10 +115,6 @@ class User(AbstractUser):
         blank=True,
         null=True,
         related_name='users'
-    )
-    group = models.ManyToManyField(
-        Group,
-        through='GroupConnections'
     )
     role = models.CharField(
         verbose_name='Пользовательская роль',
@@ -170,9 +181,11 @@ class GroupConnections(models.Model):
     )
 
     class Meta:
-        constraints = (models.UniqueConstraint(
-            fields=('user', 'group'),
-            name='unique_group'),
+        constraints = (
+            models.UniqueConstraint(
+                fields=('user', 'group'),
+                name='unique_group'
+            ),
         )
 
     def __str__(self):

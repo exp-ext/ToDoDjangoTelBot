@@ -51,6 +51,7 @@ class GetAnswerDavinci():
         self.answer_text = GetAnswerDavinci.ERROR_TEXT
         self.answer_tokens = None
         self.event = asyncio.Event()
+        self.request_massage = None
         self.prompt = [
             {
                 'role': 'system',
@@ -175,27 +176,39 @@ class GetAnswerDavinci():
 
     async def check_in_works(self) -> bool:
         """Проверяет нет ли уже в работе этого запроса."""
-        exists = await sync_to_async(
-            self.user.history_ai.filter(
-                created_at__range=[self.time_start, self.current_time],
-                question=self.message_text
-            ).exists
-        )()
-        if exists:
+        await self.get_request_massage()
+        if self.request_massage:
             return True
         asyncio.create_task(self.create_update_history_ai())
         return False
 
     async def create_update_history_ai(self):
-        """Создаём и обновляем запись в модели."""
-        history_ai = HistoryAI(
-            user=self.user,
-            question=self.message_text,
-            question_tokens=self.message_tokens,
-            answer=self.answer_text,
-            answer_tokens=self.answer_tokens
-        )
-        await history_ai.save()
+        """Создаём или обновляет запись в БД."""
+        if self.request_massage:
+            self.request_massage.answer = self.answer_text
+            self.request_massage.answer_tokens = self.answer_tokens
+        else:
+            self.request_massage = HistoryAI(
+                user=self.user,
+                question=self.message_text,
+                question_tokens=self.message_tokens,
+                answer=self.answer_text,
+                answer_tokens=self.answer_tokens
+            )
+        await self.request_massage.save()
+
+    @sync_to_async
+    def get_request_massage(self) -> None:
+        """
+        Получает сообщение из БД, если оно там есть.
+        """
+        try:
+            self.request_massage = self.user.history_ai.get(
+                created_at__range=[self.time_start, self.current_time],
+                question=self.message_text
+            )
+        except HistoryAI.DoesNotExist:
+            pass
 
     def set_user(self) -> None:
         """Определяем и назначаем  атрибут user."""

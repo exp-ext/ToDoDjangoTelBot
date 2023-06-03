@@ -164,7 +164,7 @@ class ProfileDetailView(LoginRequiredMixin, DetailView):
     def get_object(self, queryset: QuerySet = None) -> QuerySet(User):
         queryset = (
             super().get_queryset()
-            .prefetch_related('group', 'posts__author', 'posts__group')
+            .prefetch_related('posts__author', 'posts__group')
         )
         return queryset.get(username=self.kwargs['username'])
 

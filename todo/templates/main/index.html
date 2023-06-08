@@ -47,27 +47,32 @@
         <li data-target="#myCarousel" data-slide-to="2"></li>
       </ol>
       <div class="carousel-inner">
-        <div class="carousel-item active">        
 
-          {% if is_mobile %}
-            <img class="img-fluid" src="{% static 'img/index/1_reg_ban_mob.png' %}"></img>
-          {% else %}
-            <img class="img-fluid" src="{% static 'img/index/1_reg_ban.png' %}"></img>
-          {% endif %}        
+        {% if request.user.is_anonymous %}
 
-          <div class="container">
-            <div class="carousel-caption text-left">
-              <div class="lobster">
-                <h1>Регистрация</h1>
-                <p>&nbsp;</p>
-                <p>Она необходима, без неё бот не сможет разобратся где чьё напоминание. И кто в какой части мира живёт.</p>
-                <p>&nbsp;</p>
-                <p><a class="btn btn-lg btn-primary" href="#registration" role="button">Зарегистрироваться</a></p>
-              </div> 
+          <div class="carousel-item active">
+
+            {% if is_mobile %}
+              <img class="img-fluid" src="{% static 'img/index/1_reg_ban_mob.png' %}"></img>
+            {% else %}
+              <img class="img-fluid" src="{% static 'img/index/1_reg_ban.png' %}"></img>
+            {% endif %}        
+
+            <div class="container">
+              <div class="carousel-caption text-left">
+                <div class="lobster">
+                  <h1>Регистрация</h1>
+                  <p>&nbsp;</p>
+                  <p>Она необходима, без неё бот не сможет разобратся где чьё напоминание. И кто в какой части мира живёт.</p>
+                  <p>&nbsp;</p>
+                  <p><a class="btn btn-lg btn-primary" href="#registration" role="button">Зарегистрироваться</a></p>
+                </div> 
+              </div>
             </div>
           </div>
-        </div>
-        <div class="carousel-item">
+        {% endif %}
+
+        <div class="carousel-item {% if request.user.is_authenticated %} active {% endif %}">
 
           {% if is_mobile %}
             <img class="img-fluid" src="{% static 'img/index/2_func_ban_mob.png' %}"></img>
@@ -146,27 +151,28 @@
       <p>&nbsp;</p>
 
       <!-- START THE FEATURETTES -->
-      <section id="registration">
-      <hr class="featurette-divider">
+      {% if request.user.is_anonymous %}
+        <section id="registration">
+        <hr class="featurette-divider">     
 
-      
-      <div class="row featurette">
-        <div class="col-md-7">
-          <h2 class="featurette-Заголовок">Регистр<span class="text-muted">ация...</span></h2>
-          <p class="lead">
-            Для регистрации, перейдите <a href="https://t.me/BorFAsbot">в личный чат с ботом</a>, нажмите кнопку &lt;Меню&gt; и запросите регистрацию. 
-            Также, чтобы настроить часовой пояс, я рекомендую проверить погоду, используя появившуюся кнопку &lt;Показать меню&gt;.
-            <br><br>
-            <strong>Для корректной работы в групповых чатах, после добавления бота в группу, сделайте его администратором.</strong>      
-          </p>
+        <div class="row featurette">
+          <div class="col-md-7">
+            <h2 class="featurette-Заголовок">Регистр<span class="text-muted">ация...</span></h2>
+            <p class="lead">
+              Для регистрации, перейдите <a href="https://t.me/BorFAsbot">в личный чат с ботом</a>, нажмите кнопку &lt;Меню&gt; и запросите регистрацию. 
+              Также, чтобы настроить часовой пояс, я рекомендую проверить погоду, используя появившуюся кнопку &lt;Показать меню&gt;.
+              <br><br>
+              <strong>Для корректной работы в групповых чатах, после добавления бота в группу, сделайте его администратором.</strong>      
+            </p>
+          </div>
+          <div class="col-md-5">
+            <img class="bd-placeholder-img bd-placeholder-img-lg featurette-image img-fluid mx-auto" width="500" height="500"
+              src="{% static 'img/index/register.png' %}">
+            </img>
+          </div>      
         </div>
-        <div class="col-md-5">
-          <img class="bd-placeholder-img bd-placeholder-img-lg featurette-image img-fluid mx-auto" width="500" height="500"
-            src="{% static 'img/index/register.png' %}">
-          </img>
-        </div>      
-      </div>
-      </section>
+        </section>
+      {% endif %}
 
       <section id="main-functions">
       <hr class="featurette-divider">

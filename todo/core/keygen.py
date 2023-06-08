@@ -13,4 +13,3 @@ def get_key(length: int) -> str:
     """
     character_set = string.digits + string.ascii_letters
     return ''.join(secrets.choice(character_set) for _ in range(length))
-

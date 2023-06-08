@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.contrib.auth import get_user_model
 from django.utils.safestring import mark_safe
 
-from .models import Group, GroupConnections, Location
+from .models import Group, GroupConnections, GroupMailing, Location
 
 User = get_user_model()
 
@@ -52,6 +52,13 @@ class UserAdmin(admin.ModelAdmin):
         )
 
 
+class GroupMailingInline(admin.TabularInline):
+    model = GroupMailing
+    extra = 0
+    verbose_name = 'Рассылка для группы'
+    verbose_name_plural = 'Рассылки для групп'
+
+
 @admin.register(Group)
 class GroupAdmin(admin.ModelAdmin):
     list_display = ('chat_id', 'title', 'slug')
@@ -60,7 +67,7 @@ class GroupAdmin(admin.ModelAdmin):
         ('Логотип_группы', {'fields': ('image', 'preview')}),
         ('Ссылки', {'fields': ('slug', 'link')}),
     )
-    inlines = (GroupConnectionsInline,)
+    inlines = (GroupConnectionsInline, GroupMailingInline)
     prepopulated_fields = {'slug': ('title',)}
     readonly_fields = ('preview',)
 

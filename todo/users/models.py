@@ -14,12 +14,12 @@ from sorl.thumbnail import ImageField
 
 class Group(models.Model):
     chat_id = models.CharField(
-        verbose_name='ID группы',
+        _('ID группы'),
         max_length=50,
         unique=True
     )
     title = models.CharField(
-        verbose_name='Название группы',
+        _('Название группы'),
         max_length=150,
     )
     slug = models.SlugField(
@@ -27,25 +27,25 @@ class Group(models.Model):
         db_index=True
     )
     image = ImageField(
-        verbose_name='Логотип_группы',
+        _('Логотип_группы'),
         upload_to='group',
         blank=True
     )
     description = models.TextField(
-        verbose_name='Описание группы',
+        _('Описание группы'),
         blank=True,
         null=True
     )
     link = models.CharField(
-        verbose_name='Пригласительная ссылка для публичных групп',
+        _('Пригласительная ссылка для публичных групп'),
         max_length=150,
         blank=True,
         null=True
     )
 
     class Meta:
-        verbose_name = 'Группа'
-        verbose_name_plural = 'Группы'
+        verbose_name = _('Группа')
+        verbose_name_plural = _('Группы')
 
     def __str__(self):
         return f'~ {self.title}'
@@ -100,12 +100,12 @@ class User(AbstractUser):
     )
 
     birthday = models.DateField(
-        verbose_name='Дата рождения',
+        _('Дата рождения'),
         blank=True,
         null=True
     )
     image = ImageField(
-        verbose_name='Аватар',
+        _('Аватар'),
         upload_to='users',
         blank=True
     )
@@ -117,7 +117,7 @@ class User(AbstractUser):
         related_name='users'
     )
     role = models.CharField(
-        verbose_name='Пользовательская роль',
+        _('Пользовательская роль'),
         max_length=10,
         choices=Role.choices,
         default=Role.USER
@@ -129,8 +129,8 @@ class User(AbstractUser):
 
     class Meta:
         ordering = ('-created_at',)
-        verbose_name = 'Пользователь'
-        verbose_name_plural = 'Пользователи'
+        verbose_name = _('Пользователь')
+        verbose_name_plural = _('Пользователи')
 
     def __str__(self):
         return self.username

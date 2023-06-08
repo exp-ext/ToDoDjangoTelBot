@@ -12,7 +12,7 @@ https://docs.djangoproject.com/en/4.1/ref/settings/
 
 import os
 import socket
-from pathlib import Path, PurePath
+from pathlib import Path
 
 from core.keygen import get_key
 from dotenv import load_dotenv
@@ -42,10 +42,10 @@ if not SECRET_KEY:
     SECRET_KEY = get_key(50)
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = int(os.environ.get('DEBUG', default=0))
-LOCAL_DEV = int(os.environ.get('LOCAL_DEV', default=0))
+DEBUG = int(os.getenv('DEBUG', default=0))
+LOCAL_DEV = int(os.getenv('LOCAL_DEV', default=0))
 
-ALLOWED_HOSTS = os.environ.get(
+ALLOWED_HOSTS = os.getenv(
     'DJANGO_ALLOWED_HOSTS',
     default='localhost'
 ).split(" ")
@@ -101,7 +101,7 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = 'todo.urls'
-TEMPLATES_DIR = os.fspath(PurePath(BASE_DIR, 'templates'))
+TEMPLATES_DIR = Path(BASE_DIR).joinpath('templates').resolve()
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
@@ -135,12 +135,12 @@ SQLITE = {
 
 POSTGRES = {
     'default': {
-        'ENGINE': os.environ.get('POSTGRES_ENGINE'),
-        'NAME': os.environ.get('POSTGRES_DB'),
-        'USER': os.environ.get('POSTGRES_USER'),
-        'PASSWORD': os.environ.get('POSTGRES_PASSWORD'),
-        'HOST': os.environ.get('POSTGRES_HOST'),
-        'PORT': os.environ.get('POSTGRES_PORT'),
+        'ENGINE': os.getenv('POSTGRES_ENGINE'),
+        'NAME': os.getenv('POSTGRES_DB'),
+        'USER': os.getenv('POSTGRES_USER'),
+        'PASSWORD': os.getenv('POSTGRES_PASSWORD'),
+        'HOST': os.getenv('POSTGRES_HOST'),
+        'PORT': os.getenv('POSTGRES_PORT'),
     }
 }
 
@@ -149,7 +149,7 @@ DATABASES = SQLITE if LOCAL_DEV else POSTGRES
 # django-dbbackup
 DBBACKUP_STORAGE = 'django.core.files.storage.FileSystemStorage'
 DBBACKUP_STORAGE_OPTIONS = {
-    'location': os.fspath(PurePath(BASE_DIR, 'backup')),
+    'location': Path(BASE_DIR).joinpath('backup').resolve()
 }
 
 DBBACKUP_CONNECTORS = {
@@ -219,7 +219,7 @@ STATICFILES_FINDERS = (
 
 STATIC_URL = '/static/'
 
-STATIC_DIR = os.fspath(PurePath(BASE_DIR, 'static'))
+STATIC_DIR = Path(BASE_DIR).joinpath('static').resolve()
 
 if LOCAL_DEV:
     STATICFILES_DIRS = (STATIC_DIR,)
@@ -229,7 +229,7 @@ else:
 # MEDIA
 MEDIA_URL = '/media/'
 
-MEDIA_ROOT = os.fspath(PurePath(BASE_DIR, 'media'))
+MEDIA_ROOT = Path(BASE_DIR).joinpath('media').resolve()
 
 # Django-ckeditor
 

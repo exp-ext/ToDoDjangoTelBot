@@ -14,8 +14,10 @@ import os
 import socket
 from pathlib import Path
 
+import boto3
 from core.keygen import get_key
 from dotenv import load_dotenv
+from storages.backends.s3boto3 import S3Boto3Storage
 
 load_dotenv()
 
@@ -43,15 +45,23 @@ if not SECRET_KEY:
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = int(os.getenv('DEBUG', default=0))
-LOCAL_DEV = int(os.getenv('LOCAL_DEV', default=0))
 
+# HOSTS
 ALLOWED_HOSTS = os.getenv(
     'DJANGO_ALLOWED_HOSTS',
     default='localhost'
 ).split(" ")
 
+USE_X_FORWARDED_HOST = True
+CSRF_COOKIE_SECURE = True
+SESSION_COOKIE_SECURE = True
+
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
+CSRF_FAILURE_VIEW = 'core.views.csrf_failure'
+
 # Application definition
-INSTALLED_APPS = [
+DJANGO_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -59,27 +69,28 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.sitemaps',
-    # login defender
+]
+
+THIRD_PARTY_APPS = [
     'defender',
-    # backup db & media
     'dbbackup',
-    # images
     'sorl.thumbnail',
-    # celery
     'django_celery_beat',
-    # debugger
     'debug_toolbar',
-    # user agents parser
     'django_user_agents',
-    # my app
+    'django_ckeditor_5',
+    'storages',
+]
+
+PROJECT_APPS = [
     'core.apps.CoreConfig',
     'users.apps.UsersConfig',
     'tasks.apps.TasksConfig',
     'telbot.apps.TelbotConfig',
     'posts.apps.PostsConfig',
-    # WYSIWYG editor
-    'django_ckeditor_5',
 ]
+
+INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + PROJECT_APPS
 
 MIDDLEWARE = [
     # django
@@ -144,7 +155,8 @@ POSTGRES = {
     }
 }
 
-DATABASES = SQLITE if LOCAL_DEV else POSTGRES
+IS_NOT_TESTS = int(os.getenv('IS_NOT_TESTS', default=0))
+DATABASES = POSTGRES if IS_NOT_TESTS else SQLITE
 
 # django-dbbackup
 DBBACKUP_STORAGE = 'django.core.files.storage.FileSystemStorage'
@@ -187,10 +199,6 @@ AUTH_PASSWORD_VALIDATORS = [
 
 AUTH_USER_MODEL = 'users.User'
 
-CSRF_FAILURE_VIEW = 'core.views.csrf_failure'
-
-SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-
 # LOGOUT_REDIRECT_URL = 'index'
 LOGIN_URL = 'users:login'
 LOGIN_REDIRECT_URL = 'index'
@@ -212,24 +220,62 @@ USE_L10N = False
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.1/howto/static-files/
 
-STATICFILES_FINDERS = (
-    'django.contrib.staticfiles.finders.FileSystemFinder',
-    'django.contrib.staticfiles.finders.AppDirectoriesFinder',
-)
 
-STATIC_URL = '/static/'
+class StaticStorage(S3Boto3Storage):
+    location = 'static'
+    default_acl = 'public-read'
+    querystring_auth = True
 
-STATIC_DIR = Path(BASE_DIR).joinpath('static').resolve()
 
-if LOCAL_DEV:
-    STATICFILES_DIRS = (STATIC_DIR,)
+class PublicMediaStorage(S3Boto3Storage):
+    location = 'media'
+    default_acl = 'public-read'
+    file_overwrite = False
+    querystring_auth = False
+
+
+USE_S3 = int(os.getenv('USE_S3', default=0))
+
+if USE_S3:
+    AWS_STORAGE_BUCKET_NAME = os.getenv('AWS_STORAGE_BUCKET_NAME', 'data')
+    AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID')
+    AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY')
+
+    AWS_QUERYSTRING_AUTH = False
+
+    AWS_S3_USE_SSL = int(os.getenv('AWS_S3_USE_SSL', default=0))
+
+    AWS_S3_OBJECT_PARAMETERS = {
+        'CacheControl': 'max-age=86400',
+    }
+
+    AWS_DEFAULT_ACL = None
+    AWS_S3_ENDPOINT_URL = os.getenv('AWS_S3_ENDPOINT_URL')
+
+    STATICFILES_STORAGE = 'todo.settings.StaticStorage'
+    STATIC_URL = f'{AWS_S3_ENDPOINT_URL}/{AWS_STORAGE_BUCKET_NAME}/static/'
+
+    DEFAULT_FILE_STORAGE = 'todo.settings.PublicMediaStorage'
+    MEDIA_URL = f'{AWS_S3_ENDPOINT_URL}/{AWS_STORAGE_BUCKET_NAME}/media/'
+
+    S3_CLIENT = boto3.client(
+        's3',
+        aws_access_key_id=AWS_ACCESS_KEY_ID,
+        aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
+        endpoint_url='http://localhost:9000'
+    )
 else:
-    STATIC_ROOT = STATIC_DIR
+    MEDIA_URL = '/media/'
+    MEDIA_ROOT = Path(BASE_DIR).joinpath('media').resolve()
 
-# MEDIA
-MEDIA_URL = '/media/'
+    STATIC_URL = '/static/'
+    STATIC_ROOT = Path(BASE_DIR).joinpath('static').resolve()
+    STATICFILES_FINDERS = (
+        'django.contrib.staticfiles.finders.FileSystemFinder',
+        'django.contrib.staticfiles.finders.AppDirectoriesFinder',
+    )
 
-MEDIA_ROOT = Path(BASE_DIR).joinpath('media').resolve()
+STATICFILES_DIRS = (Path(BASE_DIR).joinpath('static').resolve(),)
 
 # Django-ckeditor
 
@@ -325,7 +371,7 @@ CKEDITOR_5_CONFIGS = {
 }
 
 # Setting for working with Jupiter
-if LOCAL_DEV:
+if DEBUG:
     hostname, _, ips = socket.gethostbyname_ex(socket.gethostname())
     INTERNAL_IPS = ([ip[: ip.rfind(".")] + ".1" for ip in ips]
                     + ["127.0.0.1", "10.0.2.2"])
@@ -349,24 +395,16 @@ CELERY_TASK_DEFAULT_QUEUE = 'default'
 CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
 
 # CACHE BACKEND
-REDISCACHE = {
+CACHES = {
     'default': {
         'BACKEND': 'django_redis.cache.RedisCache',
-        'LOCATION': f'redis://{REDIS_URL}',
+        'LOCATION': f'{REDIS_URL}',
         'OPTIONS': {
             'CLIENT_CLASS': 'django_redis.client.DefaultClient',
         }
     }
 }
 
-LOCMEMCACHE = {
-    'default': {
-        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
-        'LOCATION': '127.0.0.1:11211',
-    }
-}
-
-CACHES = LOCMEMCACHE if LOCAL_DEV else REDISCACHE
 
 # USER AGENTS PARSING
 # Cache backend is optional, but recommended to speed up user agent parsing
@@ -378,9 +416,16 @@ USER_AGENTS_CACHE = 'default'
 
 #  DJANGO-DEFENDER
 # https://django-defender.readthedocs.io/en/latest/#
-DEFENDER_REDIS_URL = None if LOCAL_DEV else REDIS_URL
+DEFENDER_REDIS_URL = REDIS_URL
 DEFENDER_LOCKOUT_URL = 'block'
 DEFENDER_COOLOFF_TIME = 600
+
+
+if DEBUG:
+    # Celery debugger
+    CELERY_TASK_ALWAYS_EAGER = True
+    CELERY_TASK_EAGER_PROPAGATES = True
+    CELERY_TASK_IGNORE_RESULT = True
 
 # LOGS_DIR = os.path.join(BASE_DIR, 'logs')
 # if not os.path.exists(LOGS_DIR):

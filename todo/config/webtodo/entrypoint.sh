@@ -1,16 +1,31 @@
 #!/bin/sh
 
+url="http://localhost:9000/data/"
 
-until cd /app/
-
-do
-    echo "Waiting for server volume..."
+while true; do
+  response=$(curl --output /dev/null --head --fail "$url" 2>&1)
+  exit_code=$?
+  
+  if [[ $exit_code -eq 7 ]]; then
+    echo "Ошибка подключения. Ожидание 10 секунд..."
+    sleep 10
+  else
+    break
+  fi
 done
 
-until python3 manage.py migrate
+cd /app/
+
+until python3 manage.py collectstatic --no-input;
 do
-    echo "Waiting for db to be ready... No migrate..."
-    sleep 2
+    echo "Ожидание collectstatic..."
+    sleep 5
+done
+
+until python3 manage.py migrate;
+do
+    echo "Ожидание готовности базы данных... No migrate..."
+    sleep 5
 done
 
 gunicorn -c config/gunicorn/dev.py

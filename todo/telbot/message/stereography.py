@@ -113,8 +113,8 @@ class AudioTranscription():
             ('audio_file', ('audio.ogg', response.content, 'audio/ogg'))
         ]
         url = (
-            'http://localhost:9000/asr'
-            if settings.LOCAL_DEV else 'http://todo_whisper:9000/asr'
+            'http://localhost:9090/asr'
+            if settings.DEBUG else 'http://todo_whisper:9090/asr'
         )
         params = {
             'task': 'transcribe',

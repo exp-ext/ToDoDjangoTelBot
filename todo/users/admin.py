@@ -28,7 +28,10 @@ class UserAdmin(admin.ModelAdmin):
         'first_name',
         'last_name',
         'role',
-        'favorite_group'
+        'favorite_group',
+        'is_active',
+        'is_staff',
+        'is_superuser',
     )
     fieldsets = (
         ('Данные пользователя', {
@@ -42,7 +45,12 @@ class UserAdmin(admin.ModelAdmin):
     )
     inlines = (GroupConnectionsInline, UserLocationInline)
     search_fields = ('last_name',)
-    list_filter = ('favorite_group',)
+    list_filter = (
+        ('is_active', admin.BooleanFieldListFilter),
+        ('is_staff', admin.BooleanFieldListFilter),
+        ('is_superuser', admin.BooleanFieldListFilter),
+        ('favorite_group', admin.DateFieldListFilter),
+    )
     readonly_fields = ('preview',)
     empty_value_display = '-пусто-'
 

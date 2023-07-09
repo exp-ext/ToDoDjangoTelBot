@@ -1,5 +1,5 @@
 from django.conf import settings
-from django.http import HttpRequest, HttpResponse
+from django.http import HttpRequest, HttpResponse, JsonResponse
 from django.shortcuts import render
 from django.views.decorators.http import require_GET
 from django_user_agents.utils import get_user_agent
@@ -29,3 +29,7 @@ def robots_txt(request):
         f"Sitemap: https://www.{settings.DOMAIN}/sitemap.xml",
     ]
     return HttpResponse("\n".join(lines), content_type="text/plain")
+
+
+def health(request):
+    return JsonResponse({"status": 200})

@@ -6,7 +6,6 @@ from django.views import View
 from telegram import Update
 
 from todo.celery import app
-from todo.settings import LOCAL_DEV
 
 from .cleaner import clear_commands
 from .dispatcher import dispatcher
@@ -29,10 +28,7 @@ def index(request):
 class TelegramBotWebhookView(View):
     """Получение запроса от Телеграмм."""
     def post(self, request: HttpRequest, *args, **kwargs) -> Dict[str, Any]:
-        if LOCAL_DEV:
-            process_telegram_event(json.loads(request.body))
-        else:
-            process_telegram_event.delay(json.loads(request.body))
+        process_telegram_event.delay(json.loads(request.body))
         return JsonResponse({"ok": "POST request processed"})
 
     def get(self, request: HttpRequest, *args, **kwargs) -> Dict[str, Any]:

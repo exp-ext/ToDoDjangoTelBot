@@ -1,6 +1,24 @@
 version: '3.9'
 
 services:
+
+  minio:
+    image: minio/minio:latest
+    container_name: todo-minio
+    command: server --console-address ":9001" /data
+    ports:
+      - "9000:9000"
+      - "${MINIO_PORT}:9001"
+    volumes:
+      - minio_data:/data
+    env_file:
+      - ./.env
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+
   db:
     image: postgres:13.10-alpine
     container_name: todo_db
@@ -9,6 +27,8 @@ services:
       - postgresql_volume:/var/lib/postgresql/data/
     env_file:
       - ./.env
+    depends_on: 
+      - minio  
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -h ${POSTGRES_HOST} -p ${POSTGRES_PORT} -U ${POSTGRES_USER}"]
       interval: 10s
@@ -16,11 +36,13 @@ services:
       retries: 5
 
   redis:
-    image: redis:6.2-alpine
+    image: redis:latest
     container_name: todo_redis
     restart: always
     expose:
       - 6379
+    depends_on: 
+      - minio
     healthcheck:
       test: ["CMD-SHELL", "redis-cli ping"]
       interval: 10s
@@ -38,16 +60,17 @@ services:
     command: ./config/webtodo/entrypoint.sh
     volumes:
       - static_volume:/app/static/:rw
-      - media_volume:/app/media/:rw
       - log_volume:/app/logs/:rw
       - backup_volume:/app/backup/:rw
       - cache_pip_volume:/root/.cache/pip/:rw
       - cache_apt_volume:/var/cache/apt/archives/:rw
-    expose:
-      - 8000
+    # expose:
+    #   - 8000
+    ports:
+      - "8000:8000"
     env_file:
       - ./.env
-    depends_on:
+    depends_on: 
       db:
         condition: service_healthy
       redis:
@@ -59,10 +82,9 @@ services:
       dockerfile: Dockerfile
     container_name: todo_celery
     restart: always
-    command: bash -c "celery -A todo worker --loglevel=INFO"
+    command: ./config/webtodo/celery-entrypoint.sh
     volumes:
       - backup_volume:/app/backup/:rw
-      - media_volume:/app/media/:rw
       - log_volume:/app/logs/:rw
       - cache_pip_volume:/root/.cache/pip/:rw
       - cache_apt_volume:/var/cache/apt/archives/:rw
@@ -79,10 +101,9 @@ services:
       dockerfile: Dockerfile    
     container_name: todo_beat
     restart: always
-    command: bash -c "celery -A todo beat -l info --scheduler django_celery_beat.schedulers.DatabaseScheduler"
+    command: ./config/webtodo/beat-entrypoint.sh
     volumes:
       - backup_volume:/app/backup/:rw
-      - media_volume:/app/media/:rw
       - log_volume:/app/logs/:rw
       - cache_pip_volume:/root/.cache/pip/:rw
       - cache_apt_volume:/var/cache/apt/archives/:rw
@@ -101,7 +122,7 @@ services:
       - ./nginx/:/etc/nginx/templates:rw
       - ./certbot/conf/:/etc/letsencrypt/:ro
       - static_volume:/var/html/static/:rw
-      - media_volume:/var/html/media/:rw
+      - minio_data:/var/html/media/:rw
     env_file:
       - ./.env
     ports:
@@ -134,3 +155,4 @@ volumes:
   cache_pip_volume:
   cache_apt_volume:
   whisper_volume:
+  minio_data:

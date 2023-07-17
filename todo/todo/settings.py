@@ -17,7 +17,6 @@ from pathlib import Path
 import boto3
 from core.keygen import get_key
 from dotenv import load_dotenv
-from storages.backends.s3boto3 import S3Boto3Storage
 
 load_dotenv()
 
@@ -55,7 +54,6 @@ ALLOWED_HOSTS = os.getenv(
 USE_X_FORWARDED_HOST = True
 CSRF_COOKIE_SECURE = True
 SESSION_COOKIE_SECURE = True
-
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 CSRF_FAILURE_VIEW = 'core.views.csrf_failure'
@@ -220,28 +218,12 @@ USE_L10N = False
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.1/howto/static-files/
 
-
-class StaticStorage(S3Boto3Storage):
-    location = 'static'
-    default_acl = 'public-read'
-    querystring_auth = True
-
-
-class PublicMediaStorage(S3Boto3Storage):
-    location = 'media'
-    default_acl = 'public-read'
-    file_overwrite = False
-    querystring_auth = False
-
-
 USE_S3 = int(os.getenv('USE_S3', default=0))
 
 if USE_S3:
     AWS_STORAGE_BUCKET_NAME = os.getenv('AWS_STORAGE_BUCKET_NAME', 'data')
     AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID')
     AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY')
-
-    AWS_QUERYSTRING_AUTH = False
 
     AWS_S3_USE_SSL = int(os.getenv('AWS_S3_USE_SSL', default=0))
 
@@ -252,10 +234,10 @@ if USE_S3:
     AWS_DEFAULT_ACL = None
     AWS_S3_ENDPOINT_URL = os.getenv('AWS_S3_ENDPOINT_URL')
 
-    STATICFILES_STORAGE = 'todo.settings.StaticStorage'
-    STATIC_URL = f'{AWS_S3_ENDPOINT_URL}/{AWS_STORAGE_BUCKET_NAME}/static/'
+    STATICFILES_STORAGE = 'todo.boto.StaticStorage'
+    DEFAULT_FILE_STORAGE = 'todo.boto.PublicMediaStorage'
 
-    DEFAULT_FILE_STORAGE = 'todo.settings.PublicMediaStorage'
+    STATIC_URL = f'{AWS_S3_ENDPOINT_URL}/{AWS_STORAGE_BUCKET_NAME}/static/'
     MEDIA_URL = f'{AWS_S3_ENDPOINT_URL}/{AWS_STORAGE_BUCKET_NAME}/media/'
 
     S3_CLIENT = boto3.client(
@@ -264,6 +246,7 @@ if USE_S3:
         aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
         endpoint_url='http://localhost:9000'
     )
+
 else:
     MEDIA_URL = '/media/'
     MEDIA_ROOT = Path(BASE_DIR).joinpath('media').resolve()

@@ -152,7 +152,8 @@ backup/
 web/
 # cert
 ssl/
-
+certbot/
+.env.prod
 
 docker-compose-debug.yml
 Dockerfile_dev

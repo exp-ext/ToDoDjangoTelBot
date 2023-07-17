@@ -46,10 +46,8 @@ class UserAdmin(admin.ModelAdmin):
     inlines = (GroupConnectionsInline, UserLocationInline)
     search_fields = ('last_name',)
     list_filter = (
-        ('is_active', admin.BooleanFieldListFilter),
         ('is_staff', admin.BooleanFieldListFilter),
-        ('is_superuser', admin.BooleanFieldListFilter),
-        ('favorite_group', admin.DateFieldListFilter),
+        ('last_login', admin.DateFieldListFilter),
     )
     readonly_fields = ('preview',)
     empty_value_display = '-пусто-'

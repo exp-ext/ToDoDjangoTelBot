@@ -29,7 +29,7 @@ class AudioTranscription():
 
     Для работы в режиме DEBAG необходимо запустить АПИ в контейнере:
 
-    docker run -d -p 9000:9000 -e ASR_MODEL=small \
+    docker run -d -p 9090:9090 -e ASR_MODEL=small \
         onerahmet/openai-whisper-asr-webservice:latest
     """
     ERROR_TEXT = 'Что-то пошло не так 🤷🏼'

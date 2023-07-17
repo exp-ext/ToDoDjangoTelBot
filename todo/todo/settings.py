@@ -252,18 +252,19 @@ else:
     MEDIA_ROOT = Path(BASE_DIR).joinpath('media').resolve()
 
     STATIC_URL = '/static/'
-    STATIC_ROOT = Path(BASE_DIR).joinpath('static').resolve()
+    if DEBUG:
+        STATICFILES_DIRS = (Path(BASE_DIR).joinpath('static').resolve(),)
+    else:
+        STATIC_ROOT = Path(BASE_DIR).joinpath('static').resolve()
+
     STATICFILES_FINDERS = (
         'django.contrib.staticfiles.finders.FileSystemFinder',
         'django.contrib.staticfiles.finders.AppDirectoriesFinder',
     )
 
-STATICFILES_DIRS = (Path(BASE_DIR).joinpath('static').resolve(),)
 
 # Django-ckeditor
-
 CKEDITOR_5_FILE_STORAGE = 'posts.storage.CustomStorage'
-
 CustomColorPalette = [
     {
         'color': 'hsl(4, 90%, 58%)',
@@ -290,7 +291,6 @@ CustomColorPalette = [
         'label': 'Blue'
     },
 ]
-
 
 CKEDITOR_5_CONFIGS = {
     'default': {

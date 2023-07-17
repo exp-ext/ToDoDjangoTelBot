@@ -154,8 +154,10 @@ web/
 ssl/
 certbot/
 .env.prod
+.env.dev
 
 docker-compose-debug.yml
+
 Dockerfile_dev
 conf/
 conf_sh/

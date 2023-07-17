@@ -96,12 +96,16 @@ for domain in ${!domains[*]}; do
     mkdir -p "$data_path/www"
 
     docker compose run --rm --entrypoint "\
-    certbot certonly --webroot --webroot-path /var/www/certbot --cert-name $domain_name $domain_args \
-    $staging_arg $email_arg \
+    certbot certonly --webroot -w /var/lib/letsencrypt/ \
+    $staging_arg \
+    $email_arg \
+    $domain_args \
     --rsa-key-size $rsa_key_size \
     --agree-tos \
-    --force-renewal \
+    --force-renewal\
     --non-interactive" certbot
-
   fi
 done
+
+echo "### Reloading nginx ..."
+docker compose exec nginx nginx -s reload

@@ -143,6 +143,15 @@ class User(AbstractUser):
             or self.is_staff
         )
 
+    def get_full_name(self):
+        if self.first_name and self.last_name:
+            return f"{self.first_name} {self.last_name}"
+        if self.first_name:
+            return self.first_name
+        if self.last_name:
+            return self.last_name
+        return self.username
+
 
 class Location(Create):
     TIMEZONES = tuple(zip(pytz.all_timezones, pytz.all_timezones))

@@ -3,8 +3,7 @@ name: ToDo-app workflow
 on: [push]
 
 env: 
-  DEBUG: True
-  IS_NOT_TESTS: False
+  DEBUG: 1
   TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
   DOMAIN: ${{ secrets.DOMAIN }}
 

@@ -46,16 +46,13 @@ if not SECRET_KEY:
 DEBUG = int(os.getenv('DEBUG', default=0))
 
 # HOSTS
-ALLOWED_HOSTS = os.getenv(
-    'DJANGO_ALLOWED_HOSTS',
-    default='localhost'
-).split(" ")
+ALLOWED_HOSTS = os.getenv('DJANGO_ALLOWED_HOSTS', default='localhost').split(' ')
 
 USE_X_FORWARDED_HOST = True
 CSRF_COOKIE_SECURE = True
 SESSION_COOKIE_SECURE = True
-SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
-
+CSRF_TRUSTED_ORIGINS = (f'https://*.{DOMAIN}',)
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 CSRF_FAILURE_VIEW = 'core.views.csrf_failure'
 
 # Application definition

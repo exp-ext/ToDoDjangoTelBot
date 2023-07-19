@@ -106,6 +106,3 @@ for domain in ${!domains[*]}; do
     --non-interactive" certbot
   fi
 done
-
-echo "### Reloading nginx ..."
-docker compose exec nginx nginx -s reload

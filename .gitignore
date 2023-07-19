@@ -157,6 +157,7 @@ certbot/
 .env.dev
 
 docker-compose-debug.yml
+dev.default.conf
 
 Dockerfile_dev
 conf/

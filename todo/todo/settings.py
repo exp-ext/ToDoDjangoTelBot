@@ -375,7 +375,7 @@ CELERY_TASK_DEFAULT_QUEUE = 'default'
 CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
 
 # CACHE BACKEND
-CACHES = {
+REDISCACHE = {
     'default': {
         'BACKEND': 'django_redis.cache.RedisCache',
         'LOCATION': f'{REDIS_URL}',
@@ -385,6 +385,14 @@ CACHES = {
     }
 }
 
+LOCMEMCACHE = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': '127.0.0.1:11211',
+    }
+}
+
+CACHES = REDISCACHE if IS_NOT_TESTS else LOCMEMCACHE
 
 # USER AGENTS PARSING
 # Cache backend is optional, but recommended to speed up user agent parsing
@@ -407,40 +415,49 @@ if DEBUG:
     CELERY_TASK_EAGER_PROPAGATES = True
     CELERY_TASK_IGNORE_RESULT = True
 
-# LOGS_DIR = os.path.join(BASE_DIR, 'logs')
-# if not os.path.exists(LOGS_DIR):
-#     os.makedirs(LOGS_DIR, exist_ok=True)
-#     os.chmod(LOGS_DIR, 0o665)
-
-# LOGGING = {
-#     'version': 1,
-#     'disable_existing_loggers': False,
-#     'filters': {
-#         'require_debug_false': {
-#             '()': 'django.utils.log.RequireDebugFalse'
-#         }
-#     },
-#     'formatters': {
-#         'verbose': {
-#             'format': '%(levelname)s|%(asctime)s|%(module)s|%(process)d|%(thread)d|%(message)s',
-#             'datefmt': "%d/%b/%Y %H:%M:%S"
-#         },
-#     },
-#     'handlers': {
-#         'default': {
-#             'level': 'INFO',
-#             'class': 'logging.handlers.TimedRotatingFileHandler',
-#             'filename': os.path.join(LOGS_DIR, 'django.log'),
-#             'formatter': 'verbose',
-#             'when': 'midnight',
-#             'backupCount': '5',
-#         },
-#     },
-#     'loggers': {
-#         'django': {
-#             'handlers': ['default'],
-#             'level': 'ERROR',
-#             'propagate': True,
-#         },
-#     }
-# }
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'filters': {
+        'require_debug_false': {
+            '()': 'django.utils.log.RequireDebugFalse',
+        }
+    },
+    'formatters': {
+        'console': {
+            'format': '[%(levelname)s: %(asctime)s] %(name)s.%(funcName)s:%(lineno)s- %(message)s',
+        },
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'console',
+        },
+        'django.server': {
+            'level': 'INFO',
+            'class': 'logging.StreamHandler',
+            'formatter': 'console',
+        },
+        'django.request': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+            'formatter': 'console',
+        },
+        'mail_admins': {
+            'level': 'ERROR',
+            'filters': ['require_debug_false'],
+            'class': 'django.utils.log.AdminEmailHandler',
+            'formatter': 'console',
+        },
+    },
+    'loggers': {
+        '': {
+            'handlers': ['console', 'mail_admins', 'django.request'],
+            'level': 'DEBUG' if DEBUG else 'INFO',
+        },
+        'django.server': {
+            'handlers': ['django.server'],
+            'propagate': False,
+        },
+    },
+}

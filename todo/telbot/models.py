@@ -3,6 +3,7 @@ from core.models import Create
 from django.contrib.auth import get_user_model
 from django.db import models
 from django.db.models.manager import BaseManager
+from django.utils.translation import gettext_lazy as _
 
 User = get_user_model()
 
@@ -21,21 +22,21 @@ class HistoryAI(Create):
         related_name='history_ai'
     )
     question = models.TextField(
-        verbose_name='Вопрос'
+        _('Вопрос')
     )
     question_tokens = models.PositiveIntegerField(
         null=True
     )
     answer = models.TextField(
-        verbose_name='Ответ'
+        _('Ответ')
     )
     answer_tokens = models.PositiveIntegerField(
         null=True
     )
 
     class Meta:
-        verbose_name = 'История запросов к ИИ'
-        verbose_name_plural = 'История запросов к ИИ'
+        verbose_name = _('История запросов к ИИ')
+        verbose_name_plural = _('История запросов к ИИ')
         ordering = ('created_at',)
 
     def __str__(self):
@@ -57,15 +58,15 @@ class HistoryDALLE(Create):
         related_name='history_dalle'
     )
     question = models.TextField(
-        verbose_name='Запрос'
+        _('Запрос')
     )
     answer = models.JSONField(
-        verbose_name='Ответ'
+        _('Ответ')
     )
 
     class Meta:
-        verbose_name = 'История запросов к Dalle'
-        verbose_name_plural = 'История запросов к Dalle'
+        verbose_name = _('История запросов к Dalle')
+        verbose_name_plural = _('История запросов к Dalle')
         ordering = ('created_at',)
 
     def __str__(self):
@@ -79,16 +80,16 @@ class HistoryWhisper(Create):
         related_name='history_whisper'
     )
     file_id = models.CharField(
-        max_length=128,
-        verbose_name='Id файла'
+        _('Id файла'),
+        max_length=128
     )
     transcription = models.TextField(
-        verbose_name='Аудиотранскрибция'
+        _('Аудиотранскрибция')
     )
 
     class Meta:
-        verbose_name = 'История запросов к Whisper'
-        verbose_name_plural = 'История запросов к Whisper'
+        verbose_name = _('История запросов к Whisper')
+        verbose_name_plural = _('История запросов к Whisper')
         ordering = ('created_at',)
 
     def __str__(self):
@@ -102,15 +103,15 @@ class HistoryTranslation(Create):
         related_name='history_translation'
     )
     message = models.TextField(
-        verbose_name='Сообщение'
+        _('Сообщение')
     )
     translation = models.TextField(
-        verbose_name='Перевод'
+        _('Перевод')
     )
 
     class Meta:
-        verbose_name = 'История запросов для перевода'
-        verbose_name_plural = 'История запросов для перевода'
+        verbose_name = _('История запросов для перевода')
+        verbose_name_plural = _('История запросов для перевода')
         ordering = ('created_at',)
 
     def __str__(self):

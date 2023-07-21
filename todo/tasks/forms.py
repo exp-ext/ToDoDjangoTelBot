@@ -4,8 +4,6 @@ from core.views import similarity
 from core.widget import MinimalSplitDateTimeMultiWidget
 from django import forms
 from django.core.exceptions import ValidationError
-from django.shortcuts import get_object_or_404
-from users.models import Group
 
 from .models import Task
 
@@ -46,8 +44,10 @@ class TaskForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super(TaskForm, self).__init__(*args, **kwargs)
         user = kwargs.pop('initial').get('user')
+        instance = kwargs.get('instance')
         self.fields['group'] = forms.ModelChoiceField(
-            queryset=user.groups_connections.all()
+            queryset=user.groups_connections.all(),
+            initial=instance.group if instance else None
         )
         self.fields['group'].required = False
         self.fields['group'].label = (
@@ -61,10 +61,10 @@ class TaskForm(forms.ModelForm):
         )
 
     def clean_group(self):
-        group = self.cleaned_data['group']
-        if group:
-            return get_object_or_404(Group, pk=group.group_id)
-        return group
+        group_connection = self.cleaned_data['group']
+        if group_connection:
+            return group_connection.group
+        return group_connection
 
     def clean_text(self):
         text = self.cleaned_data['text']

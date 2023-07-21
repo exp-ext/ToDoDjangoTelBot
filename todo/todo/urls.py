@@ -59,6 +59,7 @@ urlpatterns = [
         include('django_ckeditor_5.urls'),
         name='ck_editor_5_upload_file'
     ),
+    path('health/live', views.health, name='health'),
 ]
 
 if settings.DEBUG:

@@ -9,65 +9,7 @@ from users.models import Group
 User = get_user_model()
 
 
-class WishList(Create):
-    user = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        related_name='wishlists'
-    )
-    wish = models.CharField(
-        verbose_name='Желание',
-        max_length=256
-    )
-    donator = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        related_name='donate_objects',
-        blank=True,
-        null=True
-    )
-
-    class Meta:
-        verbose_name = 'Желание'
-        verbose_name_plural = 'Желания'
-        constraints = (models.UniqueConstraint(
-            fields=('user', 'wish'),
-            name='unique_wish'),
-        )
-
-    def __str__(self):
-        return f'#{self.user} мечтает о {self.wish}'
-
-
-class CelebratoryFriend(Create):
-    user = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        related_name='friend_follower'
-    )
-    friend = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        related_name='friend_following'
-    )
-    gift = models.BooleanField(default=False)
-    remind_in = models.IntegerField(
-        verbose_name='Оповестить за ... дней',
-        help_text='Оповестить за ... дней до наступления события.'
-    )
-
-    class Meta:
-        verbose_name = 'Подписка на праздники друзей'
-        constraints = (models.UniqueConstraint(
-            fields=('user', 'friend'),
-            name='unique_following_of_friend'),
-        )
-
-    def __str__(self):
-        return f'#{self.user} следит за {self.friend}'
-
-
-class Task(models.Model):
+class Task(Create):
 
     class Repeat(models.TextChoices):
         NEVER = 'N', _('Никогда')
@@ -76,10 +18,6 @@ class Task(models.Model):
         EVERY_MONTH = 'M', _('Каждый месяц')
         EVERY_YEAR = 'Y', _('Каждый год')
 
-    created_at = models.DateTimeField(
-        auto_now_add=True,
-        db_index=True
-    )
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
@@ -91,44 +29,44 @@ class Task(models.Model):
         related_name='tasks',
         blank=True,
         null=True,
-        verbose_name='Группа',
-        help_text='Если выбрать группу, то оповещение будет в ней.'
+        verbose_name=_('Группа'),
+        help_text=_('Если выбрать группу, то оповещение будет в ней.')
     )
     server_datetime = models.DateTimeField(
-        verbose_name='Дата и время для хранения на сервере'
+        _('Дата и время для хранения на сервере')
     )
     picture_link = models.CharField(
-        verbose_name='Ссылка на картинку',
-        help_text='Ссылка в формате https://domen.ru/fantasy.jpg',
+        _('Ссылка на картинку'),
+        help_text=_('Ссылка в формате https://domen.ru/fantasy.jpg'),
         max_length=200,
         blank=True
     )
     text = models.TextField(
-        verbose_name='Текст напоминания',
-        help_text='Введите текст напоминания.'
+        _('Текст напоминания'),
+        help_text=_('Введите текст напоминания.')
     )
     remind_min = models.IntegerField(
+        _('Оповестить за ... минут'),
         default=120,
-        verbose_name='Оповестить за ... минут',
-        help_text='Оповестить за ... минут до наступления события.'
+        help_text=_('Оповестить за ... минут до наступления события.')
     )
     remind_at = models.DateTimeField(
-        verbose_name='Время срабатывания оповещения'
+        _('Время срабатывания оповещения')
     )
     reminder_period = models.CharField(
+        _('Периодичность напоминания'),
         max_length=1,
         choices=Repeat.choices,
         default=Repeat.NEVER,
-        verbose_name='Периодичность напоминания',
-        help_text='Выберите период повторения напоминания.'
+        help_text=_('Выберите период повторения напоминания.')
     )
     it_birthday = models.BooleanField(
-        verbose_name='День рождения'
+        _('День рождения')
     )
 
     class Meta:
-        verbose_name = 'Напоминание'
-        verbose_name_plural = 'Напоминания'
+        verbose_name = _('Напоминание')
+        verbose_name_plural = _('Напоминания')
         ordering = ('server_datetime',)
 
     def __str__(self):

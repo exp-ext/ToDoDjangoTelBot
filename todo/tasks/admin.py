@@ -1,4 +1,6 @@
 from django.contrib import admin
+from django.db.models import Value
+from django.db.models.functions import Concat
 from django.utils.safestring import mark_safe
 
 from .models import Task
@@ -8,6 +10,7 @@ from .models import Task
 class TaskAdmin(admin.ModelAdmin):
     list_display = (
         'user',
+        'full_name',
         'group',
         'remind_at',
         'reminder_period',
@@ -27,7 +30,11 @@ class TaskAdmin(admin.ModelAdmin):
         ('Картинка в сообщении', {'fields': ('picture_link', 'preview')}),
     )
     search_fields = ('user',)
-    list_filter = ('group', 'user')
+    list_filter = (
+        ('remind_at', admin.DateFieldListFilter),
+        'group',
+        ('user__first_name', admin.AllValuesFieldListFilter),
+    )
     empty_value_display = '-пусто-'
     readonly_fields = ('preview',)
 
@@ -35,3 +42,15 @@ class TaskAdmin(admin.ModelAdmin):
         return mark_safe(
             f'<img src="{obj.picture_link}" style="max-height: 200px;">'
         )
+
+    def get_queryset(self, request):
+        queryset = super().get_queryset(request)
+        queryset = queryset.annotate(
+            full_name=Concat('user__first_name', Value(' '), 'user__last_name')
+        )
+        return queryset
+
+    def full_name(self, obj):
+        return obj.user.get_full_name()
+
+    full_name.short_description = 'Full Name'

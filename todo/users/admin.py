@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.contrib.auth import get_user_model
 from django.utils.safestring import mark_safe
 
-from .models import Group, GroupConnections, Location
+from .models import Group, GroupConnections, GroupMailing, Location
 
 User = get_user_model()
 
@@ -28,7 +28,10 @@ class UserAdmin(admin.ModelAdmin):
         'first_name',
         'last_name',
         'role',
-        'favorite_group'
+        'favorite_group',
+        'is_active',
+        'is_staff',
+        'is_superuser',
     )
     fieldsets = (
         ('Данные пользователя', {
@@ -42,7 +45,10 @@ class UserAdmin(admin.ModelAdmin):
     )
     inlines = (GroupConnectionsInline, UserLocationInline)
     search_fields = ('last_name',)
-    list_filter = ('favorite_group',)
+    list_filter = (
+        ('is_staff', admin.BooleanFieldListFilter),
+        ('last_login', admin.DateFieldListFilter),
+    )
     readonly_fields = ('preview',)
     empty_value_display = '-пусто-'
 
@@ -50,6 +56,13 @@ class UserAdmin(admin.ModelAdmin):
         return mark_safe(
             f'<img src="{obj.image.url}" style="max-height: 200px;">'
         )
+
+
+class GroupMailingInline(admin.TabularInline):
+    model = GroupMailing
+    extra = 0
+    verbose_name = 'Рассылка для группы'
+    verbose_name_plural = 'Рассылки для групп'
 
 
 @admin.register(Group)
@@ -60,7 +73,7 @@ class GroupAdmin(admin.ModelAdmin):
         ('Логотип_группы', {'fields': ('image', 'preview')}),
         ('Ссылки', {'fields': ('slug', 'link')}),
     )
-    inlines = (GroupConnectionsInline,)
+    inlines = (GroupConnectionsInline, GroupMailingInline)
     prepopulated_fields = {'slug': ('title',)}
     readonly_fields = ('preview',)
 

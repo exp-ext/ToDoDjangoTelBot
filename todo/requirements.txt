@@ -1,11 +1,15 @@
 # Djando + util
-Django~=4.2
+Django~=4.2.2
 django-defender~=0.9.7
 django-dbbackup~=4.0.2
 pillow~=9.5.0
 pytils~=0.4.1
 python-dotenv~=1.0.0
 sorl-thumbnail~=12.9.0
+psycopg2-binary~=2.9.6
+
+boto3~=1.26.165
+django-storages~=1.13.2
 
 # WYSIWYG editor
 django-ckeditor-5~=0.2.4
@@ -36,14 +40,14 @@ tiktoken~=0.3.3
 langdetect~=1.0.9
 
 # ChatGPT
-openai~=0.27.7
+openai~=0.27.8
 
 # Distributed async tasks
-celery~=5.2.7
+celery~=5.3.1
 celery[redis]
 django-celery-beat~=2.5.0
-django-redis~=5.2.0
-redis~=4.5.4
+django-redis~=5.3.0
+redis~=4.6.0
 
 # Common utilities
 ipython>=8.7.0

@@ -27,6 +27,4 @@ RUN groupadd -r app-group && \
     useradd -r -g app-group app-user && \
     chown -R app-user:app-group /app
 
-RUN python3 manage.py collectstatic --no-input
-
 USER app-user

@@ -5,7 +5,7 @@ from ...loader import check_tokens
 
 DOMAIN_URL = settings.DOMAIN
 TELEGRAM_TOKEN = settings.TELEGRAM_TOKEN
-WEBHOOK_URL = f'www.{DOMAIN_URL}/bot/{TELEGRAM_TOKEN}/webhooks/'
+WEBHOOK_URL = f'{DOMAIN_URL}/bot/{TELEGRAM_TOKEN}/webhooks/'
 
 
 def set_webhook() -> bool:

@@ -1,4 +1,3 @@
-from django.conf import settings
 from telegram.ext import (CallbackQueryHandler, CommandHandler,
                           ConversationHandler, Dispatcher, Filters,
                           MessageHandler)
@@ -127,7 +126,6 @@ def setup_dispatcher(dp: Dispatcher):
     return dp
 
 
-n_workers = 0 if settings.LOCAL_DEV else 4
 dispatcher = setup_dispatcher(
-    Dispatcher(bot, update_queue=None, workers=n_workers, use_context=True)
+    Dispatcher(bot, update_queue=None, workers=4, use_context=True)
 )

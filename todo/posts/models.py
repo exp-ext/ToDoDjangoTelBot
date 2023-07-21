@@ -1,6 +1,7 @@
 from core.models import Create
 from django.contrib.auth import get_user_model
 from django.db import models
+from django.utils.translation import gettext_lazy as _
 from django_ckeditor_5.fields import CKEditor5Field
 from sorl.thumbnail import ImageField
 from users.models import Group
@@ -10,13 +11,13 @@ User = get_user_model()
 
 class Post(Create):
     title = models.CharField(
-        verbose_name='Заголовок поста',
+        _('Заголовок поста'),
         max_length=100,
         blank=False,
         null=False,
     )
     text = CKEditor5Field(
-        verbose_name='Текст поста',
+        _('Текст поста'),
         blank=True,
         config_name='extends'
     )
@@ -24,7 +25,7 @@ class Post(Create):
         User,
         on_delete=models.CASCADE,
         related_name='posts',
-        verbose_name='Автор'
+        verbose_name=_('Автор')
     )
     group = models.ForeignKey(
         Group,
@@ -32,17 +33,17 @@ class Post(Create):
         null=True,
         on_delete=models.SET_NULL,
         related_name='posts',
-        verbose_name='Группа, к которой будет относиться пост'
+        verbose_name=_('Группа, к которой будет относиться пост')
     )
     image = ImageField(
-        verbose_name='Картинка',
+        _('Картинка'),
         upload_to='posts/',
         blank=True
     )
 
     class Meta:
-        verbose_name = 'Пост'
-        verbose_name_plural = 'Посты'
+        verbose_name = _('Пост')
+        verbose_name_plural = _('Посты')
         ordering = ('-created_at',)
 
     def __str__(self) -> str:
@@ -54,18 +55,18 @@ class Comment(Create):
         Post,
         on_delete=models.CASCADE,
         related_name='comments',
-        verbose_name='Комментарии',
-        help_text='Комментарии поста'
+        verbose_name=_('Комментарии'),
+        help_text=_('Комментарии поста')
     )
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
         related_name='comments',
-        verbose_name='Автор'
+        verbose_name=_('Автор')
     )
     text = models.TextField(
-        verbose_name='Текст комментария',
-        help_text='Введите текст комментария'
+        _('Текст комментария'),
+        help_text=_('Введите текст комментария')
     )
 
     def __str__(self) -> str:

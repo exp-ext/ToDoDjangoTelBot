@@ -1,0 +1,31 @@
+{% load static %}
+
+{% block head %}
+  <link rel="stylesheet" href="{% static 'css/ai.css' %}">
+{% endblock %}
+
+<button id="openModal">Открыть</button>
+
+<div id="myModal" class="modal">
+  <div class="modal-content">
+    <span class="close">&times;</span>
+
+    <div class="chat-messages">
+    </div>
+
+    <div class="chat-input">
+      <div hx-ws="connect:/chat/slug/">
+          <form hx-ws="send:submit">
+              <input name="message">
+              <input type="submit">
+          </form>
+      </div>
+      <div id='messages'></div>
+    </div>
+
+  </div>
+</div>
+
+{% block javascript %}
+  <script src="{% static 'js/ai.js' %}"></script>
+{% endblock %}

@@ -12,8 +12,9 @@ https://docs.djangoproject.com/en/4.1/ref/settings/
 
 import os
 import socket
-from pathlib import Path, PurePath
+from pathlib import Path
 
+import boto3
 from core.keygen import get_key
 from dotenv import load_dotenv
 
@@ -42,16 +43,20 @@ if not SECRET_KEY:
     SECRET_KEY = get_key(50)
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = int(os.environ.get('DEBUG', default=0))
-LOCAL_DEV = int(os.environ.get('LOCAL_DEV', default=0))
+DEBUG = int(os.getenv('DEBUG', default=0))
 
-ALLOWED_HOSTS = os.environ.get(
-    'DJANGO_ALLOWED_HOSTS',
-    default='localhost'
-).split(" ")
+# HOSTS
+ALLOWED_HOSTS = os.getenv('DJANGO_ALLOWED_HOSTS', default='localhost').split(' ')
+
+USE_X_FORWARDED_HOST = True
+CSRF_COOKIE_SECURE = True
+SESSION_COOKIE_SECURE = True
+CSRF_TRUSTED_ORIGINS = (f'https://*.{DOMAIN}',)
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+CSRF_FAILURE_VIEW = 'core.views.csrf_failure'
 
 # Application definition
-INSTALLED_APPS = [
+DJANGO_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -59,27 +64,28 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.sitemaps',
-    # login defender
+]
+
+THIRD_PARTY_APPS = [
     'defender',
-    # backup db & media
     'dbbackup',
-    # images
     'sorl.thumbnail',
-    # celery
     'django_celery_beat',
-    # debugger
     'debug_toolbar',
-    # user agents parser
     'django_user_agents',
-    # my app
+    'django_ckeditor_5',
+    'storages',
+]
+
+PROJECT_APPS = [
     'core.apps.CoreConfig',
     'users.apps.UsersConfig',
     'tasks.apps.TasksConfig',
     'telbot.apps.TelbotConfig',
     'posts.apps.PostsConfig',
-    # WYSIWYG editor
-    'django_ckeditor_5',
 ]
+
+INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + PROJECT_APPS
 
 MIDDLEWARE = [
     # django
@@ -101,7 +107,7 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = 'todo.urls'
-TEMPLATES_DIR = os.fspath(PurePath(BASE_DIR, 'templates'))
+TEMPLATES_DIR = Path(BASE_DIR).joinpath('templates').resolve()
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
@@ -135,21 +141,22 @@ SQLITE = {
 
 POSTGRES = {
     'default': {
-        'ENGINE': os.environ.get('POSTGRES_ENGINE'),
-        'NAME': os.environ.get('POSTGRES_DB'),
-        'USER': os.environ.get('POSTGRES_USER'),
-        'PASSWORD': os.environ.get('POSTGRES_PASSWORD'),
-        'HOST': os.environ.get('POSTGRES_HOST'),
-        'PORT': os.environ.get('POSTGRES_PORT'),
+        'ENGINE': os.getenv('POSTGRES_ENGINE'),
+        'NAME': os.getenv('POSTGRES_DB'),
+        'USER': os.getenv('POSTGRES_USER'),
+        'PASSWORD': os.getenv('POSTGRES_PASSWORD'),
+        'HOST': os.getenv('POSTGRES_HOST'),
+        'PORT': os.getenv('POSTGRES_PORT'),
     }
 }
 
-DATABASES = SQLITE if LOCAL_DEV else POSTGRES
+IS_NOT_TESTS = int(os.getenv('IS_NOT_TESTS', default=0))
+DATABASES = POSTGRES if IS_NOT_TESTS else SQLITE
 
 # django-dbbackup
 DBBACKUP_STORAGE = 'django.core.files.storage.FileSystemStorage'
 DBBACKUP_STORAGE_OPTIONS = {
-    'location': os.fspath(PurePath(BASE_DIR, 'backup')),
+    'location': Path(BASE_DIR).joinpath('backup').resolve()
 }
 
 DBBACKUP_CONNECTORS = {
@@ -187,10 +194,6 @@ AUTH_PASSWORD_VALIDATORS = [
 
 AUTH_USER_MODEL = 'users.User'
 
-CSRF_FAILURE_VIEW = 'core.views.csrf_failure'
-
-SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-
 # LOGOUT_REDIRECT_URL = 'index'
 LOGIN_URL = 'users:login'
 LOGIN_REDIRECT_URL = 'index'
@@ -212,29 +215,53 @@ USE_L10N = False
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.1/howto/static-files/
 
-STATICFILES_FINDERS = (
-    'django.contrib.staticfiles.finders.FileSystemFinder',
-    'django.contrib.staticfiles.finders.AppDirectoriesFinder',
-)
+USE_S3 = int(os.getenv('USE_S3', default=0))
 
-STATIC_URL = '/static/'
+if USE_S3:
+    AWS_STORAGE_BUCKET_NAME = os.getenv('AWS_STORAGE_BUCKET_NAME', 'data')
+    AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID')
+    AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY')
 
-STATIC_DIR = os.fspath(PurePath(BASE_DIR, 'static'))
+    AWS_S3_USE_SSL = int(os.getenv('AWS_S3_USE_SSL', default=0))
 
-if LOCAL_DEV:
-    STATICFILES_DIRS = (STATIC_DIR,)
+    AWS_S3_OBJECT_PARAMETERS = {
+        'CacheControl': 'max-age=86400',
+    }
+
+    AWS_DEFAULT_ACL = None
+    AWS_S3_ENDPOINT_URL = os.getenv('AWS_S3_ENDPOINT_URL')
+
+    STATICFILES_STORAGE = 'todo.boto.StaticStorage'
+    DEFAULT_FILE_STORAGE = 'todo.boto.PublicMediaStorage'
+
+    STATIC_URL = f'{AWS_S3_ENDPOINT_URL}/{AWS_STORAGE_BUCKET_NAME}/static/'
+    MEDIA_URL = f'{AWS_S3_ENDPOINT_URL}/{AWS_STORAGE_BUCKET_NAME}/media/'
+
+    S3_CLIENT = boto3.client(
+        's3',
+        aws_access_key_id=AWS_ACCESS_KEY_ID,
+        aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
+        endpoint_url='http://localhost:9000'
+    )
+
 else:
-    STATIC_ROOT = STATIC_DIR
+    MEDIA_URL = '/media/'
+    MEDIA_ROOT = Path(BASE_DIR).joinpath('media').resolve()
 
-# MEDIA
-MEDIA_URL = '/media/'
+    STATIC_URL = '/static/'
+    if DEBUG:
+        STATICFILES_DIRS = (Path(BASE_DIR).joinpath('static').resolve(),)
+    else:
+        STATIC_ROOT = Path(BASE_DIR).joinpath('static').resolve()
 
-MEDIA_ROOT = os.fspath(PurePath(BASE_DIR, 'media'))
+    STATICFILES_FINDERS = (
+        'django.contrib.staticfiles.finders.FileSystemFinder',
+        'django.contrib.staticfiles.finders.AppDirectoriesFinder',
+    )
+
 
 # Django-ckeditor
-
 CKEDITOR_5_FILE_STORAGE = 'posts.storage.CustomStorage'
-
 CustomColorPalette = [
     {
         'color': 'hsl(4, 90%, 58%)',
@@ -261,7 +288,6 @@ CustomColorPalette = [
         'label': 'Blue'
     },
 ]
-
 
 CKEDITOR_5_CONFIGS = {
     'default': {
@@ -325,7 +351,7 @@ CKEDITOR_5_CONFIGS = {
 }
 
 # Setting for working with Jupiter
-if LOCAL_DEV:
+if DEBUG:
     hostname, _, ips = socket.gethostbyname_ex(socket.gethostname())
     INTERNAL_IPS = ([ip[: ip.rfind(".")] + ".1" for ip in ips]
                     + ["127.0.0.1", "10.0.2.2"])
@@ -352,7 +378,7 @@ CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
 REDISCACHE = {
     'default': {
         'BACKEND': 'django_redis.cache.RedisCache',
-        'LOCATION': f'redis://{REDIS_URL}',
+        'LOCATION': f'{REDIS_URL}',
         'OPTIONS': {
             'CLIENT_CLASS': 'django_redis.client.DefaultClient',
         }
@@ -366,7 +392,7 @@ LOCMEMCACHE = {
     }
 }
 
-CACHES = LOCMEMCACHE if LOCAL_DEV else REDISCACHE
+CACHES = REDISCACHE if IS_NOT_TESTS else LOCMEMCACHE
 
 # USER AGENTS PARSING
 # Cache backend is optional, but recommended to speed up user agent parsing
@@ -378,44 +404,60 @@ USER_AGENTS_CACHE = 'default'
 
 #  DJANGO-DEFENDER
 # https://django-defender.readthedocs.io/en/latest/#
-DEFENDER_REDIS_URL = None if LOCAL_DEV else REDIS_URL
+DEFENDER_REDIS_URL = REDIS_URL
 DEFENDER_LOCKOUT_URL = 'block'
 DEFENDER_COOLOFF_TIME = 600
 
-# LOGS_DIR = os.path.join(BASE_DIR, 'logs')
-# if not os.path.exists(LOGS_DIR):
-#     os.makedirs(LOGS_DIR, exist_ok=True)
-#     os.chmod(LOGS_DIR, 0o665)
 
-# LOGGING = {
-#     'version': 1,
-#     'disable_existing_loggers': False,
-#     'filters': {
-#         'require_debug_false': {
-#             '()': 'django.utils.log.RequireDebugFalse'
-#         }
-#     },
-#     'formatters': {
-#         'verbose': {
-#             'format': '%(levelname)s|%(asctime)s|%(module)s|%(process)d|%(thread)d|%(message)s',
-#             'datefmt': "%d/%b/%Y %H:%M:%S"
-#         },
-#     },
-#     'handlers': {
-#         'default': {
-#             'level': 'INFO',
-#             'class': 'logging.handlers.TimedRotatingFileHandler',
-#             'filename': os.path.join(LOGS_DIR, 'django.log'),
-#             'formatter': 'verbose',
-#             'when': 'midnight',
-#             'backupCount': '5',
-#         },
-#     },
-#     'loggers': {
-#         'django': {
-#             'handlers': ['default'],
-#             'level': 'ERROR',
-#             'propagate': True,
-#         },
-#     }
-# }
+if DEBUG:
+    # Celery debugger
+    CELERY_TASK_ALWAYS_EAGER = True
+    CELERY_TASK_EAGER_PROPAGATES = True
+    CELERY_TASK_IGNORE_RESULT = True
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'filters': {
+        'require_debug_false': {
+            '()': 'django.utils.log.RequireDebugFalse',
+        }
+    },
+    'formatters': {
+        'console': {
+            'format': '[%(levelname)s: %(asctime)s] %(name)s.%(funcName)s:%(lineno)s- %(message)s',
+        },
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'console',
+        },
+        'django.server': {
+            'level': 'INFO',
+            'class': 'logging.StreamHandler',
+            'formatter': 'console',
+        },
+        'django.request': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+            'formatter': 'console',
+        },
+        'mail_admins': {
+            'level': 'ERROR',
+            'filters': ['require_debug_false'],
+            'class': 'django.utils.log.AdminEmailHandler',
+            'formatter': 'console',
+        },
+    },
+    'loggers': {
+        '': {
+            'handlers': ['console', 'mail_admins', 'django.request'],
+            'level': 'DEBUG' if DEBUG else 'INFO',
+        },
+        'django.server': {
+            'handlers': ['django.server'],
+            'propagate': False,
+        },
+    },
+}

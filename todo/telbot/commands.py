@@ -2,7 +2,7 @@ from typing import Mapping
 
 from telegram import Bot, BotCommand
 
-from .loader import bot
+# from .loader import bot
 
 COMMANDS: Mapping[str, Mapping[str, str]] = {
     'en': {

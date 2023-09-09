@@ -7,7 +7,7 @@ from django.contrib.auth.views import (LoginView, LogoutView,
                                        PasswordResetView)
 from django.urls import include, path, reverse_lazy
 
-from .views import block, LoginTgView
+from .views import LoginTgView, block
 
 urlpatterns = [
     path(

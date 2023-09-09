@@ -26,6 +26,9 @@ TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
 OW_API_TOKEN = os.getenv('OW_API_TOKEN', default='some_token_to_pass_test')
 YANDEX_GEO_API_TOKEN = os.getenv('YANDEX_GEO_API_TOKEN', default='some_token_to_pass_test')
 
+CHAT_GPT_TOKEN = os.getenv('CHAT_GPT_TOKEN')
+TELEGRAM_ADMIN_ID = os.getenv('TELEGRAM_ADMIN_ID')
+
 # mail service
 EMAIL_USE_TLS = True
 EMAIL_HOST = 'smtp.gmail.com'
@@ -83,6 +86,7 @@ PROJECT_APPS = [
     'tasks.apps.TasksConfig',
     'telbot.apps.TelbotConfig',
     'posts.apps.PostsConfig',
+    'ai.apps.AiConfig',
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + PROJECT_APPS
@@ -241,8 +245,9 @@ if USE_S3:
         's3',
         aws_access_key_id=AWS_ACCESS_KEY_ID,
         aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
-        endpoint_url='http://localhost:9000'
+        endpoint_url=AWS_S3_ENDPOINT_URL
     )
+    STATICFILES_DIRS = (Path(BASE_DIR).joinpath('static').resolve(),)
 
 else:
     MEDIA_URL = '/media/'

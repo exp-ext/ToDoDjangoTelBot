@@ -1,18 +1,24 @@
 import secrets
 import string
+import uuid
 from typing import Any, Dict
 
+import requests
 from django.conf import settings
 from django.contrib.auth import authenticate, get_user_model, login
 from django.contrib.auth.decorators import login_required
+from django.core.files import File
+from django.core.files.temp import NamedTemporaryFile
 from django.db.models.query import QuerySet
 from django.http import (HttpRequest, HttpResponse, HttpResponseRedirect,
                          JsonResponse)
 from django.shortcuts import get_object_or_404, redirect, render
+from django.views import View
 from telbot.cleaner import delete_messages_by_time
 from telegram import Update
 from telegram.ext import CallbackContext
 from timezonefinder import TimezoneFinder
+from users.validators import HashCheck
 
 from .forms import ProfileForm
 from .models import Location
@@ -83,6 +89,65 @@ class Signup:
         """
         character_set = string.digits + string.ascii_letters
         return ''.join(secrets.choice(character_set) for _ in range(length))
+
+
+class LoginTgView(View):
+
+    def get(self,
+            request: HttpRequest,
+            *args: Any, **kwargs: Any
+            ) -> HttpRequest:
+
+        data = request.GET
+        if not HashCheck(data).check_hash():
+            return render(request, 'users/error.html', {
+                'msg': 'Bad hash!'
+            })
+
+        photo_url = data.pop('photo_url')
+        response = requests.GET.get(photo_url)
+
+        if response.status_code == 200:
+            temp_file = NamedTemporaryFile(delete=True)
+            temp_file.write(response.content)
+            temp_file.flush()
+
+        user, status = User.objects.get_or_create(**data)
+        if status:
+            user.set_password(Signup.get_password())
+        user.image.save(f'{uuid.uuid4}.jpg', File(temp_file))
+        user.save()
+        temp_file.close()
+        login(request, user)
+        return redirect('index')
+
+    def post(self,
+             request: HttpRequest,
+             *args: Any, **kwargs: Any
+             ) -> HttpRequest:
+
+        data = request.GET
+        if not HashCheck(data).check_hash():
+            return render(request, 'users/error.html', {
+                'msg': 'Bad hash!'
+            })
+
+        photo_url = data.pop('photo_url')
+        response = requests.GET.get(photo_url)
+
+        if response.status_code == 200:
+            temp_file = NamedTemporaryFile(delete=True)
+            temp_file.write(response.content)
+            temp_file.flush()
+
+        user, status = User.objects.get_or_create(**data)
+        if status:
+            user.set_password(Signup.get_password())
+        user.image.save(f'{uuid.uuid4}.jpg', File(temp_file))
+        user.save()
+        temp_file.close()
+        login(request, user)
+        return redirect('index')
 
 
 @login_required

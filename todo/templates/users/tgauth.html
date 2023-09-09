@@ -1,0 +1,20 @@
+{% comment %} 
+<script async src="https://telegram.org/js/telegram-widget.js?2"
+  data-telegram-login="Test_Let_777_bot"
+  data-size="medium"
+  data-auth-url="https://test.yourtodo.keenetic.pro/login/tg/callback/"
+  data-request-access="write">
+</script> {% endcomment %}
+
+<script async src="https://telegram.org/js/telegram-widget.js?22"
+data-telegram-login="Test_Let_777_bot"
+data-size="medium"
+data-userpic="false"
+data-onauth="onTelegramAuth(user)"
+data-request-access="write"></script>
+
+<script type="text/javascript">
+  function onTelegramAuth(user) {
+    alert('Logged in as ' + user.first_name + ' ' + user.last_name + ' (' + user.id + (user.username ? ', @' + user.username : '') + ')');
+  }
+</script>

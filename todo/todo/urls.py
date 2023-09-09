@@ -35,6 +35,7 @@ urlpatterns = [
         path('defender/', include('defender.urls')),
     ])
     ),
+    path('ai/', include(('ai.urls', 'ai'), namespace='ai')),
     path('about/', include(('about.urls', 'about'), namespace='about')),
     path('auth/', include([
         path('', include(('users.urls', 'users'), namespace='users')),

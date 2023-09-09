@@ -1,8 +1,8 @@
 # Djando + util
-Django~=4.2.2
+Django~=4.2.4
 django-defender~=0.9.7
 django-dbbackup~=4.0.2
-pillow~=9.5.0
+pillow~=10.0.0
 pytils~=0.4.1
 python-dotenv~=1.0.0
 sorl-thumbnail~=12.9.0
@@ -11,8 +11,13 @@ psycopg2-binary~=2.9.6
 boto3~=1.26.165
 django-storages~=1.13.2
 
+psycopg2-binary
+
+boto3~=1.28.40
+django-storages~=1.13.2
+
 # WYSIWYG editor
-django-ckeditor-5~=0.2.4
+django-ckeditor-5~=0.2.9
 
 # Django User Agents
 django-user-agents~=0.4.0
@@ -21,11 +26,8 @@ ua-parser~=0.16.1
 user-agents~=2.2.0
 
 # Django productions
-gunicorn~=20.1.0
-whitenoise~=6.4.0
-
-# Debagger
-django_debug_toolbar>=4.0.0
+gunicorn~=21.2.0
+whitenoise~=6.5.0
 
 # Bot & utils
 beautifulsoup4~=4.12.2
@@ -40,14 +42,16 @@ tiktoken~=0.3.3
 langdetect~=1.0.9
 
 # ChatGPT
-openai~=0.27.8
+openai
 
 # Distributed async tasks
-celery~=5.3.1
 celery[redis]
-django-celery-beat~=2.5.0
-django-redis~=5.3.0
-redis~=4.6.0
+django-celery-beat
+django-redis
+redis
 
 # Common utilities
 ipython>=8.7.0
+
+# Debagger
+django_debug_toolbar>=4.0.0

@@ -31,4 +31,4 @@ def set_up_commands(bot_instance: Bot) -> None:
         )
 
 
-set_up_commands(bot)
+# set_up_commands(bot)

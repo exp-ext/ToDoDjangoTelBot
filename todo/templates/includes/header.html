@@ -114,13 +114,23 @@
 
               <li class="nav-item"> 
                 <a class="nav-link link-light" 
-                href="{% url 'users:login' %}">Войти</a>
-              </li>              
+                href="{% url 'users:login' %}">Войти </a>
+              </li>
 
+              <li class="nav-item d-flex align-items-center ml-auto">
+                <p>&#160<p/> 
+              </li>
+  {% comment %} 
+              <li class="nav-item d-flex align-items-center ml-auto">
+                {% include 'users/tgauth.html' %}
+              </li>  
+  {% endcomment %}
+
+              
             {% endif %}            
           </ul>
 
-          <ul class="nav justify-content-end">            
+          <ul class="nav d-flex align-items-center ml-auto ms-auto">            
             <li class="nav-item px-5">
               <a class="nav-link" href="https://t.me/BorFAsbot">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-telegram" viewBox="0 0 16 16">
@@ -130,9 +140,7 @@
             </li>
           </ul>
 
-        {% endwith %}
-
-        {% comment %} {% include 'includes/chatai.html' %} {% endcomment %}
+        {% endwith %}        
 
       </div>
     </div>

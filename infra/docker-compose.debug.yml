@@ -19,7 +19,7 @@ services:
 
   pgadmin:
     image: dpage/pgadmin4:latest
-    container_name: pgadmin
+    container_name: todo_pgadmin
     restart: unless-stopped
     environment:
       PGADMIN_DEFAULT_EMAIL: admin@admin.ru
@@ -27,7 +27,7 @@ services:
     ports:
       - 8090:80
     volumes:
-      - pgadmin_data:/var/lib/pgadmin/
+      - pgadmin_data_todo:/var/lib/pgadmin/
 
   redis:
     image: redis:latest
@@ -113,5 +113,5 @@ volumes:
   cache_pip_volume:
   cache_apt_volume:
   whisper_volume:
-  pgadmin_data:
+  pgadmin_data_todo:
   minio_data:

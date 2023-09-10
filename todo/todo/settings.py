@@ -366,7 +366,11 @@ if DEBUG:
 # https://redis.io/docs/
 # CELERY
 # https://django.fun/ru/docs/celery/5.1/getting-started/introduction/
-REDIS_URL = os.getenv('REDIS_URL', 'redis://127.0.0.1:6379')
+
+REDIS_HOST = os.getenv('REDIS_HOST', 'localhost')
+REDIS_PORT = os.getenv('REDIS_PORT', '6379')
+REDIS_URL = f'redis://{REDIS_HOST}:{REDIS_PORT}'
+
 BROKER_URL = REDIS_URL
 CELERY_BROKER_URL = REDIS_URL
 CELERY_RESULT_BACKEND = REDIS_URL

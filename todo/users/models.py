@@ -66,7 +66,7 @@ class User(AbstractUser):
         },
     )
     phone_number = PhoneNumberField(_('номер телефона'), unique=True, null=True, blank=True)
-    email = models.EmailField(_('email'), unique=True, null=True, blank=True)
+    email = models.EmailField(_('email'), null=True, blank=True)
 
     birthday = models.DateField(_('Дата рождения'), blank=True, null=True)
     image = ImageField(_('Аватар'), upload_to='users', blank=True)

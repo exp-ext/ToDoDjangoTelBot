@@ -40,7 +40,7 @@ def sending_messages(tasks: QuerySet[Task],
     messages = dict()
 
     for task in tasks:
-        recipient = task.group.chat_id if task.group else task.user.username
+        recipient = task.group.chat_id if task.group else task.user.tg_id
         if recipient not in messages:
             user_locally = task.user.locations.first()
             user_tz = pytz.timezone(user_locally.timezone)

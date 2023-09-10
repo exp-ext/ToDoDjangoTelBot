@@ -7,7 +7,7 @@ from django.contrib.auth.views import (LoginView, LogoutView,
                                        PasswordResetView)
 from django.urls import include, path, reverse_lazy
 
-from .views import LoginTgView, block
+from .views import LoginTgView, block, LoginTgLinkView
 
 urlpatterns = [
     path(
@@ -17,6 +17,7 @@ urlpatterns = [
     ),
     path('login/', include([
         path('', LoginView.as_view(template_name='users/login.html'), name='login'),
+        path('tg/<int:user_id>/<str:key>/', LoginTgLinkView.as_view(), name='tg_link_login'),
         path('tg/callback/', LoginTgView.as_view(), name='tg_login'),
         path('block/', block)
     ])

@@ -7,7 +7,7 @@ from telegram import (InlineKeyboardButton, InlineKeyboardMarkup,
                       KeyboardButton, ReplyKeyboardMarkup, Update)
 from telegram.ext import CallbackContext
 from users.models import Group, GroupConnections
-from users.views import Signup, set_coordinates
+from users.views import Authentication, set_coordinates
 
 from .cleaner import delete_messages_by_time
 from .service_message import send_service_message
@@ -18,12 +18,12 @@ User = get_user_model()
 def assign_group(update: Update):
     """Присваивание группы юзеру."""
     chat = update.effective_chat
-    user_id = update.message.from_user.id
+    user = update.message.from_user
 
     if chat.type != 'private':
         user = get_object_or_404(
             User.objects.select_related('favorite_group'),
-            username=user_id
+            username=user.username
         )
         group, _ = Group.objects.get_or_create(
             chat_id=chat.id
@@ -57,10 +57,10 @@ def build_menu(buttons: Iterable[Any], n_cols: int,
 def main_menu(update: Update, context: CallbackContext) -> None:
     """Кнопки основного меню на экран."""
     chat = update.effective_chat
-    user_id = update.effective_user.id
+    user = update.effective_user
     user_name = update.effective_user.first_name
 
-    if User.objects.filter(username=user_id).exists():
+    if User.objects.filter(username=user.username).exists():
         button_list = [
             InlineKeyboardButton('💬 добавить запись',
                                  callback_data='add_first_step'),
@@ -103,9 +103,9 @@ def main_menu(update: Update, context: CallbackContext) -> None:
 def private_menu(update: Update, context: CallbackContext) -> None:
     """Кнопки меню погоды только в личном чате с ботом"""
     chat = update.effective_chat
-    user_id = update.message.from_user.id
+    user = update.message.from_user
 
-    if (User.objects.filter(username=user_id).exists()
+    if (User.objects.filter(username=user.username).exists()
             and chat.type == 'private'):
         button_list = [
             InlineKeyboardButton('🌈 погода сейчас',
@@ -138,14 +138,14 @@ def private_menu(update: Update, context: CallbackContext) -> None:
             parse_mode='Markdown'
         ).message_id
         delete_messages_by_time.apply_async(
-            args=[user_id, message_id],
+            args=[chat.id, message_id],
             countdown=20
         )
         assign_group(update)
 
 
 def ask_registration(update: Update, context: CallbackContext) -> None:
-    """Создаём кнопку для получения координат в его личном чате."""
+    """Регистрация пользователя."""
     chat = update.effective_chat
     first_name = update.message.from_user.first_name
     if chat.type == 'private':
@@ -167,7 +167,7 @@ def ask_registration(update: Update, context: CallbackContext) -> None:
             menu_text,
             reply_markup=reply_markup
         )
-        Signup().register(update, context)
+        Authentication(update, context).register()
 
 
 def show_my_links(update: Update, context: CallbackContext):
@@ -190,3 +190,10 @@ def show_my_links(update: Update, context: CallbackContext):
         args=[chat.id, message_id],
         countdown=40
     )
+
+
+def ask_auth(update: Update, context: CallbackContext) -> None:
+    """Получаем ссылку для авторизации на сайте."""
+    chat = update.effective_chat
+    if chat.type == 'private':
+        Authentication(update, context).authorization()

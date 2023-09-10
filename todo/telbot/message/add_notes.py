@@ -35,11 +35,9 @@ def first_step_add(update: Update, context: CallbackContext):
 def add_notes(update: Update, context: CallbackContext):
     """Добавление записи в модель Task."""
     chat = update.effective_chat
-
-    user_id = update.message.from_user.id
     user = get_object_or_404(
         User,
-        username=user_id
+        username=update.message.from_user.username
     )
     user_locally = user.locations.first()
 

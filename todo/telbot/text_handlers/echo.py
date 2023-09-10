@@ -7,10 +7,10 @@ User = get_user_model()
 
 def do_echo(update: Update, context: CallbackContext):
     chat = update.effective_chat
-    user_id = update.message.from_user.id
+    tg_user = update.message.from_user
     text = update.message.text
 
-    if User.objects.filter(username=user_id).exists():
+    if User.objects.filter(username=tg_user.username).exists():
         reply_text = 'Ваш ID = {}\n\n{}'.format(chat.id, text)
     else:
         reply_text = (

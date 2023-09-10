@@ -15,7 +15,7 @@ def check_registration(update: Update,
     """Проверка регистрации пользователя перед ответом."""
     chat = update.effective_chat
     user_tel = update.effective_user
-    user = User.objects.filter(username=user_tel.id)
+    user = User.objects.filter(username=user_tel.username)
     text = None
     message_text = update.effective_message.text or ''
     if not user:

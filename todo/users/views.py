@@ -5,6 +5,7 @@ from datetime import timedelta
 from typing import Any, Dict
 
 import requests
+from core.serializers import ModelDataSerializer
 from django.conf import settings
 from django.contrib.auth import authenticate, get_user_model, login
 from django.contrib.auth.decorators import login_required
@@ -21,6 +22,8 @@ from telegram import Update
 from telegram.ext import CallbackContext
 from timezonefinder import TimezoneFinder
 from users.validators import HashCheck
+
+from todo.celery import app
 
 from .forms import ProfileForm
 from .models import Location
@@ -55,7 +58,9 @@ class Authentication:
         )
 
         if not user.image:
-            self.add_profile_picture(user)
+            self.add_profile_picture.apply_async(
+                args=(self.tg_user.id, ModelDataSerializer.serialize(user),)
+            )
 
         password = self.get_password(length=15)
         user.set_password(password)
@@ -93,7 +98,9 @@ class Authentication:
         ).first()
 
         if not user.image:
-            self.add_profile_picture(user)
+            self.add_profile_picture.apply_async(
+                args=(self.tg_user.id, ModelDataSerializer.serialize(user),)
+            )
 
         user.first_name = self.tg_user.first_name
         user.last_name = self.tg_user.last_name
@@ -106,33 +113,6 @@ class Authentication:
         ]
         self.send_messages(reply_text)
         return JsonResponse({"ok": "Link sent."})
-
-    def add_profile_picture(self, user):
-        """Добавляет фотографию профиля юзера."""
-        url = f'https://api.telegram.org/bot{settings.TELEGRAM_TOKEN}/getUserProfilePhotos'
-        params = {'user_id': self.tg_user.id}
-        response = requests.get(url, params=params)
-        data = response.json()
-
-        if response.status_code == 200:
-            file_id = data['result']['photos'][0][0]['file_id']
-            url = f'https://api.telegram.org/bot{settings.TELEGRAM_TOKEN}/getFile'
-            params = {
-                'file_id': file_id
-            }
-            response = requests.get(url, params=params)
-            data = response.json()
-            if response.status_code == 200:
-                file_path = data['result']['file_path']
-                file_url = f'https://api.telegram.org/file/bot{settings.TELEGRAM_TOKEN}/{file_path}'
-                response = requests.get(file_url)
-                if response.status_code == 200:
-                    temp_file = NamedTemporaryFile(delete=True)
-                    temp_file.write(response.content)
-                    temp_file.flush()
-                    user.image.save(f'{uuid.uuid4}.jpg', File(temp_file))
-                    temp_file.close()
-        return True
 
     def send_messages(self, reply_text):
         """Отправка сообщений в чат"""
@@ -170,6 +150,35 @@ class Authentication:
         """
         character_set = string.digits + string.ascii_letters
         return ''.join(secrets.choice(character_set) for _ in range(length))
+
+    @staticmethod
+    @app.task(ignore_result=True)
+    def add_profile_picture(tg_user_id, user):
+        """Добавляет фотографию профиля юзера."""
+        user = ModelDataSerializer.deserialize(user)
+        url = f'https://api.telegram.org/bot{settings.TELEGRAM_TOKEN}/getUserProfilePhotos'
+        params = {'user_id': tg_user_id}
+        response = requests.get(url, params=params)
+        data = response.json()
+
+        if response.status_code == 200:
+            file_id = data['result']['photos'][0][0]['file_id']
+            url = f'https://api.telegram.org/bot{settings.TELEGRAM_TOKEN}/getFile'
+            params = {
+                'file_id': file_id
+            }
+            response = requests.get(url, params=params)
+            data = response.json()
+            if response.status_code == 200:
+                file_path = data['result']['file_path']
+                file_url = f'https://api.telegram.org/file/bot{settings.TELEGRAM_TOKEN}/{file_path}'
+                response = requests.get(file_url)
+                if response.status_code == 200:
+                    temp_file = NamedTemporaryFile(delete=True)
+                    temp_file.write(response.content)
+                    temp_file.flush()
+                    user.image.save(f'{uuid.uuid4}.jpg', File(temp_file))
+                    temp_file.close()
 
 
 class LoginTgView(View):

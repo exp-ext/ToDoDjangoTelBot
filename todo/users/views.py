@@ -1,9 +1,11 @@
 import secrets
 import string
 import uuid
+from datetime import timedelta
 from typing import Any, Dict
 
 import requests
+from core.serializers import ModelDataSerializer
 from django.conf import settings
 from django.contrib.auth import authenticate, get_user_model, login
 from django.contrib.auth.decorators import login_required
@@ -13,6 +15,7 @@ from django.db.models.query import QuerySet
 from django.http import (HttpRequest, HttpResponse, HttpResponseRedirect,
                          JsonResponse)
 from django.shortcuts import get_object_or_404, redirect, render
+from django.utils import timezone
 from django.views import View
 from telbot.cleaner import delete_messages_by_time
 from telegram import Update
@@ -20,42 +23,46 @@ from telegram.ext import CallbackContext
 from timezonefinder import TimezoneFinder
 from users.validators import HashCheck
 
+from todo.celery import app
+
 from .forms import ProfileForm
 from .models import Location
 
 User = get_user_model()
 
 
-class Signup:
-    """Регистрация юзера."""
+class Authentication:
+    valid_time: int = 5
 
-    def register(self,
-                 update: Update,
-                 context: CallbackContext) -> Dict[str, Any]:
+    def __init__(self, update: Update, context: CallbackContext):
+        self.update = update
+        self.context = context
+        self.chat = update.effective_chat
+        self.tg_user = update.effective_user
+
+    def register(self, ) -> Dict[str, Any]:
         """Регистрация или обновление пользователя."""
-        chat = update.effective_chat
-        tel_user = update.effective_user
+        if self.check_chat_type():
+            return JsonResponse({"error": "Chat type not private."})
 
-        if chat.type != 'private':
-            message_id = context.bot.send_message(
-                chat.id,
-                f'{tel_user.first_name}, '
-                'эта функция доступна только в "private"'
-            ).message_id
-            delete_messages_by_time.apply_async(
-                args=[tel_user, message_id],
-                countdown=20
+        validation_key = self.get_password(length=28)
+        user, _ = User.objects.update_or_create(
+            tg_id=self.tg_user.id,
+            username=self.tg_user.username,
+            defaults={
+                'first_name': self.tg_user.first_name,
+                'last_name': self.tg_user.last_name,
+                'validation_key': validation_key,
+                'validation_key_time': timezone.now(),
+            }
+        )
+
+        if not user.image:
+            self.add_profile_picture.apply_async(
+                args=(self.tg_user.id, ModelDataSerializer.serialize(user),)
             )
-            return JsonResponse({"error": "Only in the private chat type."})
 
         password = self.get_password(length=15)
-        user, _ = User.objects.get_or_create(username=tel_user.id)
-
-        if tel_user.first_name and user.first_name != tel_user.first_name:
-            user.first_name = tel_user.first_name
-        if tel_user.last_name and user.last_name != tel_user.last_name:
-            user.last_name = tel_user.last_name
-
         user.set_password(password)
         user.save()
 
@@ -67,19 +74,73 @@ class Signup:
             )
         reply_text = [
             'Вы успешно зарегистрированы в [проекте Your To-Do]'
-            f'(https://www.{settings.DOMAIN}/auth/login/).\n'
-            'Ниже ссылка, логин и пароль для входа в личный кабинет:\n'
+            f'(https://www.{settings.DOMAIN}/).\n'
+            'Ниже логин и пароль для входа в личный кабинет:\n'
             f'⤵️\n',
-            f'{tel_user.id}\n',
-            f'{password}\n'
+            f'{self.tg_user.username}\n',
+            f'{password}\n',
+            f'Для авторизации на сайте пройдите по ссылке'
+            f'[https://www.{settings.DOMAIN}/auth/](https://www.{settings.DOMAIN}/auth/login/tg/{self.tg_user.id}/{validation_key}/)'
         ]
+        self.send_messages(reply_text)
+        return JsonResponse({"ok": "User created."})
 
+    def authorization(self) -> Dict[str, Any]:
+        """Получение ссылки для авторизации на сайте."""
+        if self.check_chat_type():
+            return JsonResponse({"error": "Chat type not private."})
+
+        validation_key = self.get_password(length=28)
+
+        user = User.objects.filter(
+            tg_id=self.tg_user.id,
+            username=self.tg_user.username
+        ).first()
+
+        if not user.image:
+            self.add_profile_picture.apply_async(
+                args=(self.tg_user.id, ModelDataSerializer.serialize(user),)
+            )
+
+        user.first_name = self.tg_user.first_name
+        user.last_name = self.tg_user.last_name
+        user.validation_key = validation_key
+        user.validation_key_time = timezone.now()
+        user.save()
+        reply_text = [
+            f'Для авторизации на сайте пройдите по ссылке'
+            f'[https://www.{settings.DOMAIN}/auth/](https://www.{settings.DOMAIN}/auth/login/tg/{self.tg_user.id}/{validation_key}/)'
+        ]
+        self.send_messages(reply_text)
+        return JsonResponse({"ok": "Link sent."})
+
+    def send_messages(self, reply_text):
+        """Отправка сообщений в чат"""
         for text in reply_text:
-            update.message.reply_text(
+            message_id = self.update.message.reply_text(
                 text=text,
                 parse_mode='Markdown'
+            ).message_id
+        lifetime = 60 * self.valid_time
+        delete_messages_by_time.apply_async(
+            args=[self.chat.id, message_id],
+            countdown=lifetime
+        )
+
+    def check_chat_type(self):
+        """Проверка типа чата."""
+        if self.chat.type != 'private':
+            message_id = self.context.bot.send_message(
+                self.chat.id,
+                f'{self.tg_user.first_name}, '
+                'эта функция доступна только в "private"'
+            ).message_id
+            delete_messages_by_time.apply_async(
+                args=[self.chat.id, message_id],
+                countdown=20
             )
-        return JsonResponse({"ok": "User created."})
+            return True
+        return False
 
     @staticmethod
     def get_password(length):
@@ -90,36 +151,37 @@ class Signup:
         character_set = string.digits + string.ascii_letters
         return ''.join(secrets.choice(character_set) for _ in range(length))
 
-
-class LoginTgView(View):
-
-    def get(self,
-            request: HttpRequest,
-            *args: Any, **kwargs: Any
-            ) -> HttpRequest:
-
-        data = request.GET
-        if not HashCheck(data).check_hash():
-            return render(request, 'users/error.html', {
-                'msg': 'Bad hash!'
-            })
-
-        photo_url = data.pop('photo_url')
-        response = requests.GET.get(photo_url)
+    @staticmethod
+    @app.task(ignore_result=True)
+    def add_profile_picture(tg_user_id, user):
+        """Добавляет фотографию профиля юзера."""
+        user = ModelDataSerializer.deserialize(user)
+        url = f'https://api.telegram.org/bot{settings.TELEGRAM_TOKEN}/getUserProfilePhotos'
+        params = {'user_id': tg_user_id}
+        response = requests.get(url, params=params)
+        data = response.json()
 
         if response.status_code == 200:
-            temp_file = NamedTemporaryFile(delete=True)
-            temp_file.write(response.content)
-            temp_file.flush()
+            file_id = data['result']['photos'][0][0]['file_id']
+            url = f'https://api.telegram.org/bot{settings.TELEGRAM_TOKEN}/getFile'
+            params = {
+                'file_id': file_id
+            }
+            response = requests.get(url, params=params)
+            data = response.json()
+            if response.status_code == 200:
+                file_path = data['result']['file_path']
+                file_url = f'https://api.telegram.org/file/bot{settings.TELEGRAM_TOKEN}/{file_path}'
+                response = requests.get(file_url)
+                if response.status_code == 200:
+                    temp_file = NamedTemporaryFile(delete=True)
+                    temp_file.write(response.content)
+                    temp_file.flush()
+                    user.image.save(f'{uuid.uuid4}.jpg', File(temp_file))
+                    temp_file.close()
 
-        user, status = User.objects.get_or_create(**data)
-        if status:
-            user.set_password(Signup.get_password())
-        user.image.save(f'{uuid.uuid4}.jpg', File(temp_file))
-        user.save()
-        temp_file.close()
-        login(request, user)
-        return redirect('index')
+
+class LoginTgView(View):
 
     def post(self,
              request: HttpRequest,
@@ -142,11 +204,25 @@ class LoginTgView(View):
 
         user, status = User.objects.get_or_create(**data)
         if status:
-            user.set_password(Signup.get_password())
+            user.set_password(Authentication.get_password())
         user.image.save(f'{uuid.uuid4}.jpg', File(temp_file))
         user.save()
         temp_file.close()
         login(request, user)
+        return redirect('index')
+
+
+class LoginTgLinkView(View):
+    valid_time: int = 10
+
+    def get(self, request: HttpRequest, user_id: str, key: str, *args: Any, **kwargs: Any) -> HttpRequest:
+        """Авторизует пользователя по ссылке из Телеграм."""
+
+        user = User.objects.filter(tg_id=user_id).first()
+
+        time_difference = timezone.now() - user.validation_key_time
+        if user.validation_key == key and time_difference < timedelta(minutes=self.valid_time):
+            login(request, user)
         return redirect('index')
 
 

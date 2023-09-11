@@ -52,7 +52,7 @@ class ProfileForm(forms.ModelForm):
         super(ProfileForm, self).__init__(*args, **kwargs)
         self.fields['username'].widget.attrs['readonly'] = True
         self.fields['username'].help_text = (
-            'Ваш телеграмм ID. Получить его можно в чате с ботом.'
+            'Ваш login. Получить его можно после регистрации в чате с ботом.'
         )
         user = kwargs.get('instance')
         self.fields['favorite_group'] = forms.ModelChoiceField(

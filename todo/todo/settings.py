@@ -15,6 +15,7 @@ import socket
 from pathlib import Path
 
 import boto3
+import redis
 from core.keygen import get_key
 from dotenv import load_dotenv
 
@@ -366,10 +367,31 @@ if DEBUG:
 # https://redis.io/docs/
 # CELERY
 # https://django.fun/ru/docs/celery/5.1/getting-started/introduction/
-REDIS_URL = os.getenv('REDIS_URL', 'redis://127.0.0.1:6379')
-BROKER_URL = REDIS_URL
-CELERY_BROKER_URL = REDIS_URL
-CELERY_RESULT_BACKEND = REDIS_URL
+
+REDIS_HOST = os.getenv('REDIS_HOST', 'localhost')
+REDIS_PORT = os.getenv('REDIS_PORT', '6379')
+REDIS_PASSWORD = os.getenv('REDIS_PASSWORD')
+
+REDIS_URL = f'redis://:{REDIS_PASSWORD}@{REDIS_HOST}:{REDIS_PORT}'
+
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            "hosts": [("{REDIS_URL}/0",)],
+        },
+    },
+}
+
+REDIS_CLIENT = redis.StrictRedis(
+    host=REDIS_HOST,
+    port=REDIS_PORT,
+    db=0,
+    password=REDIS_PASSWORD
+)
+
+CELERY_BROKER_URL = f"{REDIS_URL}/0"
+CELERY_RESULT_BACKEND = CELERY_BROKER_URL
 CELERY_ACCEPT_CONTENT = ['application/json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
@@ -420,49 +442,49 @@ if DEBUG:
     CELERY_TASK_EAGER_PROPAGATES = True
     CELERY_TASK_IGNORE_RESULT = True
 
-LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'filters': {
-        'require_debug_false': {
-            '()': 'django.utils.log.RequireDebugFalse',
-        }
-    },
-    'formatters': {
-        'console': {
-            'format': '[%(levelname)s: %(asctime)s] %(name)s.%(funcName)s:%(lineno)s- %(message)s',
-        },
-    },
-    'handlers': {
-        'console': {
-            'class': 'logging.StreamHandler',
-            'formatter': 'console',
-        },
-        'django.server': {
-            'level': 'INFO',
-            'class': 'logging.StreamHandler',
-            'formatter': 'console',
-        },
-        'django.request': {
-            'level': 'DEBUG',
-            'class': 'logging.StreamHandler',
-            'formatter': 'console',
-        },
-        'mail_admins': {
-            'level': 'ERROR',
-            'filters': ['require_debug_false'],
-            'class': 'django.utils.log.AdminEmailHandler',
-            'formatter': 'console',
-        },
-    },
-    'loggers': {
-        '': {
-            'handlers': ['console', 'mail_admins', 'django.request'],
-            'level': 'DEBUG' if DEBUG else 'INFO',
-        },
-        'django.server': {
-            'handlers': ['django.server'],
-            'propagate': False,
-        },
-    },
-}
+# LOGGING = {
+#     'version': 1,
+#     'disable_existing_loggers': False,
+#     'filters': {
+#         'require_debug_false': {
+#             '()': 'django.utils.log.RequireDebugFalse',
+#         }
+#     },
+#     'formatters': {
+#         'console': {
+#             'format': '[%(levelname)s: %(asctime)s] %(name)s.%(funcName)s:%(lineno)s- %(message)s',
+#         },
+#     },
+#     'handlers': {
+#         'console': {
+#             'class': 'logging.StreamHandler',
+#             'formatter': 'console',
+#         },
+#         'django.server': {
+#             'level': 'INFO',
+#             'class': 'logging.StreamHandler',
+#             'formatter': 'console',
+#         },
+#         'django.request': {
+#             'level': 'DEBUG',
+#             'class': 'logging.StreamHandler',
+#             'formatter': 'console',
+#         },
+#         'mail_admins': {
+#             'level': 'ERROR',
+#             'filters': ['require_debug_false'],
+#             'class': 'django.utils.log.AdminEmailHandler',
+#             'formatter': 'console',
+#         },
+#     },
+#     'loggers': {
+#         '': {
+#             'handlers': ['console', 'mail_admins', 'django.request'],
+#             'level': 'DEBUG' if DEBUG else 'INFO',
+#         },
+#         'django.server': {
+#             'handlers': ['django.server'],
+#             'propagate': False,
+#         },
+#     },
+# }

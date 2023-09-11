@@ -10,7 +10,8 @@ from .external_api.translator import send_translation
 from .geoservis.positions import my_current_geoposition
 from .geoservis.weather import current_weather, weather_forecast
 from .loader import bot
-from .menus import ask_registration, main_menu, private_menu, show_my_links
+from .menus import (ask_auth, ask_registration, main_menu, private_menu,
+                    show_my_links)
 from .message.add_notes import add_notes, first_step_add
 from .message.del_notes import del_notes, first_step_dell
 from .message.show_notes import (first_step_show, show_all_notes, show_at_date,
@@ -26,7 +27,11 @@ def setup_dispatcher(dp: Dispatcher):
     """
     # команды
     dp.add_handler(
-        CommandHandler('ask_registration', ask_registration)
+        CommandHandler('auth', ask_auth)
+    )
+
+    dp.add_handler(
+        CommandHandler('registration', ask_registration)
     )
 
     # основное меню и его Handler's

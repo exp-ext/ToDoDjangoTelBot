@@ -38,10 +38,10 @@ def show_at_date(update: Update, context: CallbackContext):
     в зависимости от private или group.
     """
     chat = update.effective_chat
-    user_id = update.effective_user.id
+
     user = get_object_or_404(
         User,
-        username=user_id
+        username=update.effective_user.username
     )
     user_locally = user.locations.first()
 
@@ -88,11 +88,10 @@ def show(update: Update, context: CallbackContext,
     Отправляет в чат сообщение со списком событий.
     """
     chat = update.effective_chat
-    user_id = update.effective_user.id
-
+    tg_user = update.effective_user
     user = get_object_or_404(
         User,
-        username=user_id
+        username=tg_user.username
     )
     user_locally = user.locations.first()
     user_tz = pytz.timezone(user_locally.timezone)
@@ -147,7 +146,7 @@ def show(update: Update, context: CallbackContext,
                 if_owner = (
                     f'- <i>автор {item.user.first_name} '
                     f'{item.user.last_name}\n</i>'
-                    if not group and item.user.username != str(user_id) else ''
+                    if not group and item.user.username != str(tg_user.username) else ''
                 )
                 if_group = (
                     f' в группе "{item.group.title}"'

@@ -53,8 +53,12 @@ services:
     image: redis:latest
     container_name: todo_redis
     restart: always
+    command: >
+          --requirepass ${REDIS_PASSWORD}
     expose:
       - 6379
+    env_file:
+      - ./.env
     healthcheck:
       test: ["CMD-SHELL", "redis-cli ping"]
       interval: 10s

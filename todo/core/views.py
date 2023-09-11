@@ -71,7 +71,7 @@ def linkages_check(user: QuerySet[User]) -> None:
         try:
             result = bot.get_chat_member(
                 entry.group.chat_id,
-                user.username
+                user.tg_id
             )
             if result.status in exit_status:
                 entry.delete()

@@ -46,7 +46,7 @@ class TaskForm(forms.ModelForm):
         user = kwargs.pop('initial').get('user')
         instance = kwargs.get('instance')
         self.fields['group'] = forms.ModelChoiceField(
-            queryset=user.groups_connections.all(),
+            queryset=user.groups_connections.all().select_related('user', 'group'),
             initial=instance.group if instance else None
         )
         self.fields['group'].required = False

@@ -1,5 +1,4 @@
 from django.core.management.base import BaseCommand, CommandError
-
 from telbot.commands import set_up_commands
 
 

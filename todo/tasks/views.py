@@ -86,6 +86,11 @@ class TaskCreateView(LoginRequiredMixin, CreateView):
         super().__init__()
         self.it_birthday = False
 
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        queryset = queryset.select_related('group')
+        return queryset
+
     def get_initial(self) -> Dict[str, Any]:
         initial = super().get_initial()
         tz = self.request.user.locations.first().timezone

@@ -152,7 +152,7 @@ class GetAnswerDallE():
         """Определяем и назначаем  атрибут user."""
         self.user = get_object_or_404(
             User,
-            username=self.update.effective_user.id
+            username=self.update.effective_user.username
         )
 
     def set_windows_time(self) -> None:

@@ -39,7 +39,7 @@ def clear_commands(update: Update) -> None:
 def remove_keyboard(update: Update, context: CallbackContext) -> None:
     """
     Удаление клавиатуры после нажатия.
-        Принимает:
+    ### Args:
     - update (:obj:`Update`)
     - context (:obj:`CallbackContext`)
     """
@@ -55,9 +55,9 @@ def remove_keyboard(update: Update, context: CallbackContext) -> None:
 def delete_messages_by_time(chat_id: int, message_id: int) -> None:
     """
     Удаление сообщения.
-        Параметры:
-    - chat id (:obj:`int` | :obj:`str`)
-    - message id (:obj:`int` | :obj:`str`)
+    ### Args:
+    - chat_id (:obj:`int` | :obj:`str`)
+    - message_id (:obj:`int` | :obj:`str`)
     """
     try:
         bot.delete_message(chat_id, message_id)

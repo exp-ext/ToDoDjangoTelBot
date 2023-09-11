@@ -18,7 +18,7 @@ def my_current_geoposition(update: Update, context: CallbackContext):
 
     geo = f"{coordinates.longitude},{coordinates.latitude}"
 
-    user = get_object_or_404(User, username=user_id)
+    user = get_object_or_404(User, tg_id=user_id)
 
     if user.favorite_group:
         user_id = user.favorite_group.chat_id

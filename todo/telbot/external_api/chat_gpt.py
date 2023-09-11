@@ -236,7 +236,7 @@ class GetAnswerDavinci():
         self.user = (
             User.objects
             .prefetch_related('history_ai')
-            .get(username=self.update.effective_user.id)
+            .get(username=self.update.effective_user.username)
         )
 
     def set_message_text(self) -> str:

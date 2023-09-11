@@ -33,10 +33,9 @@ def del_notes(update: Update, context: CallbackContext):
     """Удаление записи в модели Task."""
     chat = update.effective_chat
 
-    user_id = update.message.from_user.id
     user = get_object_or_404(
         User,
-        username=user_id
+        username=update.message.from_user.username
     )
     user_locally = user.locations.first()
 

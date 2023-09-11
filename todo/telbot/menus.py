@@ -2,44 +2,15 @@ from typing import Any, Iterable
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.shortcuts import get_object_or_404
 from telegram import (InlineKeyboardButton, InlineKeyboardMarkup,
                       KeyboardButton, ReplyKeyboardMarkup, Update)
 from telegram.ext import CallbackContext
-from users.models import Group, GroupConnections
-from users.views import Signup, set_coordinates
+from users.views import Authentication, set_coordinates
 
+from .checking import check_registration
 from .cleaner import delete_messages_by_time
-from .service_message import send_service_message
 
 User = get_user_model()
-
-
-def assign_group(update: Update):
-    """Присваивание группы юзеру."""
-    chat = update.effective_chat
-    user_id = update.message.from_user.id
-
-    if chat.type != 'private':
-        user = get_object_or_404(
-            User.objects.select_related('favorite_group'),
-            username=user_id
-        )
-        group, _ = Group.objects.get_or_create(
-            chat_id=chat.id
-        )
-        if group.title != chat.title:
-            group.title = chat.title
-            group.save()
-
-        if not user.favorite_group:
-            user.favorite_group = group
-            user.save()
-
-        GroupConnections.objects.get_or_create(
-            user=user,
-            group=group
-        )
 
 
 def build_menu(buttons: Iterable[Any], n_cols: int,
@@ -57,10 +28,15 @@ def build_menu(buttons: Iterable[Any], n_cols: int,
 def main_menu(update: Update, context: CallbackContext) -> None:
     """Кнопки основного меню на экран."""
     chat = update.effective_chat
-    user_id = update.effective_user.id
     user_name = update.effective_user.first_name
 
-    if User.objects.filter(username=user_id).exists():
+    answers = {
+        '': (f'{update.effective_user.first_name}, пожалуйста пройдите по '
+             f'ссылке [для прохождения процедуры регистрации]'
+             f'({context.bot.link}) 🔆')
+    }
+
+    if check_registration(update, context, answers):
         button_list = [
             InlineKeyboardButton('💬 добавить запись',
                                  callback_data='add_first_step'),
@@ -90,23 +66,18 @@ def main_menu(update: Update, context: CallbackContext) -> None:
             reply_markup=reply_markup,
             parse_mode='Markdown'
         )
-        assign_group(update)
-    else:
-        reply_text = (
-            f'{update.effective_user.first_name}, пожалуйста пройдите по '
-            f'ссылке [для прохождения процедуры регистрации]'
-            f'({context.bot.link}) 🔆'
-        )
-        send_service_message(chat.id, reply_text, parse_mode='Markdown')
 
 
 def private_menu(update: Update, context: CallbackContext) -> None:
     """Кнопки меню погоды только в личном чате с ботом"""
     chat = update.effective_chat
-    user_id = update.message.from_user.id
 
-    if (User.objects.filter(username=user_id).exists()
-            and chat.type == 'private'):
+    answers = {
+        '': (f'{update.message.from_user.first_name}, функции геолокации '
+             f'работают только в [private chat]({context.bot.link}) с ботом.')
+    }
+
+    if check_registration(update, context, answers):
         button_list = [
             InlineKeyboardButton('🌈 погода сейчас',
                                  callback_data='weather_per_day'),
@@ -127,25 +98,10 @@ def private_menu(update: Update, context: CallbackContext) -> None:
             parse_mode='Markdown'
         )
         set_coordinates(update, context)
-    else:
-        raise_text = (
-            f'{update.message.from_user.first_name}, функции геолокации '
-            f'работают только в [private chat]({context.bot.link}) с ботом.'
-        )
-        message_id = context.bot.send_message(
-            chat.id,
-            raise_text,
-            parse_mode='Markdown'
-        ).message_id
-        delete_messages_by_time.apply_async(
-            args=[user_id, message_id],
-            countdown=20
-        )
-        assign_group(update)
 
 
 def ask_registration(update: Update, context: CallbackContext) -> None:
-    """Создаём кнопку для получения координат в его личном чате."""
+    """Регистрация пользователя."""
     chat = update.effective_chat
     first_name = update.message.from_user.first_name
     if chat.type == 'private':
@@ -167,7 +123,7 @@ def ask_registration(update: Update, context: CallbackContext) -> None:
             menu_text,
             reply_markup=reply_markup
         )
-        Signup().register(update, context)
+        Authentication(update, context).register()
 
 
 def show_my_links(update: Update, context: CallbackContext):
@@ -190,3 +146,15 @@ def show_my_links(update: Update, context: CallbackContext):
         args=[chat.id, message_id],
         countdown=40
     )
+
+
+def ask_auth(update: Update, context: CallbackContext) -> None:
+    """Получаем ссылку для авторизации на сайте."""
+    chat = update.effective_chat
+
+    answers = {
+        '': ('Для начала необходимо пройти регистрацию.')
+    }
+
+    if check_registration(update, context, answers) and chat.type == 'private':
+        Authentication(update, context).authorization()

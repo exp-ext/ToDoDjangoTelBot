@@ -442,49 +442,49 @@ if DEBUG:
     CELERY_TASK_EAGER_PROPAGATES = True
     CELERY_TASK_IGNORE_RESULT = True
 
-LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'filters': {
-        'require_debug_false': {
-            '()': 'django.utils.log.RequireDebugFalse',
-        }
-    },
-    'formatters': {
-        'console': {
-            'format': '[%(levelname)s: %(asctime)s] %(name)s.%(funcName)s:%(lineno)s- %(message)s',
-        },
-    },
-    'handlers': {
-        'console': {
-            'class': 'logging.StreamHandler',
-            'formatter': 'console',
-        },
-        'django.server': {
-            'level': 'INFO',
-            'class': 'logging.StreamHandler',
-            'formatter': 'console',
-        },
-        'django.request': {
-            'level': 'DEBUG',
-            'class': 'logging.StreamHandler',
-            'formatter': 'console',
-        },
-        'mail_admins': {
-            'level': 'ERROR',
-            'filters': ['require_debug_false'],
-            'class': 'django.utils.log.AdminEmailHandler',
-            'formatter': 'console',
-        },
-    },
-    'loggers': {
-        '': {
-            'handlers': ['console', 'mail_admins', 'django.request'],
-            'level': 'DEBUG' if DEBUG else 'INFO',
-        },
-        'django.server': {
-            'handlers': ['django.server'],
-            'propagate': False,
-        },
-    },
-}
+# LOGGING = {
+#     'version': 1,
+#     'disable_existing_loggers': False,
+#     'filters': {
+#         'require_debug_false': {
+#             '()': 'django.utils.log.RequireDebugFalse',
+#         }
+#     },
+#     'formatters': {
+#         'console': {
+#             'format': '[%(levelname)s: %(asctime)s] %(name)s.%(funcName)s:%(lineno)s- %(message)s',
+#         },
+#     },
+#     'handlers': {
+#         'console': {
+#             'class': 'logging.StreamHandler',
+#             'formatter': 'console',
+#         },
+#         'django.server': {
+#             'level': 'INFO',
+#             'class': 'logging.StreamHandler',
+#             'formatter': 'console',
+#         },
+#         'django.request': {
+#             'level': 'DEBUG',
+#             'class': 'logging.StreamHandler',
+#             'formatter': 'console',
+#         },
+#         'mail_admins': {
+#             'level': 'ERROR',
+#             'filters': ['require_debug_false'],
+#             'class': 'django.utils.log.AdminEmailHandler',
+#             'formatter': 'console',
+#         },
+#     },
+#     'loggers': {
+#         '': {
+#             'handlers': ['console', 'mail_admins', 'django.request'],
+#             'level': 'DEBUG' if DEBUG else 'INFO',
+#         },
+#         'django.server': {
+#             'handlers': ['django.server'],
+#             'propagate': False,
+#         },
+#     },
+# }

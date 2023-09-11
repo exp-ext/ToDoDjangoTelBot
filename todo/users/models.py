@@ -135,4 +135,4 @@ class GroupConnections(models.Model):
         )
 
     def __str__(self):
-        return self.group
+        return f'{self.user.username} in {self.group.title}'

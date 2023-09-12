@@ -38,20 +38,13 @@ def main_menu(update: Update, context: CallbackContext) -> None:
 
     if check_registration(update, context, answers):
         button_list = [
-            InlineKeyboardButton('💬 добавить запись',
-                                 callback_data='add_first_step'),
-            InlineKeyboardButton('❌ удалить запись',
-                                 callback_data='del_first_step'),
-            InlineKeyboardButton('🚼 календарь рождений',
-                                 callback_data='show_birthday'),
-            InlineKeyboardButton('📅 планы на дату',
-                                 callback_data='show_first_step'),
-            InlineKeyboardButton('📝 все планы',
-                                 callback_data='show_all_notes'),
-            InlineKeyboardButton('🎭 анекдот',
-                                 callback_data='show_joke'),
-            InlineKeyboardButton('🌁 генерировать картинку по описанию',
-                                 callback_data='gen_image_first'),
+            InlineKeyboardButton('💬 добавить запись', callback_data='add_first_step'),
+            InlineKeyboardButton('❌ удалить запись', callback_data='del_first_step'),
+            InlineKeyboardButton('🚼 календарь рождений', callback_data='show_birthday'),
+            InlineKeyboardButton('📅 планы на дату', callback_data='show_first_step'),
+            InlineKeyboardButton('📝 все планы', callback_data='show_all_notes'),
+            InlineKeyboardButton('🎭 анекдот', callback_data='show_joke'),
+            InlineKeyboardButton('🌁 генерировать картинку по описанию', callback_data='gen_image_first'),
         ]
         reply_markup = InlineKeyboardMarkup(build_menu(button_list, n_cols=2))
 
@@ -79,14 +72,10 @@ def private_menu(update: Update, context: CallbackContext) -> None:
 
     if check_registration(update, context, answers):
         button_list = [
-            InlineKeyboardButton('🌈 погода сейчас',
-                                 callback_data='weather_per_day'),
-            InlineKeyboardButton('☔️ прогноз погоды на 4 дня',
-                                 callback_data='weather'),
-            InlineKeyboardButton('🛰 моя позиция для группы',
-                                 callback_data='my_position'),
-            InlineKeyboardButton('🏄 список мероприятий поблизости',
-                                 callback_data='show_festivals'),
+            InlineKeyboardButton('🌈 погода сейчас', callback_data='weather_per_day'),
+            InlineKeyboardButton('☔️ прогноз погоды на 4 дня', callback_data='weather'),
+            InlineKeyboardButton('🛰 моя позиция для группы', callback_data='my_position'),
+            InlineKeyboardButton('🏄 список мероприятий поблизости', callback_data='show_festivals'),
         ]
         reply_markup = InlineKeyboardMarkup(build_menu(button_list, n_cols=1))
 

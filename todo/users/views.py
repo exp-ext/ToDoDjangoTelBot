@@ -222,6 +222,8 @@ class LoginTgLinkView(View):
 
         time_difference = timezone.now() - user.validation_key_time
         if user.validation_key == key and time_difference < timedelta(minutes=self.valid_time):
+            user.validation_key = None
+            user.save()
             login(request, user)
         return redirect('index')
 
@@ -261,7 +263,7 @@ def login_token(request: HttpRequest, user_id: int = None,
     return redirect('index')
 
 
-def get_coordinates(username: int) -> QuerySet[Location]:
+def get_coordinates(tg_id: int) -> QuerySet[Location]:
     """
     Получение последних координат пользователя.
 
@@ -272,8 +274,8 @@ def get_coordinates(username: int) -> QuerySet[Location]:
     - longitude (:obj:`float`)
     - timezone (:obj:`str`)
     """
-    user = get_object_or_404(User, username=username)
-    return user.locations.first()
+    user = User.objects.filter(tg_id=tg_id).first()
+    return user.locations.first() if user else None
 
 
 def set_coordinates(update: Update, _: CallbackContext) -> None:
@@ -282,17 +284,17 @@ def set_coordinates(update: Update, _: CallbackContext) -> None:
     user_id = chat.id
     latitude = update.message.location.latitude
     longitude = update.message.location.longitude
-    user = get_object_or_404(User, username=user_id)
+    user = User.objects.filter(tg_id=user_id).first()
 
-    tf = TimezoneFinder()
-    timezone_str = tf.timezone_at(lng=longitude, lat=latitude)
-
-    Location.objects.create(
-        user=user,
-        latitude=latitude,
-        longitude=longitude,
-        timezone=timezone_str
-    )
+    if user:
+        tf = TimezoneFinder()
+        timezone_str = tf.timezone_at(lng=longitude, lat=latitude)
+        Location.objects.create(
+            user=user,
+            latitude=latitude,
+            longitude=longitude,
+            timezone=timezone_str
+        )
 
 
 def block(request: HttpRequest) -> HttpResponse:

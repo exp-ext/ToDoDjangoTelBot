@@ -14,7 +14,6 @@ import os
 import socket
 from pathlib import Path
 
-import boto3
 import redis
 from core.keygen import get_key
 from dotenv import load_dotenv
@@ -159,11 +158,6 @@ IS_NOT_TESTS = int(os.getenv('IS_NOT_TESTS', default=0))
 DATABASES = POSTGRES if IS_NOT_TESTS else SQLITE
 
 # django-dbbackup
-DBBACKUP_STORAGE = 'django.core.files.storage.FileSystemStorage'
-DBBACKUP_STORAGE_OPTIONS = {
-    'location': Path(BASE_DIR).joinpath('backup').resolve()
-}
-
 DBBACKUP_CONNECTORS = {
     'default': {
         'CONNECTOR': 'dbbackup.db.postgresql.PgDumpBinaryConnector',
@@ -220,54 +214,24 @@ USE_L10N = False
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.1/howto/static-files/
 
-USE_S3 = int(os.getenv('USE_S3', default=0))
+STATIC_URL = '/static/'
+MEDIA_URL = '/media/'
+MEDIA_ROOT = Path(BASE_DIR).joinpath('media').resolve()
 
-if USE_S3:
-    AWS_STORAGE_BUCKET_NAME = os.getenv('AWS_STORAGE_BUCKET_NAME', 'data')
-    AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID')
-    AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY')
+DBBACKUP_STORAGE = 'django.core.files.storage.FileSystemStorage'
 
-    AWS_S3_USE_SSL = int(os.getenv('AWS_S3_USE_SSL', default=0))
+DBBACKUP_STORAGE_OPTIONS = {
+    'location': Path(BASE_DIR).joinpath('backup').resolve()
+}
 
-    AWS_S3_OBJECT_PARAMETERS = {
-        'CacheControl': 'max-age=86400',
-    }
-
-    AWS_DEFAULT_ACL = None
-    AWS_S3_ENDPOINT_URL = os.getenv('AWS_S3_ENDPOINT_URL')
-
-    STATICFILES_STORAGE = 'todo.boto.StaticStorage'
-    DEFAULT_FILE_STORAGE = 'todo.boto.PublicMediaStorage'
-
-    STATIC_URL = f'{AWS_S3_ENDPOINT_URL}/{AWS_STORAGE_BUCKET_NAME}/static/'
-    MEDIA_URL = f'{AWS_S3_ENDPOINT_URL}/{AWS_STORAGE_BUCKET_NAME}/media/'
-
-    S3_CLIENT = boto3.client(
-        's3',
-        aws_access_key_id=AWS_ACCESS_KEY_ID,
-        aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
-        endpoint_url=AWS_S3_ENDPOINT_URL
-    )
-    STATICFILES_DIRS = (Path(BASE_DIR).joinpath('static').resolve(),)
-
+if DEBUG:
+    STATICFILES_DIRS = (BASE_DIR / 'static',)
 else:
-    MEDIA_URL = '/media/'
-    MEDIA_ROOT = Path(BASE_DIR).joinpath('media').resolve()
-
-    STATIC_URL = '/static/'
-    if DEBUG:
-        STATICFILES_DIRS = (Path(BASE_DIR).joinpath('static').resolve(),)
-    else:
-        STATIC_ROOT = Path(BASE_DIR).joinpath('static').resolve()
-
-    STATICFILES_FINDERS = (
-        'django.contrib.staticfiles.finders.FileSystemFinder',
-        'django.contrib.staticfiles.finders.AppDirectoriesFinder',
-    )
-
+    STATIC_ROOT = Path(BASE_DIR).joinpath('static').resolve()
 
 # Django-ckeditor
-CKEDITOR_5_FILE_STORAGE = 'posts.storage.CustomStorage'
+CKEDITOR_5_FILE_STORAGE = 'posts.storage.CkeditorCustomStorage'
+
 CustomColorPalette = [
     {
         'color': 'hsl(4, 90%, 58%)',
@@ -299,7 +263,6 @@ CKEDITOR_5_CONFIGS = {
     'default': {
         'toolbar': ['heading', '|', 'bold', 'italic', 'link',
                     'bulletedList', 'numberedList', 'blockQuote', 'imageUpload', ],
-
     },
     'extends': {
         'blockToolbar': [
@@ -345,7 +308,7 @@ CKEDITOR_5_CONFIGS = {
                 {'model': 'heading2', 'view': 'h2', 'title': 'Heading 2', 'class': 'ck-heading_heading2'},
                 {'model': 'heading3', 'view': 'h3', 'title': 'Heading 3', 'class': 'ck-heading_heading3'}
             ]
-        }
+        },
     },
     'list': {
         'properties': {
@@ -359,8 +322,7 @@ CKEDITOR_5_CONFIGS = {
 # Setting for working with Jupiter
 if DEBUG:
     hostname, _, ips = socket.gethostbyname_ex(socket.gethostname())
-    INTERNAL_IPS = ([ip[: ip.rfind(".")] + ".1" for ip in ips]
-                    + ["127.0.0.1", "10.0.2.2"])
+    INTERNAL_IPS = ([ip[: ip.rfind(".")] + ".1" for ip in ips] + ["127.0.0.1", "10.0.2.2"])
 
 # REDIS
 # https://python-scripts.com/redis

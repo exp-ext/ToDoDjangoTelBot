@@ -1,5 +1,5 @@
 
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 from django.contrib.auth import get_user_model
 from django.test import Client, TestCase
@@ -66,9 +66,8 @@ class TaskFormTests(TestCase):
         """Форма создает заметку."""
         posts_count = Task.objects.count()
         posts_first = set(Task.objects.all())
-        now = datetime.now()
+        now = datetime.now() + timedelta(days=1)
         form_data = {
-            'group': self.group.id,
             'server_datetime_0': now.strftime('%Y-%m-%d'),
             'server_datetime_1': now.strftime('%H:%M'),
             'text': 'напоминание о ДР 2278921635156165123',
@@ -99,9 +98,8 @@ class TaskFormTests(TestCase):
         self.assertTrue(
             Task.objects.filter(text=self.task.text).exists()
         )
-        now = datetime.now()
+        now = datetime.now() + timedelta(days=2)
         form_data = {
-            'group': self.group.id,
             'server_datetime_0': now.strftime('%Y-%m-%d'),
             'server_datetime_1': now.strftime('%H:%M'),
             'text': 'пост 2278921635156165123',
@@ -119,7 +117,6 @@ class TaskFormTests(TestCase):
         self.assertEqual(
             Task.objects.get(
                 text='пост 2278921635156165123',
-                group=self.group.id
             ).text,
             'пост 2278921635156165123'
         )

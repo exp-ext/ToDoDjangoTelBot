@@ -106,7 +106,7 @@ class GroupPostsListView(LoginRequiredMixin, ListView):
                  ) -> HttpResponse:
         self.group = get_object_or_404(Group, slug=self.kwargs['slug'])
         status = ('is_anonymous' if request.user.is_anonymous
-                  else get_status_in_group(self.group, request.user.username))
+                  else get_status_in_group(self.group, request.user.tg_id))
         self.is_admin = False
         admin_status = ['creator', 'administrator']
         self.is_admin = status in admin_status

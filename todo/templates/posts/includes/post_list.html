@@ -48,7 +48,7 @@
           {% if post.group and group != post.group %}
             <a class="btn btn-outline-secondary btn-sm" href="{% url 'posts:group_list' post.group.slug %}">все записи группы</a>
           {% endif %}
-        </div>        
+        </div>
       </div>
       <div class="col-md-5 py-2">
           {% if post.group and group != post.group and post.group.link %}

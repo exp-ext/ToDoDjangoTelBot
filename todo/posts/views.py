@@ -31,23 +31,24 @@ class SearchListView(ListView):
     template_name = 'posts/search_result.html'
     paginate_by = PAGINATE_BY
 
+    def get(self, request, *args, **kwargs):
+        self.keyword = self.request.GET.get('q', '')
+        if not self.keyword:
+            return redirect('posts:index_posts')
+        return super().get(request, *args, **kwargs)
+
     def get_context_data(self, **kwargs) -> Dict[str, Any]:
         context = super().get_context_data(**kwargs)
         context['keyword'] = self.request.GET.get('q', '')
         return context
 
     def get_queryset(self) -> QuerySet(Post):
-        keyword = self.request.GET.get('q', '')
         user = self.request.user
-
-        if not keyword:
-            return redirect('posts:index_posts')
-
         post_list = (
             Post.objects
             .select_related('author', 'group')
             .exclude(group__link=None)
-            .filter(text__icontains=keyword)
+            .filter(text__icontains=self.keyword)
             .order_by('group')
         )
         if user.is_authenticated:
@@ -57,7 +58,7 @@ class SearchListView(ListView):
                     .groups_connections
                     .values_list('group', flat=True)
                 ),
-                text__icontains=keyword,
+                text__icontains=self.keyword,
             )
         return post_list
 
@@ -105,8 +106,10 @@ class GroupPostsListView(LoginRequiredMixin, ListView):
     def dispatch(self, request: HttpRequest, *args: Any, **kwargs: Any
                  ) -> HttpResponse:
         self.group = get_object_or_404(Group, slug=self.kwargs['slug'])
-        status = ('is_anonymous' if request.user.is_anonymous
-                  else get_status_in_group(self.group, request.user.tg_id))
+        status = (
+            'is_anonymous' if request.user.is_anonymous
+            else get_status_in_group(self.group, request.user.tg_id)
+        )
         self.is_admin = False
         admin_status = ['creator', 'administrator']
         self.is_admin = status in admin_status

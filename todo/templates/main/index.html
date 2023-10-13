@@ -15,7 +15,7 @@
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://www.yourtodo.ru" />
   <meta property="og:description" content="Это идеальное решение для людей, которые хотят быть более продуктивными и достичь своих целей."/>
-  <meta property="og:image" content="https://www.yourtodo.ru/static/img/index/2_func_ban.png">
+  <meta property="og:image" content="https://www.yourtodo.ru/static/img/index/2_func_ban.webp">
   <meta property="og:image:alt" content="city" />
 
   <style>
@@ -52,11 +52,12 @@
 
           <div class="carousel-item active">
 
+
             {% if is_mobile %}
-              <img class="img-fluid" src="{% static 'img/index/1_reg_ban_mob.png' %}"></img>
+              <img class="img-fluid" src="{% static 'img/index/1_reg_ban_mob.webp' %}"></img>
             {% else %}
-              <img class="img-fluid" src="{% static 'img/index/1_reg_ban.png' %}"></img>
-            {% endif %}        
+              <img class="img-fluid" src="{% static 'img/index/1_reg_ban.webp' %}"></img>
+            {% endif %}  
 
             <div class="container">
               <div class="carousel-caption text-left">
@@ -75,9 +76,9 @@
         <div class="carousel-item {% if request.user.is_authenticated %} active {% endif %}">
 
           {% if is_mobile %}
-            <img class="img-fluid" src="{% static 'img/index/2_func_ban_mob.png' %}"></img>
+            <img class="img-fluid" src="{% static 'img/index/2_func_ban_mob.webp' %}"></img>
           {% else %}
-            <img class="img-fluid" src="{% static 'img/index/2_func_ban.png' %}"></img>
+            <img class="img-fluid" src="{% static 'img/index/2_func_ban.webp' %}"></img>
           {% endif %}
           
           <div class="container">
@@ -95,9 +96,9 @@
         <div class="carousel-item">
 
           {% if is_mobile %}
-            <img class="img-fluid" src="{% static 'img/index/3_services_ban_mob.png' %}"></img>
+            <img class="img-fluid" src="{% static 'img/index/3_services_ban_mob.webp' %}"></img>
           {% else %}
-            <img class="img-fluid" src="{% static 'img/index/3_services_ban.png' %}"></img>
+            <img class="img-fluid" src="{% static 'img/index/3_services_ban.webp' %}"></img>
           {% endif %}
           
           <div class="container">
@@ -159,15 +160,16 @@
           <div class="col-md-7">
             <h2 class="featurette-Заголовок">Регистр<span class="text-muted">ация...</span></h2>
             <p class="lead">
-              Для регистрации, перейдите <a href="https://t.me/BorFAsbot">в личный чат с ботом</a>, нажмите кнопку &lt;Меню&gt; и запросите регистрацию. 
-              Также, чтобы настроить часовой пояс, я рекомендую проверить погоду, используя появившуюся кнопку &lt;Показать меню&gt;.
+              Для регистрации в системе, перейдите <a href="https://t.me/BorFAsbot">в личный чат с Евой</a>, нажмите кнопку &lt;Меню&gt; и запросите регистрацию.
+              <br><br>
+              Чтобы настроить часовой пояс отличный от МСК, рекомендуется проверить погоду, используя появившуюся кнопку &lt;Показать меню&gt;.
               <br><br>
               <strong>Для корректной работы в групповых чатах, после добавления бота в группу, сделайте его администратором.</strong>      
             </p>
           </div>
           <div class="col-md-5">
             <img class="bd-placeholder-img bd-placeholder-img-lg featurette-image img-fluid mx-auto" width="500" height="500"
-              src="{% static 'img/index/register.png' %}">
+              src="{% static 'img/index/register.webp' %}">
             </img>
           </div>      
         </div>
@@ -183,21 +185,20 @@
           <p class="lead">
             <ol style="list-style: none; line-height: 20px; ">
               <li><p>📅 Telegram ToDo management</p></li>
-              <li><p>🎭 рассказываю анекдоты</p></li>
-              <li><p>😼 высылаю картинки с котиками</p></li>
-              <li><p>🌈 знаю погоду на улице в твоём местоположении</li>
-              <li><p>☔️ предсказываю погоду на 4 дня вперёд</p></li>
-              <li><p>🛰 могу отправить твоё местоположение в группу фаворит</p></li>
-              <li><p>🏄 знаю о всех мероприятиях в ближайшем от тебя мегаполисе</p></li>
-              <li><p>🧠 если в чате, где я присутствую, обратится ко мне по имени Ева, то Ваше сообщение точно не останется не отвеченным</p></li>
-              <li><p>📚 если в конце предложения поставить стрелку и двухбуквенный код языка (согласно стандарту ISO 639-1), например ...->en, то я переведу Ваше сообщение на этот язык</p></li>
-              <li><p>💬 отправленное голосовое сообщение в чате будет автоматически проходить аудиотранскрипцию и отображаться в виде текста</p></li>
+              <li><p>🎭 анекдоты</p></li>
+              <li><p>🌈 погода в твоём местоположении</li>
+              <li><p>☔️ прогноз погоды на 4 дня вперёд</p></li>
+              <li><p>🛰 отправка GPS местоположения в группу фаворит</p></li>
+              <li><p>🏄 список мероприятий в ближайшем от тебя мегаполисе</p></li>
+              <li><p>🧠 приватный и групповой чат с ИИ Eva</p></li>
+              <li><p>📚 перевод текста на другие языки</p></li>
+              <li><p>💬 аудиотранскрипция сообщения</p></li>
             </ol>
           </p>
         </div>
         <div class="col-md-5 order-md-1">
           <img class="bd-placeholder-img bd-placeholder-img-lg featurette-image img-fluid mx-auto" width="500" height="500"
-            src="{% static 'img/index/menu.png' %}">
+            src="{% static 'img/index/menu.webp' %}">
           </img>
 
         </div>
@@ -253,7 +254,7 @@
         </div>
         <div class="col-md-5">
           <img class="bd-placeholder-img bd-placeholder-img-lg featurette-image img-fluid mx-auto" width="500" height="500"
-            src="{% static 'img/index/message.png' %}">
+            src="{% static 'img/index/message.webp' %}">
           </img>
         </div>
       </div>
@@ -270,7 +271,7 @@
         </div>
         <div class="col-md-5 order-md-1">
           <img class="bd-placeholder-img bd-placeholder-img-lg featurette-image img-fluid mx-auto" width="500" height="500"
-            src="{% static 'img/index/site_menu.png' %}">
+            src="{% static 'img/index/site_menu.webp' %}">
           </img>
 
         </div>
@@ -288,15 +289,18 @@
           </div>
           <div class="col-md-5">
             <img class="bd-placeholder-img bd-placeholder-img-lg featurette-image img-fluid mx-auto" width="500" height="500"
-              src="{% static 'img/index/notes.png' %}">
+              src="{% static 'img/index/notes.webp' %}">
             </img>
           </div>
         </div>
 
         <hr class="featurette-divider">
-
       <!-- /END THE FEATURETTES -->
 
     </div><!-- /.container -->
 
+{% endblock %}
+
+
+{% block javascript %}  
 {% endblock %}

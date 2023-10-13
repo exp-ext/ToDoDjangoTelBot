@@ -2,39 +2,6 @@ version: '3.9'
 
 services:
 
-  minio:
-    image: minio/minio:latest
-    container_name: todo-minio
-    command: server --console-address ":9001" /${AWS_STORAGE_BUCKET_NAME}
-    ports:
-      - "9000:9000"
-      - "${MINIO_PORT}:9001"
-    volumes:
-      - minio_data:/${AWS_STORAGE_BUCKET_NAME}
-    env_file:
-      - ./.env
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
-      interval: 30s
-      timeout: 20s
-      retries: 3
-
-  createbuckets:
-    image: minio/mc
-    entrypoint: >
-      /bin/sh -c "
-      /usr/bin/mc alias set minio http://minio:9000 ${MINIO_ROOT_USER} ${MINIO_ROOT_PASSWORD} --api S3v4;
-      /usr/bin/mc mb minio/${AWS_STORAGE_BUCKET_NAME};
-      exit 0;
-      "
-    volumes:
-      - minio_data:/data
-    env_file:
-      - ./.env
-    depends_on:
-      minio:
-        condition: service_healthy
-
   db:
     image: postgres:13.10-alpine
     container_name: todo_db
@@ -43,11 +10,6 @@ services:
       - postgresql_volume:/var/lib/postgresql/data/
     env_file:
       - ./.env
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -h ${POSTGRES_HOST} -p ${POSTGRES_PORT} -U ${POSTGRES_USER}"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
 
   redis:
     image: redis:latest
@@ -59,11 +21,6 @@ services:
       - 6379
     env_file:
       - ./.env
-    healthcheck:
-      test: ["CMD-SHELL", "redis-cli ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
 
   web:
     build:
@@ -85,10 +42,8 @@ services:
     env_file:
       - ./.env
     depends_on:
-      db:
-        condition: service_healthy
-      minio:
-        condition: service_healthy
+      - db
+      - redis
 
   celery:
     build:
@@ -106,12 +61,8 @@ services:
     env_file:
       - ./.env
     depends_on:
-      db:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-      minio:
-        condition: service_healthy
+      - db
+      - redis
 
   celery-beat:
     build:
@@ -129,12 +80,19 @@ services:
     env_file:
       - ./.env
     depends_on:
-      db:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-      minio:
-        condition: service_healthy
+      - db
+      - redis
+      - celery
+
+  whisper:
+    image: onerahmet/openai-whisper-asr-webservice:latest
+    container_name: todo_whisper
+    ports:
+      - "9090:9000"
+    environment:
+      - ASR_MODEL=base
+    volumes:
+      - whisper_volume:/root/.cache/whisper
 
   nginx:
     image: nginx:latest
@@ -163,22 +121,11 @@ services:
     depends_on:
       - nginx
 
-  whisper:
-    image: onerahmet/openai-whisper-asr-webservice:latest
-    container_name: todo_whisper
-    ports:
-      - "9090:9000"
-    environment:
-      - ASR_MODEL=base
-    volumes:
-      - whisper_volume:/root/.cache/whisper
-
 volumes:
   postgresql_volume:
   backup_volume:
   cache_pip_volume:
   cache_apt_volume:
   whisper_volume:
-  minio_data:
   static_volume:
   media_volume:

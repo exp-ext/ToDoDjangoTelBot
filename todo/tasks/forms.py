@@ -1,5 +1,6 @@
-from datetime import timedelta
+from datetime import datetime, timedelta
 
+import pytz
 from core.views import similarity
 from core.widget import MinimalSplitDateTimeMultiWidget
 from django import forms
@@ -45,8 +46,9 @@ class TaskForm(forms.ModelForm):
         super(TaskForm, self).__init__(*args, **kwargs)
         user = kwargs.pop('initial').get('user')
         instance = kwargs.get('instance')
+        groups_connections = user.groups_connections.all().select_related('user', 'group')
         self.fields['group'] = forms.ModelChoiceField(
-            queryset=user.groups_connections.all().select_related('user', 'group'),
+            queryset=groups_connections,
             initial=instance.group if instance else None
         )
         self.fields['group'].required = False
@@ -59,6 +61,16 @@ class TaskForm(forms.ModelForm):
             'Для появление Вашей группы в выпадающем списке, необходимо '
             'в её чате хотя бы один раз вызвать меню.</p>'
         )
+
+    def clean_server_datetime(self):
+        server_datetime = self.cleaned_data['server_datetime']
+        user_tz = self.initial.get('tz')
+        tz = pytz.timezone(user_tz)
+        if server_datetime <= datetime.now(tz):
+            raise ValidationError(
+                'Назначенное время не может быть меньше текущего.'
+            )
+        return server_datetime
 
     def clean_group(self):
         group_connection = self.cleaned_data['group']

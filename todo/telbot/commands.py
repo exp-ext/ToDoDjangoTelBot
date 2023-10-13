@@ -6,15 +6,15 @@ from .loader import bot
 
 COMMANDS: Mapping[str, Mapping[str, str]] = {
     'en': {
+        'main_menu': '📲 Main bot menu',
         'auth': '👩‍💻 Authorization on the website',
-        'main_menu': '📲 Main menu of bot',
         'registration': '📍 Register',
         'show_my_links': '📥 Show my links'
     },
     'ru': {
+        'main_menu': '📲 Общее меню бота',
         'auth': '👩‍💻 Авторизация на сайте',
-        'main_menu': '📲 Основное меню бота',
-        'registration': '📍Пройти регистрацию',
+        'registration': '📍Регистрация',
         'show_my_links': '📥 Показать основные ссылки'
     }
 }

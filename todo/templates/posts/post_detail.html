@@ -98,4 +98,13 @@
 
 {% block javascript %}  
   <script src="{% static 'js/script.js' %}"></script>
+  <script async charset="utf-8" src="//cdn.embedly.com/widgets/platform.js"></script>
+  <script>
+    document.querySelectorAll( 'oembed[url]' ).forEach( element => {
+        const anchor = document.createElement( 'a' );
+        anchor.setAttribute( 'href', element.getAttribute( 'url' ) );
+        anchor.className = 'embedly-card';
+        element.appendChild( anchor );
+    } );
+  </script>
 {% endblock %}

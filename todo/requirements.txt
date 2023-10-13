@@ -1,8 +1,8 @@
 # Djando + util
-Django~=4.2.4
+Django==4.2.5
 django-defender~=0.9.7
 django-dbbackup~=4.0.2
-pillow~=10.0.0
+pillow~=10.0.1
 pytils~=0.4.1
 python-dotenv~=1.0.0
 sorl-thumbnail~=12.9.0
@@ -10,11 +10,11 @@ django-phonenumber-field[phonenumbers]~=7.1.0
 
 psycopg2-binary
 
-boto3~=1.28.40
+boto3~=1.28.62
 django-storages~=1.13.2
 
 # WYSIWYG editor
-django-ckeditor-5~=0.2.9
+django-ckeditor-5~=0.2.10
 
 # Django User Agents
 django-user-agents~=0.4.0

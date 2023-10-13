@@ -159,11 +159,6 @@ IS_NOT_TESTS = int(os.getenv('IS_NOT_TESTS', default=0))
 DATABASES = POSTGRES if IS_NOT_TESTS else SQLITE
 
 # django-dbbackup
-DBBACKUP_STORAGE = 'django.core.files.storage.FileSystemStorage'
-DBBACKUP_STORAGE_OPTIONS = {
-    'location': Path(BASE_DIR).joinpath('backup').resolve()
-}
-
 DBBACKUP_CONNECTORS = {
     'default': {
         'CONNECTOR': 'dbbackup.db.postgresql.PgDumpBinaryConnector',
@@ -220,54 +215,61 @@ USE_L10N = False
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.1/howto/static-files/
 
+AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID')
+AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY')
+AWS_S3_ENDPOINT_URL = os.getenv('AWS_S3_ENDPOINT_URL')
+AWS_STORAGE_BUCKET_NAME = os.getenv('AWS_STORAGE_BUCKET_NAME')
+AWS_S3_USE_SSL = int(os.getenv('AWS_S3_USE_SSL', default=0))
+
+STATIC_BUCKET_NAME = 'static'
+MEDIA_BUCKET_NAME = 'media'
+DATABASE_BUCKET_NAME = 'database'
+
 USE_S3 = int(os.getenv('USE_S3', default=0))
-
 if USE_S3:
-    AWS_STORAGE_BUCKET_NAME = os.getenv('AWS_STORAGE_BUCKET_NAME', 'data')
-    AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID')
-    AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY')
-
-    AWS_S3_USE_SSL = int(os.getenv('AWS_S3_USE_SSL', default=0))
-
-    AWS_S3_OBJECT_PARAMETERS = {
-        'CacheControl': 'max-age=86400',
-    }
-
-    AWS_DEFAULT_ACL = None
-    AWS_S3_ENDPOINT_URL = os.getenv('AWS_S3_ENDPOINT_URL')
-
+    STATIC_URL = f'{AWS_S3_ENDPOINT_URL}/{AWS_STORAGE_BUCKET_NAME}/{STATIC_BUCKET_NAME}/'
     STATICFILES_STORAGE = 'todo.boto.StaticStorage'
-    DEFAULT_FILE_STORAGE = 'todo.boto.PublicMediaStorage'
 
-    STATIC_URL = f'{AWS_S3_ENDPOINT_URL}/{AWS_STORAGE_BUCKET_NAME}/static/'
-    MEDIA_URL = f'{AWS_S3_ENDPOINT_URL}/{AWS_STORAGE_BUCKET_NAME}/media/'
+    MEDIA_URL = f'{AWS_S3_ENDPOINT_URL}/{AWS_STORAGE_BUCKET_NAME}/{MEDIA_BUCKET_NAME}/'
+    DEFAULT_FILE_STORAGE = 'todo.boto.MediaStorage'
 
-    S3_CLIENT = boto3.client(
-        's3',
-        aws_access_key_id=AWS_ACCESS_KEY_ID,
-        aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
-        endpoint_url=AWS_S3_ENDPOINT_URL
-    )
-    STATICFILES_DIRS = (Path(BASE_DIR).joinpath('static').resolve(),)
-
+    DBBACKUP_STORAGE = 'todo.boto.DataBaseStorage'
+    DBBACKUP_STORAGE_OPTIONS = {
+        'access_key': AWS_ACCESS_KEY_ID,
+        'secret_key': AWS_SECRET_ACCESS_KEY,
+        'bucket_name': AWS_STORAGE_BUCKET_NAME,
+        'default_acl': 'private',
+    }
 else:
+    STATIC_URL = '/static/'
+
     MEDIA_URL = '/media/'
     MEDIA_ROOT = Path(BASE_DIR).joinpath('media').resolve()
 
-    STATIC_URL = '/static/'
-    if DEBUG:
-        STATICFILES_DIRS = (Path(BASE_DIR).joinpath('static').resolve(),)
-    else:
-        STATIC_ROOT = Path(BASE_DIR).joinpath('static').resolve()
+    DBBACKUP_STORAGE = 'django.core.files.storage.FileSystemStorage'
+    DBBACKUP_STORAGE_OPTIONS = {
+        'location': Path(BASE_DIR).joinpath('backup').resolve()
+    }
 
-    STATICFILES_FINDERS = (
-        'django.contrib.staticfiles.finders.FileSystemFinder',
-        'django.contrib.staticfiles.finders.AppDirectoriesFinder',
-    )
+if DEBUG:
+    STATICFILES_DIRS = (BASE_DIR / 'static',)
+else:
+    STATIC_ROOT = Path(BASE_DIR).joinpath('static').resolve()
 
+S3_CLIENT = boto3.client(
+    's3',
+    use_ssl=AWS_S3_USE_SSL,
+    aws_access_key_id=AWS_ACCESS_KEY_ID,
+    aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
+    endpoint_url=AWS_S3_ENDPOINT_URL
+)
 
 # Django-ckeditor
-CKEDITOR_5_FILE_STORAGE = 'posts.storage.CustomStorage'
+CKEDITOR_5_FILE_STORAGE = 'posts.storage.CkeditorCustomStorage'
+CKEDITOR_FORCE_JPEG_COMPRESSION = True
+CKEDITOR_RESTRICT_BY_DATE = True
+CKEDITOR_IMAGE_BACKEND = 'ckeditor_uploader.backends.PillowBackend'
+
 CustomColorPalette = [
     {
         'color': 'hsl(4, 90%, 58%)',
@@ -345,7 +347,7 @@ CKEDITOR_5_CONFIGS = {
                 {'model': 'heading2', 'view': 'h2', 'title': 'Heading 2', 'class': 'ck-heading_heading2'},
                 {'model': 'heading3', 'view': 'h3', 'title': 'Heading 3', 'class': 'ck-heading_heading3'}
             ]
-        }
+        },
     },
     'list': {
         'properties': {
@@ -355,6 +357,14 @@ CKEDITOR_5_CONFIGS = {
         }
     }
 }
+
+if USE_S3:
+    CKEDITOR_CONFIGS = {
+        "default": {
+            "removePlugins": "stylesheetparser",
+        }
+    }
+
 
 # Setting for working with Jupiter
 if DEBUG:

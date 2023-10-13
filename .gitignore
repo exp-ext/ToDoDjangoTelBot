@@ -163,3 +163,4 @@ Dockerfile_dev
 conf/
 conf_sh/
 logs
+default_dev.conf

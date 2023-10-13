@@ -222,8 +222,6 @@ class LoginTgLinkView(View):
 
         time_difference = timezone.now() - user.validation_key_time
         if user.validation_key == key and time_difference < timedelta(minutes=self.valid_time):
-            user.validation_key = None
-            user.save()
             login(request, user)
         return redirect('index')
 

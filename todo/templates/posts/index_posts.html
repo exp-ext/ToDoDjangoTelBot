@@ -1,8 +1,8 @@
 {% extends "base.html" %}
 
 {% block head %}
-  <meta name="description" content="Организуйте заметки своего Телеграмм канала с помощью простого и эффектовного инструмента - YourToDo!"/>
-  <meta name="keywords" content="заметки, сделать личный блог, телеграмм каналы, лучшие телеграмм каналы, канал продвижение">
+  <meta name="description" content="Организуйте свои заметки с помощью простого и эффектовного инструмента - YourToDo!"/>
+  <meta name="keywords" content="заметки, сделать личный блог, телеграмм, лучшие телеграмм каналы, канал продвижение">
   <meta name="robots" content="index, follow">
   <meta name="author" content="Your To-Do">
 {% endblock %}
@@ -17,12 +17,11 @@
     {% include 'posts/includes/search.html' %}
 
     <div class="ck ck-content">
-
       {% for post in page_obj %} 
         {% include 'posts/includes/post_list.html' %}        
       {% endfor %} 
-
     </div> 
+
     {% include 'posts/includes/paginator.html' %}
   </div> 
 

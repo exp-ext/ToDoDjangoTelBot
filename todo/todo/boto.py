@@ -1,15 +1,17 @@
 from storages.backends.s3boto3 import S3Boto3Storage
+from django.conf import settings
 
 
 class StaticStorage(S3Boto3Storage):
-    location = 'static'
+    location = settings.STATIC_BUCKET_NAME
     default_acl = 'public-read'
-    querystring_auth = True
 
 
-class PublicMediaStorage(S3Boto3Storage):
-    location = 'media'
+class MediaStorage(S3Boto3Storage):
+    location = settings.MEDIA_BUCKET_NAME
     default_acl = 'public-read'
-    file_overwrite = False
-    querystring_auth = True
-    querystring_expire = (60 * 60 * 24)
+
+
+class DataBaseStorage(S3Boto3Storage):
+    default_acl = 'private'
+    bucket_name = settings.DATABASE_BUCKET_NAME

@@ -64,12 +64,15 @@
 }
 
 @media (max-width: 767px) {
-    .descript-wrapper,
-    .ico-wrap {
-      float: none;
-      text-align: center;
-    }
-    .ico-wrap {
-      margin: 0 auto 15px auto;
-    }
+  .wrapper {
+    padding-top: 50px;
+  }
+  .descript-wrapper,
+  .ico-wrap {
+    float: none;
+    text-align: center;
+  }
+  .ico-wrap {
+    margin: 0 auto 15px auto;
+  }
 }

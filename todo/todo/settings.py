@@ -231,9 +231,6 @@ else:
 
 # Django-ckeditor
 CKEDITOR_5_FILE_STORAGE = 'posts.storage.CkeditorCustomStorage'
-CKEDITOR_FORCE_JPEG_COMPRESSION = True
-CKEDITOR_RESTRICT_BY_DATE = True
-CKEDITOR_IMAGE_BACKEND = 'ckeditor_uploader.backends.PillowBackend'
 
 CustomColorPalette = [
     {
@@ -266,7 +263,6 @@ CKEDITOR_5_CONFIGS = {
     'default': {
         'toolbar': ['heading', '|', 'bold', 'italic', 'link',
                     'bulletedList', 'numberedList', 'blockQuote', 'imageUpload', ],
-
     },
     'extends': {
         'blockToolbar': [
@@ -323,12 +319,10 @@ CKEDITOR_5_CONFIGS = {
     }
 }
 
-
 # Setting for working with Jupiter
 if DEBUG:
     hostname, _, ips = socket.gethostbyname_ex(socket.gethostname())
-    INTERNAL_IPS = ([ip[: ip.rfind(".")] + ".1" for ip in ips]
-                    + ["127.0.0.1", "10.0.2.2"])
+    INTERNAL_IPS = ([ip[: ip.rfind(".")] + ".1" for ip in ips] + ["127.0.0.1", "10.0.2.2"])
 
 # REDIS
 # https://python-scripts.com/redis

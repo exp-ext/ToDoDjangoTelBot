@@ -116,4 +116,3 @@ volumes:
   cache_apt_volume:
   whisper_volume:
   pgadmin_data_todo:
-  minio_data:

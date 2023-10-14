@@ -57,17 +57,14 @@ class PostURLTests(TestCase):
             [self.guest_client, self.post_edit, code_found],
             [self.guest_client, self.group_list, code_found],
             [self.authorized_client, self.profile, code_ok],
-            [self.guest_client, self.profile, code_found],
+            [self.guest_client, self.profile, code_ok],
             [self.guest_client, self.post_detail, code_ok],
             [self.guest_client, '/unexisting_page/', code_not_found]
         ]
         for client, address, code in url_names:
             with self.subTest(address=address):
                 response = client.get(address)
-                self.assertEqual(
-                    response.status_code,
-                    code
-                )
+                self.assertEqual(response.status_code, code)
 
     def test_urls_correct_template(self):
         """URL-адрес использует соответствующий шаблон в приложении posts."""

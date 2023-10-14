@@ -89,3 +89,62 @@ body {
     margin-top: 7rem;
   }
 }
+
+.tenses_image{
+  transform: translate(0px,120%);
+  opacity: 0;
+  transition: all 0.8s ease 0s;
+}
+
+.tenses_image._active {
+  transform: translate(0px,0px);
+  opacity: 1;
+}
+
+.tenses {
+  transform: translate(0px,120%);
+  opacity: 0;
+  transition: all 0.8s ease 0s;
+}
+
+.tenses._active {
+  transform: translate(0px,0px);
+  opacity: 1;
+  transition: all 0.8s ease 0.5s;
+}
+
+.text-blog {
+  transform: translate(-120%,0px);
+  opacity: 0;
+  transition: all 0.8s ease 0s;
+}
+
+.text-blog._active {
+  transform: translate(0px,0px);
+  opacity: 1;
+  transition: all 0.8s ease 0s;
+}
+
+.image-blog {
+  transform: translate(120%,0px);
+  opacity: 0;
+  transition: all 0.8s ease 0s;
+}
+
+.image-blog._active {
+  transform: translate(0px,0px);
+  opacity: 1;
+  transition: all 0.8s ease 0s;
+}
+
+.right-image-blog {
+  transform: scale(0);
+  opacity: 0;
+  transition: all 0.8s ease 0s;
+}
+
+.right-image-blog._active {
+  transform: scale(1);
+  opacity: 1;
+  transition: all 0.8s ease 0s;
+}

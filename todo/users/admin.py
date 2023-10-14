@@ -35,7 +35,7 @@ class UserAdmin(admin.ModelAdmin):
     )
     fieldsets = (
         ('Данные пользователя', {
-            'fields': ('username', 'first_name', 'last_name')
+            'fields': ('tg_id', 'username', 'first_name', 'last_name')
         }),
         ('Аватар', {'fields': ('image', 'preview')}),
         ('Категория и статус', {

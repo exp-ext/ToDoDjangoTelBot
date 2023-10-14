@@ -18,6 +18,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.views import View
 from telbot.cleaner import delete_messages_by_time
+from telbot.loader import bot
 from telegram import Update
 from telegram.ext import CallbackContext
 from timezonefinder import TimezoneFinder
@@ -29,6 +30,7 @@ from .forms import ProfileForm
 from .models import Location
 
 User = get_user_model()
+ADMIN_ID = settings.TELEGRAM_ADMIN_ID
 
 
 class Authentication:
@@ -79,10 +81,12 @@ class Authentication:
             f'⤵️\n',
             f'{self.tg_user.username}\n',
             f'{password}\n',
-            f'Для авторизации на сайте пройдите по ссылке'
+            f'Для авторизации на [сайте](https://www.{settings.DOMAIN}) пройдите по ссылке'
             f'[https://www.{settings.DOMAIN}/auth/](https://www.{settings.DOMAIN}/auth/login/tg/{self.tg_user.id}/{validation_key}/)'
         ]
-        self.send_messages(reply_text)
+        message_id = self.send_messages(reply_text)
+        user.validation_message_id = message_id
+        user.save()
         return JsonResponse({"ok": "User created."})
 
     def authorization(self) -> Dict[str, Any]:
@@ -106,12 +110,13 @@ class Authentication:
         user.last_name = self.tg_user.last_name
         user.validation_key = validation_key
         user.validation_key_time = timezone.now()
-        user.save()
         reply_text = [
-            f'Для авторизации на сайте пройдите по ссылке'
+            f'Для авторизации на [сайте](https://www.{settings.DOMAIN}) пройдите по ссылке'
             f'[https://www.{settings.DOMAIN}/auth/](https://www.{settings.DOMAIN}/auth/login/tg/{self.tg_user.id}/{validation_key}/)'
         ]
-        self.send_messages(reply_text)
+        message_id = self.send_messages(reply_text)
+        user.validation_message_id = message_id
+        user.save()
         return JsonResponse({"ok": "Link sent."})
 
     def send_messages(self, reply_text):
@@ -126,6 +131,7 @@ class Authentication:
             args=[self.chat.id, message_id],
             countdown=lifetime
         )
+        return message_id
 
     def check_chat_type(self):
         """Проверка типа чата."""
@@ -217,13 +223,23 @@ class LoginTgLinkView(View):
 
     def get(self, request: HttpRequest, user_id: str, key: str, *args: Any, **kwargs: Any) -> HttpRequest:
         """Авторизует пользователя по ссылке из Телеграм."""
+        try:
+            user_id = int(user_id)
+            key = str(key)
+            user = User.objects.filter(tg_id=user_id).first()
 
-        user = User.objects.filter(tg_id=user_id).first()
-
-        time_difference = timezone.now() - user.validation_key_time
-        if user.validation_key == key and time_difference < timedelta(minutes=self.valid_time):
-            login(request, user)
-        return redirect('index')
+            time_difference = timezone.now() - user.validation_key_time
+            if user.validation_key == key and time_difference < timedelta(minutes=self.valid_time):
+                login(request, user)
+                user.validation_key = None
+                user.save()
+                delete_messages_by_time.apply_async(
+                    args=[user_id, user.validation_message_id],
+                    countdown=5
+                )
+            return redirect('index')
+        except Exception as err:
+            bot.send_message(ADMIN_ID, f'Ошибка в модуле авторизации: {err}')
 
 
 @login_required

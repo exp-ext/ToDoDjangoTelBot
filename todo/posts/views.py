@@ -88,7 +88,7 @@ class IndexPostsListView(ListView):
         return post_list
 
 
-class GroupPostsListView(LoginRequiredMixin, ListView):
+class GroupPostsListView(ListView):
     """
     Возвращает:
     - (:obj:`Paginator`) с заметками группы по slug;
@@ -106,16 +106,15 @@ class GroupPostsListView(LoginRequiredMixin, ListView):
     def dispatch(self, request: HttpRequest, *args: Any, **kwargs: Any
                  ) -> HttpResponse:
         self.group = get_object_or_404(Group, slug=self.kwargs['slug'])
+        if not self.group.link:
+            return redirect('posts:index_posts')
         status = (
-            'is_anonymous' if request.user.is_anonymous
+            'is_anonymous' if request.user.is_anonymous or not request.user.tg_id
             else get_status_in_group(self.group, request.user.tg_id)
         )
         self.is_admin = False
         admin_status = ['creator', 'administrator']
         self.is_admin = status in admin_status
-        if not self.is_admin and not self.group.link and status != 'member':
-            return redirect('posts:index_posts')
-
         self.form = GroupMailingForm(request.POST or None)
         self.forism_check = self.group.group_mailing.filter(
             mailing_type='forismatic_quotes'
@@ -153,7 +152,7 @@ class GroupPostsListView(LoginRequiredMixin, ListView):
         return self.get(request, *args, **kwargs)
 
 
-class ProfileDetailView(LoginRequiredMixin, DetailView):
+class ProfileDetailView(DetailView):
     """
     Возвращает:
     - (:obj:`Paginator`) все посты одного пользователя по его имени(id);
@@ -175,12 +174,11 @@ class ProfileDetailView(LoginRequiredMixin, DetailView):
         context = super().get_context_data(**kwargs)
         post_list = self.get_user_posts().select_related('author', 'group')
         page_obj = paginator_handler(self.request, post_list, PAGINATE_BY)
+        user = self.request.user
         context |= {
             'page_obj': page_obj,
             'posts_count': page_obj.paginator.count,
-            'following': (
-                self.request.user.follower.filter(author=self.object).exists()
-            )
+            'following': False if user.is_anonymous else user.follower.filter(author=self.object).exists()
         }
         return context
 
@@ -188,11 +186,7 @@ class ProfileDetailView(LoginRequiredMixin, DetailView):
         groups = self.get_user_groups()
         return (
             self.object.posts
-            .filter(
-                Q(group=None)
-                | Q(group__in=groups)
-                | Q(group__link__isnull=False)
-            )
+            .filter(Q(group=None) | Q(group__in=groups) | Q(group__link__isnull=False))
             .select_related('author', 'group')
         )
 

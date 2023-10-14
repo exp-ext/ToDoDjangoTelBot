@@ -76,6 +76,7 @@ class User(AbstractUser):
 
     validation_key = models.CharField(max_length=28, null=True, blank=True)
     validation_key_time = models.DateTimeField(null=True, blank=True)
+    validation_message_id = models.IntegerField(null=True, blank=True)
 
     is_blocked_bot = models.BooleanField(default=False)
 

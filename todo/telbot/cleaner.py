@@ -60,7 +60,6 @@ def delete_messages_by_time(chat_id: int, message_id: int) -> None:
     - message_id (:obj:`int` | :obj:`str`)
     """
     try:
-        # bot.delete_message(chat_id, message_id)
-        pass
+        bot.delete_message(chat_id, message_id)
     except Exception as error:
         raise KeyError(error)

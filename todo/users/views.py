@@ -53,7 +53,7 @@ class Authentication:
                 'first_name': self.tg_user.first_name,
                 'last_name': self.tg_user.last_name,
                 'validation_key': validation_key,
-                'validation_key_time': timezone.now(),
+                'validation_key_time': timezone.now().astimezone(timezone.utc),
             }
         )
 
@@ -64,14 +64,6 @@ class Authentication:
 
         password = self.get_password(length=15)
         user.set_password(password)
-        user.save()
-
-        if not Location.objects.filter(user=user).exists():
-            Location.objects.create(
-                user=user,
-                latitude=59.799,
-                longitude=30.274
-            )
         reply_text = [
             'Вы успешно зарегистрированы в [проекте Your To-Do]'
             f'(https://www.{settings.DOMAIN}/).\n'
@@ -79,10 +71,18 @@ class Authentication:
             f'⤵️\n',
             f'{self.tg_user.username}\n',
             f'{password}\n',
-            f'Для авторизации на сайте пройдите по ссылке'
+            f'Для авторизации на [сайте](https://www.{settings.DOMAIN}) пройдите по ссылке'
             f'[https://www.{settings.DOMAIN}/auth/](https://www.{settings.DOMAIN}/auth/login/tg/{self.tg_user.id}/{validation_key}/)'
         ]
-        self.send_messages(reply_text)
+        message_id = self.send_messages(reply_text)
+        user.validation_message_id = message_id
+        user.save()
+        if not user.locations.exists():
+            Location.objects.create(
+                user=user,
+                latitude=59.799,
+                longitude=30.274
+            )
         return JsonResponse({"ok": "User created."})
 
     def authorization(self) -> Dict[str, Any]:
@@ -105,13 +105,14 @@ class Authentication:
         user.first_name = self.tg_user.first_name
         user.last_name = self.tg_user.last_name
         user.validation_key = validation_key
-        user.validation_key_time = timezone.now()
-        user.save()
+        user.validation_key_time = timezone.now().astimezone(timezone.utc)
         reply_text = [
-            f'Для авторизации на сайте пройдите по ссылке'
+            f'Для авторизации на [сайте](https://www.{settings.DOMAIN}) пройдите по ссылке'
             f'[https://www.{settings.DOMAIN}/auth/](https://www.{settings.DOMAIN}/auth/login/tg/{self.tg_user.id}/{validation_key}/)'
         ]
-        self.send_messages(reply_text)
+        message_id = self.send_messages(reply_text)
+        user.validation_message_id = message_id
+        user.save()
         return JsonResponse({"ok": "Link sent."})
 
     def send_messages(self, reply_text):
@@ -126,6 +127,7 @@ class Authentication:
             args=[self.chat.id, message_id],
             countdown=lifetime
         )
+        return message_id
 
     def check_chat_type(self):
         """Проверка типа чата."""
@@ -217,12 +219,19 @@ class LoginTgLinkView(View):
 
     def get(self, request: HttpRequest, user_id: str, key: str, *args: Any, **kwargs: Any) -> HttpRequest:
         """Авторизует пользователя по ссылке из Телеграм."""
-
+        user_id = int(user_id)
+        key = str(key)
         user = User.objects.filter(tg_id=user_id).first()
 
-        time_difference = timezone.now() - user.validation_key_time
+        time_difference = timezone.now().astimezone(timezone.utc) - user.validation_key_time
         if user.validation_key == key and time_difference < timedelta(minutes=self.valid_time):
             login(request, user)
+            user.validation_key = None
+            user.save()
+            delete_messages_by_time.apply_async(
+                args=[user_id, user.validation_message_id],
+                countdown=5
+            )
         return redirect('index')
 
 

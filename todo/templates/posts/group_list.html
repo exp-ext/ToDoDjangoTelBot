@@ -6,6 +6,7 @@
   <meta name="description" content="Ваша группа, Ваши Заметки - Организуйте общие мысли с легкостью с Your ToDo!"/>
   <meta name="keywords" content="Telegram, заметки, организация заметок, Telegram инструмент, группа">
   <link rel="stylesheet" href="{% static 'css/toggle-radio.css' %}">
+  <link rel="stylesheet" href="{% static 'css/moving_units.css' %}">
 {% endblock %}
 
 {% block title %} Записи сообщества {{ group.title }} {% endblock %}
@@ -15,7 +16,7 @@
   <div class="container py-5">
     <div class="py-3">
 
-      <div class="card shadow mb-3 rounded text-center bg-secondary">
+      <div class="card shadow rounded text-center bg-secondary moving-unit _anim-items">
 
         <div class="card-body">
           <h1 class="card-header">{{ group.title }}</h1>
@@ -23,7 +24,6 @@
           {% if group.link %}<p class="card-text">Пригласительная ссылка: <a href="{{ group.link }}">{{ group.link }}</a> </p>{% endif %}
         </div>
       
-
         {% if is_admin %}
           <form actions="{% url 'posts:group_list' group.slug %}" method="POST">
             {% csrf_token %}
@@ -40,7 +40,7 @@
                       {% elif forism_check == True and radio.choice_label == "Включена" %}
                         checked
                       {% endif %}
-                      {{ radio.tag }}
+                      {{ radio.tag }}>
 
                     <label class="btn btn-outline-dark" for="{{ radio.id_for_label }}">
                       {{ radio.choice_label }}
@@ -74,5 +74,9 @@
 
     {% include 'posts/includes/paginator.html' %}
   </div>
+</br>
+{% endblock %}
 
+{% block javascript %}
+  <script src="{% static 'js/carousel.js' %}"></script>
 {% endblock %}

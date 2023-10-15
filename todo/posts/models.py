@@ -10,23 +10,20 @@ User = get_user_model()
 
 
 class Post(Create):
-    title = models.CharField(
-        _('Заголовок поста'),
-        max_length=100,
-        blank=False,
-        null=False,
-    )
-    text = CKEditor5Field(
-        _('Текст поста'),
-        blank=True,
-        config_name='extends'
-    )
-    author = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        related_name='posts',
-        verbose_name=_('Автор')
-    )
+    """
+    Модель для хранения постов.
+
+    ### Fields:
+    - title (`CharField`): Заголовок поста.
+    - text (`CKEditor5Field`): Текст поста.
+    - author (`ForeignKey`): Автор поста.
+    - group (`ForeignKey`, optional): Группа, к которой будет относиться пост.
+    - image (`ImageField`): Картинка, прикрепленная к посту.
+
+    """
+    title = models.CharField(_('Заголовок поста'), max_length=100, blank=False, null=False,)
+    text = CKEditor5Field(_('Текст поста'), blank=True, config_name='extends')
+    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='posts', verbose_name=_('Автор'))
     group = models.ForeignKey(
         Group,
         blank=True,
@@ -35,11 +32,7 @@ class Post(Create):
         related_name='posts',
         verbose_name=_('Группа, к которой будет относиться пост')
     )
-    image = ImageField(
-        _('Картинка'),
-        upload_to='posts/',
-        blank=True
-    )
+    image = ImageField(_('Картинка'), upload_to='posts/', blank=True)
 
     class Meta:
         verbose_name = _('Пост')
@@ -51,6 +44,15 @@ class Post(Create):
 
 
 class Comment(Create):
+    """
+    Модель для хранения комментариев к постам.
+
+    ### Fields:
+    - post (`ForeignKey`): Пост, к которому относится комментарий.
+    - author (`ForeignKey`): Автор комментария.
+    - text (`TextField`): Текст комментария.
+
+    """
     post = models.ForeignKey(
         Post,
         on_delete=models.CASCADE,
@@ -58,32 +60,27 @@ class Comment(Create):
         verbose_name=_('Комментарии'),
         help_text=_('Комментарии поста')
     )
-    author = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        related_name='comments',
-        verbose_name=_('Автор')
-    )
-    text = models.TextField(
-        _('Текст комментария'),
-        help_text=_('Введите текст комментария')
-    )
+    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='comments', verbose_name=_('Автор'))
+    text = models.TextField(_('Текст комментария'), help_text=_('Введите текст комментария'))
 
     def __str__(self) -> str:
         return self.text[:15]
 
 
 class Follow(models.Model):
-    user = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        related_name='follower'
-    )
-    author = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        related_name='following'
-    )
+    """
+    Модель для отслеживания подписок пользователей на других пользователей.
+
+    ### Fields:
+    - user (`ForeignKey`): Пользователь, который подписывается.
+    - author (`ForeignKey`): Пользователь, на которого подписываются.
+
+    ### Constraints:
+    - unique_follower: Уникальное сочетание (author, user).
+
+    """
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='follower')
+    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='following')
 
     class Meta:
         constraints = (models.UniqueConstraint(

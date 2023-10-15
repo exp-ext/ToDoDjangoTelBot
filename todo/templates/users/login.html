@@ -12,10 +12,10 @@
   <div class="container py-5"> 
     <div class="row justify-content-center">
       <div class="col-md-8 p-5">
-        <div class="card">
+        <div class="card bg-light shadow">
 
           <div class="card-header">
-            Войти на сайт
+            <b>Войти на сайт</b>
           </div>
 
           <div class="card-body">
@@ -63,7 +63,7 @@
                 </div>
               {% endfor %}
               <div class="col-md-6 offset-md-4">
-                <button type="submit" class="btn btn-primary">
+                <button type="submit" class="btn btn-primary shadow">
                   Войти
                 </button>
                 <a href="{% url 'users:password_reset_form' %}" class="btn btn-link">
@@ -76,9 +76,8 @@
       </div> <!-- col -->
     </div> <!-- row -->
     <p style="text-align:center; color:rgb(26, 4, 4);">
-      Для получения логина и пароля необходимо 
-      <a href="https://t.me/BorFAsbot">пройти в чат с ботом</a>
-      и пройти регистрацию.
-    </p>
+      <b>Для получения <span style="color: red;">логина</span> и <span style="color: red;">пароля</span> необходимо пройти регистрацию
+        <a href="https://t.me/BorFAsbot"> в приватном чате Телеграмм бота</a>.</b>
+    </p>    
   </div> <!-- container -->
 {% endblock %} 

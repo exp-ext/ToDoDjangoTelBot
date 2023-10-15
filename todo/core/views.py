@@ -96,5 +96,5 @@ def get_status_in_group(group: QuerySet[Group], user_id: int) -> bool:
             group.save()
         result = bot.get_chat_member(group.chat_id, user_id)
         return result.status
-    except Exception as error:
-        raise KeyError(error)
+    except Exception:
+        return 'error'

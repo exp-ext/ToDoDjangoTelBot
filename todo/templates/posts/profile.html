@@ -19,17 +19,20 @@
               <p class="card-header">{{ author.get_full_name }}</p>
               <p class="card-header py-3">Всего постов: {{ posts_count }} </p>
 
-              {% if following %}
-                <a class="btn btn-lg btn-light"
-                  href="{% url 'posts:profile_unfollow' author %}" role="button">
-                  Отписаться
-                </a>
-              {% else %}
-                  <a class="btn btn-primary px-5"
-                    href="{% url 'posts:profile_follow' author %}" role="button">
-                    Подписаться
+              {% if user.is_authenticated %}              
+                {% if following %}
+                  <a class="btn btn-lg btn-light"
+                    href="{% url 'posts:profile_unfollow' author %}" role="button">
+                    Отписаться
                   </a>
+                {% else %}
+                    <a class="btn btn-primary px-5"
+                      href="{% url 'posts:profile_follow' author %}" role="button">
+                      Подписаться
+                    </a>
+                {% endif %}
               {% endif %}
+
             </div>
             
             <div class="col-md-3">
@@ -37,7 +40,7 @@
 
             <div class="col-md-3">
                 {% thumbnail author.image "200x200" crop="center" upscale=True as im %}
-                  <img class="border" src="{{ im.url }}" width="{{ im.width }}" height="{{ im.height }}">
+                  <img class="border shadow" src="{{ im.url }}" width="{{ im.width }}" height="{{ im.height }}">
                 {% endthumbnail %} 
             </div>
           </div>

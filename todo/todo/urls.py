@@ -30,36 +30,29 @@ SITEMAPS = {
 
 urlpatterns = [
     path('', views.index, name='index'),
-    path('admin/', include([
-        path('', admin.site.urls),
-        path('defender/', include('defender.urls')),
-    ])
+    path(
+        'admin/',
+        include([
+            path('', admin.site.urls),
+            path('defender/', include('defender.urls')),
+        ])
     ),
     path('ai/', include(('ai.urls', 'ai'), namespace='ai')),
     path('about/', include(('about.urls', 'about'), namespace='about')),
-    path('auth/', include([
-        path('', include(('users.urls', 'users'), namespace='users')),
-        path('', include('django.contrib.auth.urls')),
-    ])
+    path(
+        'auth/',
+        include([
+            path('', include(('users.urls', 'users'), namespace='users')),
+            path('', include('django.contrib.auth.urls')),
+        ])
     ),
     path('bot/', include(('telbot.urls', 'telbot'))),
     path('tasks/', include(('tasks.urls', 'tasks'), namespace='tasks')),
-    path(
-        'profile/<str:username>/',
-        accounts_profile,
-        name='accounts_profile'
-    ),
+    path('profile/<str:username>/', accounts_profile, name='accounts_profile'),
     path('posts/', include(('posts.urls', 'posts'), namespace='posts')),
-    path(
-        'sitemap.xml', sitemap, {'sitemaps': SITEMAPS},
-        name='django.contrib.sitemaps.views.sitemap'
-    ),
+    path('sitemap.xml', sitemap, {'sitemaps': SITEMAPS}, name='django.contrib.sitemaps.views.sitemap'),
     path('robots.txt', views.robots_txt),
-    path(
-        'ckeditor5/',
-        include('django_ckeditor_5.urls'),
-        name='ck_editor_5_upload_file'
-    ),
+    path('ckeditor5/', include('django_ckeditor_5.urls'), name='ck_editor_5_upload_file'),
     path('health/live', views.health, name='health'),
 ]
 
@@ -69,12 +62,8 @@ if settings.DEBUG:
     urlpatterns += [
         path('__debug__/', include(debug_toolbar.urls)),
     ]
-    urlpatterns += static(
-        settings.STATIC_URL, document_root=settings.STATIC_ROOT
-    )
-    urlpatterns += static(
-        settings.MEDIA_URL, document_root=settings.MEDIA_ROOT
-    )
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 
 handler403 = 'core.views.permission_denied'

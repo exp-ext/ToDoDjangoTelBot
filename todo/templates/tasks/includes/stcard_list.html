@@ -36,10 +36,10 @@
         {% endif %}     
 
         {% if note.user == request.user %}
-          <a class="btn btn-outline-secondary" href="{% url 'tasks:task_edit' note.pk %}" class="card-link">изменить</a>
-          <a class="btn btn-outline-dark" href="{% url 'tasks:task_delete' note.pk %}" class="card-link">удалить</a>
+          <a class="btn btn-outline-secondary shadow" href="{% url 'tasks:task_edit' note.pk %}" class="card-link">изменить</a>
+          <a class="btn btn-outline-dark shadow" href="{% url 'tasks:task_delete' note.pk %}" class="card-link">удалить</a>
         {% else %}
-          <a class="btn btn-outline-secondary" href="{% url 'posts:profile' note.user %}" class="card-link">Создано: {{ note.user.get_full_name }}</a>
+          <a class="btn btn-outline-secondary shadow" href="{% url 'posts:profile' note.user %}" class="card-link">Создано: {{ note.user.get_full_name }}</a>
         {% endif %} 
 
   </div>

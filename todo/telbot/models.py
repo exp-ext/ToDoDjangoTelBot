@@ -16,23 +16,22 @@ class AsyncManager(BaseManager.from_queryset(models.QuerySet)):
 
 
 class HistoryAI(Create):
-    user = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        related_name='history_ai'
-    )
-    question = models.TextField(
-        _('Вопрос')
-    )
-    question_tokens = models.PositiveIntegerField(
-        null=True
-    )
-    answer = models.TextField(
-        _('Ответ')
-    )
-    answer_tokens = models.PositiveIntegerField(
-        null=True
-    )
+    """
+    Модель для хранения истории вопросов и ответов AI.
+
+    ### Fields:
+    - user (`ForeignKey`): Пользователь, связанный с историей.
+    - question (`TextField`): Вопрос, заданный пользователем.
+    - question_tokens (`PositiveIntegerField`): Количество токенов в вопросе (может быть null).
+    - answer (`TextField`): Ответ, сгенерированный AI.
+    - answer_tokens (`PositiveIntegerField`): Количество токенов в ответе (может быть null).
+
+    """
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='history_ai')
+    question = models.TextField(_('Вопрос'))
+    question_tokens = models.PositiveIntegerField(null=True)
+    answer = models.TextField(_('Ответ'))
+    answer_tokens = models.PositiveIntegerField(null=True)
 
     class Meta:
         verbose_name = _('История запросов к ИИ')
@@ -40,7 +39,7 @@ class HistoryAI(Create):
         ordering = ('created_at',)
 
     def __str__(self):
-        return self.question
+        return f'User: {self.user}, Question: {self.question}'
 
     @sync_to_async
     def save(self, *args, **kwargs):
@@ -52,17 +51,18 @@ class HistoryAI(Create):
 
 
 class HistoryDALLE(Create):
-    user = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        related_name='history_dalle'
-    )
-    question = models.TextField(
-        _('Запрос')
-    )
-    answer = models.JSONField(
-        _('Ответ')
-    )
+    """
+    Модель для хранения истории запросов и ответов от DALL·E.
+
+    ### Fields:
+    - user (`ForeignKey`): Пользователь, связанный с историей.
+    - question (`TextField`): Запрос, заданный пользователем.
+    - answer (`JSONField`): Ответ, полученный от DALL·E.
+
+    """
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='history_dalle')
+    question = models.TextField(_('Запрос'))
+    answer = models.JSONField(_('Ответ'))
 
     class Meta:
         verbose_name = _('История запросов к Dalle')
@@ -70,22 +70,22 @@ class HistoryDALLE(Create):
         ordering = ('created_at',)
 
     def __str__(self):
-        return self.question
+        return f'User: {self.user}, Question: {self.question}'
 
 
 class HistoryWhisper(Create):
-    user = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        related_name='history_whisper'
-    )
-    file_id = models.CharField(
-        _('Id файла'),
-        max_length=128
-    )
-    transcription = models.TextField(
-        _('Аудиотранскрибция')
-    )
+    """
+    Модель для хранения истории аудиотранскрибции.
+
+    ### Fields:
+    - user (`ForeignKey`): Пользователь, связанный с историей.
+    - file_id (`CharField`): Идентификатор файла.
+    - transcription (`TextField`): Текстовая транскрибция аудио.
+
+    """
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='history_whisper')
+    file_id = models.CharField(_('Id файла'), max_length=128)
+    transcription = models.TextField(_('Аудиотранскрибция'))
 
     class Meta:
         verbose_name = _('История запросов к Whisper')
@@ -93,21 +93,22 @@ class HistoryWhisper(Create):
         ordering = ('created_at',)
 
     def __str__(self):
-        return self.transcription
+        return f'User: {self.user}, File ID: {self.file_id}'
 
 
 class HistoryTranslation(Create):
-    user = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        related_name='history_translation'
-    )
-    message = models.TextField(
-        _('Сообщение')
-    )
-    translation = models.TextField(
-        _('Перевод')
-    )
+    """
+    Модель для хранения истории переводов.
+
+    ### Fields:
+    - user (`ForeignKey`): Пользователь, связанный с историей переводов.
+    - message (`TextField`): Исходное сообщение.
+    - translation (`TextField`): Перевод сообщения.
+
+    """
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='history_translation')
+    message = models.TextField(_('Сообщение'))
+    translation = models.TextField(_('Перевод'))
 
     class Meta:
         verbose_name = _('История запросов для перевода')
@@ -115,4 +116,4 @@ class HistoryTranslation(Create):
         ordering = ('created_at',)
 
     def __str__(self):
-        return self.message
+        return f'User: {self.user}, Message: {self.message}'

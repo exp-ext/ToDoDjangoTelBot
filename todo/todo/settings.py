@@ -108,6 +108,8 @@ MIDDLEWARE = [
     'django_user_agents.middleware.UserAgentMiddleware',
     # debug_toolbar
     'debug_toolbar.middleware.DebugToolbarMiddleware',
+    # server error
+    'todo.middleware.ServerErrorHandlerMiddleware',
 ]
 
 ROOT_URLCONF = 'todo.urls'

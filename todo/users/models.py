@@ -7,6 +7,8 @@ from django.contrib.auth.models import AbstractUser
 from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.db import models
 from django.db.models import Q
+from django.db.models.signals import pre_save
+from django.dispatch import receiver
 from django.utils.translation import gettext_lazy as _
 from phonenumber_field.modelfields import PhoneNumberField
 from pytils.translit import slugify
@@ -14,6 +16,18 @@ from sorl.thumbnail import ImageField
 
 
 class Group(models.Model):
+    """
+    Модель для описания группы.
+
+    ### Fields:
+    - chat_id (`CharField`): ID группы (уникальное значение).
+    - title (`CharField`): Название группы.
+    - slug (`SlugField`): Уникальный идентификатор группы.
+    - image (`ImageField`): Логотип группы.
+    - description (`TextField`): Описание группы.
+    - link (`CharField`): Пригласительная ссылка для публичных групп.
+
+    """
     chat_id = models.CharField(_('ID группы'), max_length=50, unique=True)
     title = models.CharField(_('Название группы'), max_length=150)
     slug = models.SlugField(unique=True, db_index=True)
@@ -28,16 +42,25 @@ class Group(models.Model):
     def __str__(self):
         return f'~ {self.title}'
 
-    def save(self, *args, **kwargs):
-        slug = slugify(self.title)[:30]
-        if not slug or Group.objects.filter(Q(slug=slug), ~Q(chat_id=self.chat_id)).exists():
-            self.slug = ''.join(random.choices(string.ascii_lowercase, k=15))
-        else:
-            self.slug = slug
-        super().save(*args, **kwargs)
+
+@receiver(pre_save, sender=Group)
+def pre_save_group(sender, instance, *args, **kwargs):
+    """Генерируем уникальный slug на основе title, если не задан."""
+    if not instance.slug:
+        slug = slugify(instance.title)[:30]
+        if not slug or Group.objects.filter(Q(slug=slug), ~Q(chat_id=instance.chat_id)).exists():
+            instance.slug = ''.join(random.choices(string.ascii_lowercase, k=15))
 
 
 class GroupMailing(models.Model):
+    """
+    Модель для связи групп и типов рассылок.
+
+    ### Fields:
+    - group (`ForeignKey`): Ссылка на группу.
+    - mailing_type (`CharField`): Тип рассылки (FORISMATIC_QUOTES и др.).
+
+    """
     class GroupMailingTypes(models.TextChoices):
         FORISMATIC_QUOTES = 'forismatic_quotes', _('Цитаты')
 
@@ -46,6 +69,32 @@ class GroupMailing(models.Model):
 
 
 class User(AbstractUser):
+    """
+    Модель пользователя с расширенными полями.
+
+    ### Fields:
+    - tg_id (`IntegerField`): ID в Телеграмм.
+    - username (`CharField`): Имя пользователя.
+    - phone_number (`PhoneNumberField`): Номер телефона.
+    - email (`EmailField`): Email адрес.
+    - birthday (`DateField`): Дата рождения.
+    - image (`ImageField`): Аватар пользователя.
+    - favorite_group (`ForeignKey`): Любимая группа пользователя.
+    - role (`CharField`): Пользовательская роль (ADMIN или USER).
+    - validation_key (`CharField`): Ключ для валидации.
+    - validation_key_time (`DateTimeField`): Время валидации ключа.
+    - validation_message_id (`IntegerField`): ID валидационного сообщения.
+    - is_blocked_bot (`BooleanField`): Флаг заблокированного бота.
+    - created_at (`DateTimeField`): Дата создания.
+
+    ### Relationships:
+    - favorite_group (`Group`): Любимая группа пользователя.
+
+    ### Methods:
+    - is_admin: Проверяет, является ли пользователь администратором.
+    - get_full_name: Возвращает полное имя пользователя.
+
+    """
     class Role(models.TextChoices):
         ADMIN = 'admin', _('Администратор')
         USER = 'user', _('Пользователь')
@@ -105,6 +154,24 @@ class User(AbstractUser):
 
 
 class Location(Create):
+    """
+    Модель для хранения информации о местоположении пользователя.
+
+    ### Fields:
+    - user (`ForeignKey`): Ссылка на пользователя, к которому привязано местоположение.
+    - latitude (`FloatField`): Широта местоположения.
+    - longitude (`FloatField`): Долгота местоположения.
+    - timezone (`CharField`): Временная зона для местоположения.
+
+    ### Timezones:
+    - Временные зоны, доступные для выбора, включая все зоны, предоставленные библиотекой pytz.
+
+    ### Attributes:
+    - TIMEZONES (`tuple`): Кортеж с доступными временными зонами.
+
+    ### Default Timezone:
+    - По умолчанию, устанавливается временная зона 'Europe/Moscow'.
+    """
     TIMEZONES = tuple(zip(pytz.all_timezones, pytz.all_timezones))
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='locations')
     latitude = models.FloatField()
@@ -124,6 +191,18 @@ class Location(Create):
 
 
 class GroupConnections(models.Model):
+    """
+    Модель для хранения связей между пользователями и группами.
+
+    ### Fields:
+    - user (`ForeignKey`): Ссылка на пользователя, принадлежащего группе.
+    - group (`ForeignKey`): Ссылка на группу, к которой привязан пользователь.
+
+    ### Relationships:
+    - user (`User`): Связанный пользователь.
+    - group (`Group`): Связанная группа.
+
+    """
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='groups_connections')
     group = models.ForeignKey(Group, on_delete=models.CASCADE, related_name='groups_connections')
 

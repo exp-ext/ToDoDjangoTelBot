@@ -66,7 +66,7 @@
                   <p>&nbsp;</p>
                   <p>Она необходима, без неё бот не сможет разобратся где чьё напоминание. И кто в какой части мира живёт.</p>
                   <p>&nbsp;</p>
-                  <p><a class="btn btn-lg btn-primary" href="#registration" role="button">Зарегистрироваться</a></p>
+                  <p><a class="btn btn-lg btn-secondary shadow" href="#registration" role="button">Зарегистрироваться</a></p>
                 </div> 
               </div>
             </div>
@@ -88,7 +88,7 @@
                 <p>&nbsp;</p>
                 <p>Есть некоторые приятные фишки о которых тебе нужно знать.</p>
                 <p>&nbsp;</p>
-                <p><a class="btn btn-lg btn-primary" href="#main-functions" role="button">Подробнее</a></p>
+                <p><a class="btn btn-lg btn-secondary shadow" href="#main-functions" role="button">Подробнее</a></p>
               </div>
             </div>
           </div>
@@ -108,7 +108,7 @@
                 <p>&nbsp;</p>
                 <p>В основном меня создали для того чтобы Ты ничего в своей жизни не пропустил, но есть и ещё кое-что ♨️</p>
                 <p>&nbsp;</p>
-                <p><a class="btn btn-lg btn-primary" href="#reminders" role="button">Подробнее.</a></p>
+                <p><a class="btn btn-lg btn-secondary shadow" href="#reminders" role="button">Подробнее</a></p>
               </div>
             </div>
           </div>
@@ -137,21 +137,21 @@
 
       <div class="row">
         <div class="col-lg-4">          
-          <img class="img-fluid rounded-circle tenses_image _anim-items _anim-no-hide" width="140" height="140" src="{% static 'img/index/4_past.png' %}"></img>
+          <img class="img-fluid rounded-circle shadow tenses_image _anim-items _anim-no-hide" width="140" height="140" src="{% static 'img/index/4_past.png' %}"></img>
           <div class="tenses _anim-items">
             <h2>Прошлое</h2>
             <p>Часто возникала необходимость напоминания большому количеству людей о начале какого-либо мероприятия. Оттуда и родилась идея создать Telegram ToDo manager.</p>
           </div>
         </div><!-- /.col-lg-4 -->
         <div class="col-lg-4">          
-          <img class="img-fluid rounded-circle tenses_image _anim-items _anim-no-hide" width="140" height="140" src="{% static 'img/index/4_present.png' %}"></img>
+          <img class="img-fluid rounded-circle shadow tenses_image _anim-items _anim-no-hide" width="140" height="140" src="{% static 'img/index/4_present.png' %}"></img>
           <div class="tenses _anim-items">
             <h2>Настоящее</h2>
             <p>На данном этапе своей жизни система находится в разработке. Но уже сейчас есть множество функций, которые ждут своего пользователя.</p>
           </div>
         </div><!-- /.col-lg-4 -->
         <div class="col-lg-4">
-          <img class="img-fluid rounded-circle tenses_image _anim-items _anim-no-hide" width="140" height="140" src="{% static 'img/index/4_future.png' %}"></img>
+          <img class="img-fluid rounded-circle shadow tenses_image _anim-items _anim-no-hide" width="140" height="140" src="{% static 'img/index/4_future.png' %}"></img>
           <div class="tenses _anim-items">
             <h2>Будущее</h2>
             <p>В дальнейшем все обязательно должно перерасти во что-то более технологичное. Возможно будет соцсеть, а возможно что-то новое. Это пока останется секретом.</p>
@@ -169,7 +169,7 @@
 
         <div class="row featurette">
 
-          <div class="col-md-7">
+          <div class="col-md-7 d-flex align-items-center">
             <div class="text-blog _anim-items">
               <h2 class="featurette-Заголовок">Регистр<span class="text-muted">ация...</span></h2>
               <p class="lead">
@@ -184,7 +184,7 @@
 
           <div class="col-md-5">
             <div class="right-image-blog _anim-items">
-              <img class="bd-placeholder-img bd-placeholder-img-lg featurette-image img-fluid mx-auto" width="500" height="500"
+              <img class="bd-placeholder-img bd-placeholder-img-lg featurette-image img-fluid mx-auto shadow" width="500" height="500"
                 src="{% static 'img/index/register.webp' %}">
               </img>
             </div> 
@@ -198,7 +198,7 @@
       <hr class="featurette-divider">
 
       <div class="row featurette">
-        <div class="col-md-7 order-md-2">
+        <div class="col-md-7 order-md-2 d-flex align-items-center">
           <div class="text-blog _anim-items">
             <h2 class="featurette-Заголовок">Основные <span class="text-muted">функции.</span></h2>
             <div class="lead">
@@ -216,7 +216,7 @@
         </div>
         <div class="col-md-5 order-md-1">
           <div class="{% if is_mobile %} right-image-blog {% else %} image-blog {% endif %} _anim-items">
-            <img class="bd-placeholder-img bd-placeholder-img-lg featurette-image img-fluid mx-auto" width="500" height="500"
+            <img class="bd-placeholder-img bd-placeholder-img-lg featurette-image img-fluid mx-auto shadow" width="500" height="500"
               src="{% static 'img/index/menu.webp' %}">
             </img>
           </div>
@@ -228,7 +228,7 @@
       <hr class="featurette-divider">
 
       <div class="row featurette">
-        <div class="col-md-7">
+        <div class="col-md-7 d-flex align-items-center">
           <div class="text-blog _anim-items">
             <h2 class="featurette-Заголовок">Описание работы  <span class="text-muted">основного модуля.</span></h2>
             <h4 style="color: #080144;">- Кнопки меню:</h4>
@@ -270,7 +270,7 @@
         </div>
         <div class="col-md-5">
           <div class="right-image-blog _anim-items">
-            <img class="bd-placeholder-img bd-placeholder-img-lg featurette-image img-fluid mx-auto" width="500" height="500"
+            <img class="bd-placeholder-img bd-placeholder-img-lg featurette-image img-fluid mx-auto shadow" width="500" height="500"
               src="{% static 'img/index/message.webp' %}">
             </img>
           </div>
@@ -281,7 +281,7 @@
       <hr class="featurette-divider">
 
       <div class="row featurette">
-        <div class="col-md-7 order-md-2">
+        <div class="col-md-7 order-md-2 d-flex align-items-center">
           <div class="text-blog _anim-items">
             <h2 class="featurette-Заголовок">Управление <span class="text-muted">с сайта.</span></h2>
             <p class="lead">
@@ -291,7 +291,7 @@
         </div>
         <div class="col-md-5 order-md-1">
           <div class="{% if is_mobile %} right-image-blog {% else %} image-blog {% endif %} _anim-items">
-            <img class="bd-placeholder-img bd-placeholder-img-lg featurette-image img-fluid mx-auto" width="500" height="500"
+            <img class="bd-placeholder-img bd-placeholder-img-lg featurette-image img-fluid mx-auto shadow" width="500" height="500"
               src="{% static 'img/index/site_menu.webp' %}">
             </img>
           </div>
@@ -301,7 +301,7 @@
         <hr class="featurette-divider">
   
         <div class="row featurette">
-          <div class="col-md-7">
+          <div class="col-md-7 d-flex align-items-center">
             <div class="text-blog _anim-items">
               <h2 class="featurette-Заголовок">Заметки  <span class="text-muted"></span></h2>
               <p class="lead">
@@ -312,7 +312,7 @@
           </div>
           <div class="col-md-5">
             <div class="right-image-blog _anim-items">
-              <img class="bd-placeholder-img bd-placeholder-img-lg featurette-image img-fluid mx-auto" width="500" height="500"
+              <img class="bd-placeholder-img bd-placeholder-img-lg featurette-image img-fluid mx-auto shadow" width="500" height="500"
                 src="{% static 'img/index/notes.webp' %}">
               </img>
             </div>

@@ -18,7 +18,6 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.views import View
 from telbot.cleaner import delete_messages_by_time
-from telbot.loader import bot
 from telegram import Update
 from telegram.ext import CallbackContext
 from timezonefinder import TimezoneFinder
@@ -30,7 +29,6 @@ from .forms import ProfileForm
 from .models import Location
 
 User = get_user_model()
-ADMIN_ID = settings.TELEGRAM_ADMIN_ID
 
 
 class Authentication:
@@ -55,7 +53,7 @@ class Authentication:
                 'first_name': self.tg_user.first_name,
                 'last_name': self.tg_user.last_name,
                 'validation_key': validation_key,
-                'validation_key_time': timezone.now(),
+                'validation_key_time': timezone.now().astimezone(timezone.utc),
             }
         )
 
@@ -66,14 +64,6 @@ class Authentication:
 
         password = self.get_password(length=15)
         user.set_password(password)
-        user.save()
-
-        if not Location.objects.filter(user=user).exists():
-            Location.objects.create(
-                user=user,
-                latitude=59.799,
-                longitude=30.274
-            )
         reply_text = [
             'Вы успешно зарегистрированы в [проекте Your To-Do]'
             f'(https://www.{settings.DOMAIN}/).\n'
@@ -87,6 +77,12 @@ class Authentication:
         message_id = self.send_messages(reply_text)
         user.validation_message_id = message_id
         user.save()
+        if not user.locations.exists():
+            Location.objects.create(
+                user=user,
+                latitude=59.799,
+                longitude=30.274
+            )
         return JsonResponse({"ok": "User created."})
 
     def authorization(self) -> Dict[str, Any]:
@@ -109,7 +105,7 @@ class Authentication:
         user.first_name = self.tg_user.first_name
         user.last_name = self.tg_user.last_name
         user.validation_key = validation_key
-        user.validation_key_time = timezone.now()
+        user.validation_key_time = timezone.now().astimezone(timezone.utc)
         reply_text = [
             f'Для авторизации на [сайте](https://www.{settings.DOMAIN}) пройдите по ссылке'
             f'[https://www.{settings.DOMAIN}/auth/](https://www.{settings.DOMAIN}/auth/login/tg/{self.tg_user.id}/{validation_key}/)'
@@ -223,23 +219,20 @@ class LoginTgLinkView(View):
 
     def get(self, request: HttpRequest, user_id: str, key: str, *args: Any, **kwargs: Any) -> HttpRequest:
         """Авторизует пользователя по ссылке из Телеграм."""
-        try:
-            user_id = int(user_id)
-            key = str(key)
-            user = User.objects.filter(tg_id=user_id).first()
+        user_id = int(user_id)
+        key = str(key)
+        user = User.objects.filter(tg_id=user_id).first()
 
-            time_difference = timezone.now() - user.validation_key_time
-            if user.validation_key == key and time_difference < timedelta(minutes=self.valid_time):
-                login(request, user)
-                user.validation_key = None
-                user.save()
-                delete_messages_by_time.apply_async(
-                    args=[user_id, user.validation_message_id],
-                    countdown=5
-                )
-            return redirect('index')
-        except Exception as err:
-            bot.send_message(ADMIN_ID, f'Ошибка в модуле авторизации: {err}')
+        time_difference = timezone.now().astimezone(timezone.utc) - user.validation_key_time
+        if user.validation_key == key and time_difference < timedelta(minutes=self.valid_time):
+            login(request, user)
+            user.validation_key = None
+            user.save()
+            delete_messages_by_time.apply_async(
+                args=[user_id, user.validation_message_id],
+                countdown=5
+            )
+        return redirect('index')
 
 
 @login_required

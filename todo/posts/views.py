@@ -47,8 +47,7 @@ class SearchListView(ListView):
         post_list = (
             Post.objects
             .select_related('author', 'group')
-            .exclude(group__link=None)
-            .filter(text__icontains=self.keyword)
+            .filter(Q(group__isnull=True) | Q(group__link__isnull=False), text__icontains=self.keyword)
             .order_by('group')
         )
         if user.is_authenticated:
@@ -72,11 +71,7 @@ class IndexPostsListView(ListView):
 
     def get_queryset(self) -> QuerySet(Post):
         user = self.request.user
-        post_list = (
-            Post.objects
-            .exclude(Q(group=True) & Q(group__link__isnull=True))
-            .select_related('author', 'group')
-        )
+        post_list = Post.objects.filter(Q(group__isnull=True) | Q(group__link__isnull=False))
         if user.is_authenticated:
             post_list |= Post.objects.filter(
                 group__in=(

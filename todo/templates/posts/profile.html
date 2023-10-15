@@ -40,7 +40,7 @@
 
             <div class="col-md-3">
                 {% thumbnail author.image "200x200" crop="center" upscale=True as im %}
-                  <img class="border" src="{{ im.url }}" width="{{ im.width }}" height="{{ im.height }}">
+                  <img class="border shadow" src="{{ im.url }}" width="{{ im.width }}" height="{{ im.height }}">
                 {% endthumbnail %} 
             </div>
           </div>

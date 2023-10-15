@@ -13,6 +13,16 @@ class MyDateInput(forms.DateInput):
 
 
 class ProfileForm(forms.ModelForm):
+    phone_number = forms.CharField(
+        label='Номер телефона',
+        widget=forms.TextInput(
+            attrs={
+                'id': "phone_number",
+                'placeholder': "+7(___)___-__-__",
+            }
+        ),
+        required=False,
+    )
     email = forms.EmailField(
         widget=forms.TextInput(
             attrs={
@@ -32,9 +42,11 @@ class ProfileForm(forms.ModelForm):
         model = User
         fields = (
             'image',
+            'tg_id',
             'username',
             'first_name',
             'last_name',
+            'phone_number',
             'email',
             'favorite_group',
             'birthday',
@@ -45,22 +57,20 @@ class ProfileForm(forms.ModelForm):
             )
         }
         labels = {
-            'username': 'Your Telegram ID',
+            'username': 'Имя пользователя',
         }
 
     def __init__(self, *args, **kwargs):
         super(ProfileForm, self).__init__(*args, **kwargs)
         self.fields['username'].widget.attrs['readonly'] = True
-        self.fields['username'].help_text = (
-            'Ваш login. Получить его можно после регистрации в чате с ботом.'
-        )
+        self.fields['tg_id'].widget.attrs['readonly'] = True
         user = kwargs.get('instance')
         self.fields['favorite_group'] = forms.ModelChoiceField(
             queryset=user.groups_connections.all()
         )
         self.fields['favorite_group'].required = False
         self.fields['favorite_group'].label = (
-            'Группа которая будет назначена основной для аккаунта.'
+            'Группа по умолчанию для действий без выбора группы'
         )
 
     def clean_favorite_group(self):

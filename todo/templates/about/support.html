@@ -12,50 +12,73 @@
 
 {% block content %}
 
-  <div class="container">
-    <div class="wrapper">
+  <div class="container p-5">
 
-      <div class="row align-items-start">            
-        <div class="col-md-5">
-          <img class="rounded-circle" width="140" height="140" src="{% static 'img/about/logotype.png' %}"></img>
+    <div class="card bg-light shadow {% if is_mobile == False %} w-50 {% endif %} mx-auto my-4">
+      <!-- Хедер карточки -->
+      <div class="card-title text-center my-3">
+        <div class="row align-items-start justify-content-center">
+          <div class="col-md-5">
+            <img class="rounded-circle" width="140" height="140" src="{% static 'img/about/logotype.png' %}" alt="Logo">
+          </div>
         </div>
-      </div>          
+      </div>
 
-      <div class="ico-wrap"> <i class="fa fa-map-marker ico-contact"></i></div>
+      <!-- Тело карточки -->
+      <div class="card-body text-center">
 
-      <div class="descript-wrapper">
-        <h4 class="aio-icon-title">Наш фактический адрес:</h4>
-        <div class="aio-icon-description">
+        <div class="row justify-content-center">
+          <div class="ico-wrap">
+            <i class="fa fa-map-marker ico-contact"></i>
+          </div>
+        </div>
+
+        <div class="row my-3">
+          <h4 class="aio-icon-title">Наш фактический адрес:</h4>
+          <div class="aio-icon-description">
             197227, г. Санкт-Петербург, пр-т. Сизова,
             <br>дом 12, корпус 1
+          </div>
         </div>
-      </div>
-      
-      <span class="clearfix"></span>
-      
-      <div class="ico-wrap"> <i class="fa fa-clock-o ico-contact"></i></div>
-
-      <div class="descript-wrapper">
-        <h4 class="aio-icon-title">Время работы техподдержки:</h4>
-        <div class="aio-icon-description">
-          пн.-сб. с 9:00 до 20:00.
-          <br>вс — выходной</div>
-      </div>
-
+    
         <span class="clearfix"></span>
-      
-        <div class="ico-wrap">
-            <i class="fa fa-phone ico-contact"></i>
+
+        <div class="row justify-content-center">    
+          <div class="ico-wrap">
+            <i class="fa fa-clock-o ico-contact"></i>
+          </div>
         </div>
-        <div class="descript-wrapper">
+
+        <div class="row my-3">
+          <h4 class="aio-icon-title">Время работы техподдержки:</h4>
+          <div class="aio-icon-description">
+            пн.-сб. с 9:00 до 20:00.
+            <br>вс — выходной
+          </div>
+        </div>
+    
+        <span class="clearfix"></span>
+    
+        <div class="row justify-content-center"> 
+          <div class="ico-wrap">
+            <i class="fa fa-phone ico-contact"></i>
+          </div>
+        </div>
+
+        <div class="row my-3">
           <h4 class="aio-icon-title">Телефон для связи:</h4>
           <div class="aio-icon-description">
             +7 (981) 860-56-36<br>
-            <a href="https://t.me/Borokin" target="_blank" rel="noopener"><img src="https://img.shields.io/badge/Telegram-Messaging-blue" /></a>
+            <a href="https://t.me/Borokin" target="_blank" rel="noopener">
+              <img src="https://img.shields.io/badge/Telegram-Messaging-blue" alt="Telegram Link">
+            </a>
           </div>
-        </div> 
-      </br></br>
+        </div>
+
+      </div>
+
     </div>
+
   </div>
 
 {% endblock %} 

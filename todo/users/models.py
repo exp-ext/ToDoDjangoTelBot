@@ -99,7 +99,7 @@ class User(AbstractUser):
         ADMIN = 'admin', _('Администратор')
         USER = 'user', _('Пользователь')
 
-    tg_id = models.IntegerField(_('id в Телеграмм'), null=True, blank=True)
+    tg_id = models.IntegerField(_('Telegram ID'), null=True, blank=True)
     username_validator = UnicodeUsernameValidator()
     username = models.CharField(
         _('Имя пользователя'),

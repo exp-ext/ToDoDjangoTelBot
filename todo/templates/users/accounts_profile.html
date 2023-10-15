@@ -11,64 +11,76 @@
 
 {% block content %}
 
-  <div class="container py-5"> 
+  <div class="container py-3 mt-4 ml-4">    
 
-    <div class="card-body">
-      
-      <form method="post"
-      enctype="multipart/form-data"
-      action="{% url 'accounts_profile' user.username %}"
-      >
-          
-        {% csrf_token %}
+        <form method="post" enctype="multipart/form-data" action="{% url 'accounts_profile' user.username %}">          
+          {% csrf_token %}
 
-        {% for field in form %}
-          <div class="form-group row my-3 p-3">
+          <div class="row py-4 align-items-stretch">
 
-            <label for="{{ field.text.id_for_label }}">
-              {{ field.label }}
-              {% if field.field.required %}
-                <span class="reqired text-danger">*</span>
-              {% endif %}
+            <!-- Profile picture card-->
+            <div class="col-xl-4">                         
+              <div class="card bg-light shadow">
+                <div class="form-group row my-3 p-3"> 
 
-              {% if field.name == 'image' %} 
-                <div class="row">
-                  <div class="col-md-2">
-                    {% thumbnail user.image "200x200" crop="center" upscale=True as im %}
-                      <img src="{{ im.url }}" width="{{ im.width }}" height="{{ im.height }}">
-                    {% endthumbnail %}
-                  </div>                
-                  <div class="mx-5 col-xl-6">
-                    {{ field|addclass:"form-control" }}
+                  <div class="card-body text-center">
+                      {% thumbnail user.image "300x300" crop="center" upscale=True as im %}
+                        <img class="border shadow" src="{{ im.url }}" width="{{ im.width }}" height="{{ im.height }}">
+                      {% endthumbnail %}                      
                   </div>
-                </div>
-              {% else %}
-                <div class="col-md-9">                                   
-                  {{ field|addclass:"form-control" }}
-                </div>
-              {% endif %}                 
+                  <div class="btn btn-light">
+                    {{ form.image|addclass:"form-control form-control-sm" }}
+                  </div>
 
-              {% if field.help_text %}
-              <small id="{{ field.text.id_for_label }}-help" class="form-text text-muted"> 
-                {{ field.help_text|safe }}
-              </small>
-              {% endif %} 
-              
-              <div class="form-error">{{ field.errors }}</div>                   
+                  <div class="form-error">{{ form.image.errors }}</div>
 
-            </label>
+                </div>
+              </div>
+            </div>
+
+            <!-- Profile imput fields-->
+            <div class="col-xl-8">
+              <div class="card bg-light mb-4 shadow">
+                <div class="card-body">
+
+                    {% for field in form %}
+
+                      <div class="form-group row my-2 p-2">
+                          {% if not field.name == 'image' %}
+
+                          <label for="{{ field.text.id_for_label }}">
+                            {{ field.label }}
+                            {% if field.field.required %}
+                              <span class="reqired text-danger">*</span>
+                            {% endif %}
+                                  
+                              {{ field|addclass:"form-control" }}
+
+                          {% endif %}                 
+
+                          <div class="form-error">{{ field.errors }}</div>                   
+
+                        </label>
+
+                      </div>
+
+                    {% endfor %}
+                </div>
+              </div>
+
+            </div>
+
+            <div class="col-md-6 offset-md-4 p-2">
+              <button type="submit" class="btn btn-secondary shadow">
+                Сохранить данные
+              </button>
+            </div>
 
           </div>
-        {% endfor %}
-
-        <div class="col-md-6 offset-md-4">
-          <button type="submit" class="btn btn-primary">
-            Сохранить данные
-          </button>
-        </div>
-
-      </form>
-    </div>
+        </form>
   </div>
-  <br>
 {% endblock content %}
+
+{% block javascript %}
+  <script  src="{% static 'js/check-phone.js' %}"></script>
+{% endblock %}

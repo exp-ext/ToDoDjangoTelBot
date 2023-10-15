@@ -35,7 +35,7 @@
             <li class="list-group-item bg-secondary">
               <p>Дата публикации:<br/>~ {{ post.created_at|date:"d E Y" }}</p>
             </li>        
-            {% if post.group %}
+            {% if post.group and post.group.link %}
                 <li class="list-group-item  bg-secondary">
                   <p>Группа:<br/>{{ post.group }}</p>
                   <a type="button" class="button fast white" href="{% url 'posts:group_list' post.group.slug%}">

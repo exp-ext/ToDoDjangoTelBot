@@ -77,6 +77,10 @@ def check_registration(update: Update, context: CallbackContext, answers: dict) 
             chat_id=chat.id
         )
         any_changes = False
+        if group.link != chat.link:
+            group.link = chat.link
+            group.save()
+
         if created or group.title != chat.title:
             group.title = chat.title
             group.save()

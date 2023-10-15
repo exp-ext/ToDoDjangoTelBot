@@ -26,7 +26,7 @@ function mask(e) {
     setCursorPosition(i, this)
 }
     window.addEventListener("DOMContentLoaded", function() {
-        var input = document.querySelector("#online_phone");
+        var input = document.querySelector("#phone_number");
         input.addEventListener("input", mask, false);
         input.focus();
         setCursorPosition(3, input);

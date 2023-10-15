@@ -10,7 +10,7 @@
           <br>
         </div>
       </div>
-      
+
       <div class="col-md-5">
         <h6 class="card-subtitle text-muted">
           <ul>
@@ -45,10 +45,10 @@
       <div class="col-md-5">      
         <div class="btn-group" role="group" aria-label="Transition management">      
           <a class="btn btn-outline-secondary btn-sm" href="{% url 'posts:post_detail' post.pk %}">подробная информация </a>
-          {% if post.group and group != post.group %}
+          {% if post.group and group != post.group and post.group.link %}
             <a class="btn btn-outline-secondary btn-sm" href="{% url 'posts:group_list' post.group.slug %}">все записи группы</a>
           {% endif %}
-        </div>        
+        </div>
       </div>
       <div class="col-md-5 py-2">
           {% if post.group and group != post.group and post.group.link %}

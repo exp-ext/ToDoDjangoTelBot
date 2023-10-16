@@ -5,7 +5,9 @@
 
 <head>
 
-  {% include 'includes/yacounter.html' %}  
+  {% include 'includes/yacounter.html' %}
+  {% include 'includes/yaheadadvertising.html' %}
+
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
  
@@ -73,7 +75,7 @@
 
   <script src="{% static 'django_ckeditor_5/dist/bundle.js' %}"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
-  <script>hljs.initHighlightingOnLoad();</script>
+  <script>hljs.highlightAll();</script>
 
   <script src="{% static 'js/chatpopup.js' %}"></script>
 

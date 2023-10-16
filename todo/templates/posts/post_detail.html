@@ -19,6 +19,7 @@
   <meta property="og:image:alt" content="{{ post.title }}" />
 
   <link rel="stylesheet" href="{% static 'css/hover-effects.css' %}">
+  <link rel="stylesheet" href="{% static 'css/moving_units.css' %}">
   
 {% endblock %}
 
@@ -27,11 +28,11 @@
 {% block content %}
 
   <div class="container-fluid py-5">
-    <div class="row py-5">
+    <div class="row py-3">
 
       <aside class="col-lg-2 col-sm-12">
         <div class="hover-effects">
-          <ul class="list-group">
+          <ul class="list-group shadow group-unit _anim-items _anim-no-hide">
             <li class="list-group-item bg-secondary">
               <p>Дата публикации:<br/>~ {{ post.created_at|date:"d E Y" }}</p>
             </li>        
@@ -68,10 +69,11 @@
               {% endif %}
             </li>
           </ul>
-        </div> 
+        </div>
+        {% include 'includes/yabodyadvertising.html' %}
       </aside>
 
-      <article class="col-lg-8 col-sm-12 bg-light rounded">            
+      <article class="col-lg-8 col-sm-12 bg-light rounded shadow">            
         <div class="lobster"> 
           <h1>{{ post.title }}</h1>
         </div>      
@@ -107,4 +109,5 @@
         element.appendChild( anchor );
     } );
   </script>
+  <script src="{% static 'js/carousel.js' %}"></script>
 {% endblock %}

@@ -21,3 +21,15 @@
   opacity: 1;
   transition: all 0.8s ease 0s;
 }
+
+.arising-unit {
+  transform: scale(0);
+  opacity: 0;
+  transition: all 0.8s ease 0s;
+}
+
+.arising-unit._active {
+  transform: scale(1);
+  opacity: 1;
+  transition: all 0.8s ease 0s;
+}

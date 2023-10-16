@@ -12,10 +12,10 @@
 
 {% block headline %}
   <div class="container py-5">
-    <div class="py-3">
-      <div class="card shadow bg-secondary rounded moving-unit _anim-items">
+
+      <div class="card mt-3 shadow bg-secondary rounded {% if is_mobile %} group-unit {% else %} moving-unit {% endif %} _anim-items _anim-no-hide">
         <div class="card-body">
-          <div class="row">             
+          <div class="row">
             <div class="col-md-5">
               <h2 class="card-header">Все посты пользователя</h2>
               <p class="card-header">{{ author.get_full_name }}</p>
@@ -23,12 +23,12 @@
 
               {% if user.is_authenticated %}              
                 {% if following %}
-                  <a class="btn btn-lg btn-light"
+                  <a class="btn btn-lg btn-light shadow"
                     href="{% url 'posts:profile_unfollow' author %}" role="button">
                     Отписаться
                   </a>
                 {% else %}
-                    <a class="btn btn-primary px-5 shadow"
+                    <a class="btn btn-primary shadow"
                       href="{% url 'posts:profile_follow' author %}" role="button">
                       Подписаться
                     </a>
@@ -48,7 +48,7 @@
           </div>
         </div>
       </div>
-    </div>
+
   </div>
 {% endblock %}
 
@@ -66,8 +66,4 @@
   {% include 'includes/yaribbonadvertising.html' %}
 </div>
 <br>
-{% endblock %}
-
-{% block javascript %}
-  <script src="{% static 'js/carousel.js' %}"></script>
 {% endblock %}

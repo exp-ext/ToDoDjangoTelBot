@@ -5,7 +5,6 @@
 {% block head %}
   <meta name="description" content="Ваша группа, Ваши Заметки - Организуйте общие мысли с легкостью с Your ToDo!"/>
   <meta name="keywords" content="Telegram, заметки, организация заметок, Telegram инструмент, группа">
-  <link rel="stylesheet" href="{% static 'css/toggle-radio.css' %}">
   <link rel="stylesheet" href="{% static 'css/moving_units.css' %}">
 {% endblock %}
 
@@ -14,9 +13,7 @@
 {% block headline %} 
 
   <div class="container py-5">
-    <div class="py-3">
-
-      <div class="card shadow rounded text-center bg-secondary moving-unit _anim-items">
+      <div class="card mt-3 shadow rounded text-center bg-secondary {% if is_mobile %} group-unit {% else %} moving-unit {% endif %} _anim-items _anim-no-hide">
 
         <div class="card-body">
           <h1 class="card-header">{{ group.title }}</h1>
@@ -55,8 +52,6 @@
         {% endif %}
 
       </div>
-
-    </div>
   </div>
   
 {% endblock %}
@@ -80,8 +75,4 @@
 </div>
 <br>
 
-{% endblock %}
-
-{% block javascript %}
-  <script src="{% static 'js/carousel.js' %}"></script>
 {% endblock %}

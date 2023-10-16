@@ -12,6 +12,7 @@ from django.views import View
 from django.views.generic import CreateView, ListView, UpdateView
 from django.views.generic.detail import DetailView
 from django.views.generic.edit import FormView
+from django_user_agents.utils import get_user_agent
 from users.models import Group, GroupMailing
 
 from .forms import CommentForm, GroupMailingForm, PostForm
@@ -121,11 +122,13 @@ class GroupPostsListView(ListView):
 
     def get_context_data(self, **kwargs: Any) -> Dict[str, Any]:
         context = super().get_context_data(**kwargs)
+        user_agent = get_user_agent(self.request)
         context |= {
             'group': self.group,
             'is_admin': self.is_admin,
             'form': self.form,
             'forism_check': self.forism_check,
+            'is_mobile': user_agent.is_mobile,
         }
         return context
 
@@ -169,11 +172,13 @@ class ProfileDetailView(DetailView):
         context = super().get_context_data(**kwargs)
         post_list = self.get_user_posts().select_related('author', 'group')
         page_obj = paginator_handler(self.request, post_list, PAGINATE_BY)
+        user_agent = get_user_agent(self.request)
         user = self.request.user
         context |= {
             'page_obj': page_obj,
             'posts_count': page_obj.paginator.count,
-            'following': False if user.is_anonymous else user.follower.filter(author=self.object).exists()
+            'following': False if user.is_anonymous else user.follower.filter(author=self.object).exists(),
+            'is_mobile': user_agent.is_mobile,
         }
         return context
 

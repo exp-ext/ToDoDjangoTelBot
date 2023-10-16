@@ -20,7 +20,7 @@
 
   <link rel="stylesheet" href="{% static 'css/hover-effects.css' %}">
   <link rel="stylesheet" href="{% static 'css/moving_units.css' %}">
-  
+
 {% endblock %}
 
 {% block title %} Запись: {{ post }} {% endblock %}
@@ -35,7 +35,7 @@
           <ul class="list-group shadow group-unit _anim-items _anim-no-hide">
             <li class="list-group-item bg-secondary">
               <p>Дата публикации:<br/>~ {{ post.created_at|date:"d E Y" }}</p>
-            </li>        
+            </li>
             {% if post.group and post.group.link %}
                 <li class="list-group-item  bg-secondary">
                   <p>Группа:<br/>{{ post.group }}</p>
@@ -70,8 +70,8 @@
             </li>
           </ul>
         </div>
-        <br>
-        <div class="card p-1 bg-light rounded shadow"> 
+
+        <div class="card p-1 bg-light rounded shadow group-unit _anim-items _anim-no-hide my-2"> 
           {% include 'includes/yabodyadvertising.html' %}
         </div>
       </aside>
@@ -112,5 +112,4 @@
         element.appendChild( anchor );
     } );
   </script>
-  <script src="{% static 'js/carousel.js' %}"></script>
 {% endblock %}

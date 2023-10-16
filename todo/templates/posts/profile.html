@@ -53,9 +53,7 @@
 {% endblock %}
 
 {% block content %}
-
   <div class="container">
-
     <div class="ck ck-content">
       {% for post in page_obj %}
         {% include 'posts/includes/post_list.html' %}
@@ -63,7 +61,11 @@
     </div>
     {% include 'posts/includes/paginator.html' %}
   </div>
-</br>
+
+<div class="container shadow my-3 p-1 rounded">
+  {% include 'includes/yaribbonadvertising.html' %}
+</div>
+<br>
 {% endblock %}
 
 {% block javascript %}

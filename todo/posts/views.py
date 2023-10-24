@@ -1,5 +1,6 @@
 from typing import Any, Dict
 
+from advertising.models import PartnerBanner
 from core.views import get_status_in_group, linkages_check, paginator_handler
 from django.contrib.auth import get_user_model
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -242,8 +243,7 @@ class PostUpdateView(LoginRequiredMixin, UpdateView):
         initial['is_edit'] = True
         return initial
 
-    def get(self, request: HttpRequest, *args: Any, **kwargs: Any
-            ) -> HttpRequest:
+    def get(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpRequest:
         linkages_check(request.user)
         post = self.get_object()
         if post.author != request.user:
@@ -273,9 +273,16 @@ class PostDetailView(DetailView):
     def get_context_data(self, **kwargs: Any) -> Dict[str, Any]:
         context = super().get_context_data(**kwargs)
         post = self.get_object()
-        context['authors_posts_count'] = post.author.posts.count()
-        context['comments'] = post.comments.all()
-        context['form'] = CommentForm(self.request.POST or None)
+        user_agent = get_user_agent(self.request)
+        all_banners = PartnerBanner.objects.all()
+        random_banner = all_banners.order_by('?').first()
+        context |= {
+            'authors_posts_count': post.author.posts.count(),
+            'comments': post.comments.all(),
+            'form': CommentForm(self.request.POST or None),
+            'is_mobile': user_agent.is_mobile,
+            'advertising': random_banner if random_banner else False
+        }
         return context
 
 

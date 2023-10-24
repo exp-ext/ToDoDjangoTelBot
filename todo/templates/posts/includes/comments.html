@@ -1,7 +1,7 @@
 {% load user_filters %}
 
 {% if user.is_authenticated %}
-  <div class="card my-4">
+  <div class="card my-4 rounded shadow">
     <h5 class="card-header">Добавить комментарий:</h5>
     <div class="card-body">
       <form method="post" action="{% url 'posts:add_comment' post.id %}">
@@ -9,7 +9,9 @@
         <div class="form-group mb-2">
           {{ form.text|addclass:"form-control" }}
         </div>
-        <button type="submit" class="btn btn-primary">Отправить</button>
+        <div class="d-flex flex-row-reverse">
+          <button type="submit" class="btn btn-secondary shadow">Отправить</button>
+        </div>
       </form>
     </div>
   </div>

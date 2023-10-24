@@ -96,9 +96,10 @@ def ask_registration(update: Update, context: CallbackContext) -> None:
     if chat.type == 'private':
         button_list = [
             KeyboardButton('меню геофункций 📡', request_location=True),
+            KeyboardButton('авторизация на сайте 👩‍💻', request_contact=True),
         ]
         reply_markup = ReplyKeyboardMarkup(
-            build_menu(button_list, n_cols=1),
+            build_menu(button_list, n_cols=2),
             resize_keyboard=True
         )
         menu_text = (

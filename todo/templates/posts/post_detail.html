@@ -18,6 +18,9 @@
   {% endthumbnail %}
   <meta property="og:image:alt" content="{{ post.title }}" />
 
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:image" content="https://www.yourtodo.ru{{ im.url }}">
+
   <link rel="stylesheet" href="{% static 'css/hover-effects.css' %}">
   <link rel="stylesheet" href="{% static 'css/moving_units.css' %}">
 
@@ -74,6 +77,11 @@
         <div class="card p-1 bg-light rounded shadow group-unit _anim-items _anim-no-hide my-2"> 
           {% include 'includes/yabodyadvertising.html' %}
         </div>
+
+        {% if not is_mobile %}
+          {% include 'posts/includes/advertising.html' %}
+        {% endif %}
+
       </aside>
 
       <article class="col-lg-8 col-sm-12 bg-light rounded shadow">            
@@ -88,7 +96,13 @@
             {{ post.text|safe }}
           </div> 
         </p>
+
+        {% if is_mobile %}
+          {% include 'posts/includes/advertising.html' %}
+        {% endif %}
+
         {% include 'posts/includes/comments.html' %}
+
       </article>   
 
     </div>

@@ -21,22 +21,22 @@ class Post(Create):
     - image (`ImageField`): Картинка, прикрепленная к посту.
 
     """
-    title = models.CharField(_('Заголовок поста'), max_length=100, blank=False, null=False,)
-    text = CKEditor5Field(_('Текст поста'), blank=True, config_name='extends')
-    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='posts', verbose_name=_('Автор'))
+    title = models.CharField(_('заголовок поста'), max_length=100)
+    text = CKEditor5Field(_('текст поста'), blank=True, config_name='extends')
+    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='posts', verbose_name=_('автор'))
     group = models.ForeignKey(
         Group,
         blank=True,
         null=True,
         on_delete=models.SET_NULL,
         related_name='posts',
-        verbose_name=_('Группа, к которой будет относиться пост')
+        verbose_name=_('группа, к которой будет относиться пост')
     )
-    image = ImageField(_('Картинка'), upload_to='posts/', blank=True)
+    image = ImageField(_('картинка'), upload_to='posts/', blank=True)
 
     class Meta:
-        verbose_name = _('Пост')
-        verbose_name_plural = _('Посты')
+        verbose_name = _('пост')
+        verbose_name_plural = _('посты')
         ordering = ('-created_at',)
 
     def __str__(self) -> str:
@@ -57,11 +57,11 @@ class Comment(Create):
         Post,
         on_delete=models.CASCADE,
         related_name='comments',
-        verbose_name=_('Комментарии'),
-        help_text=_('Комментарии поста')
+        verbose_name=_('комментарии'),
+        help_text=_('комментарии поста')
     )
     author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='comments', verbose_name=_('Автор'))
-    text = models.TextField(_('Текст комментария'), help_text=_('Введите текст комментария'))
+    text = models.TextField(_('текст комментария'), help_text=_('введите текст комментария'))
 
     def __str__(self) -> str:
         return self.text[:15]

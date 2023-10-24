@@ -1,19 +1,19 @@
 import secrets
 import string
+import traceback
 import uuid
 from datetime import timedelta
-from typing import Any, Dict
+from typing import Any, Dict, OrderedDict
 
 import requests
 from core.serializers import ModelDataSerializer
 from django.conf import settings
-from django.contrib.auth import authenticate, get_user_model, login
+from django.contrib.auth import get_user_model, login
 from django.contrib.auth.decorators import login_required
 from django.core.files import File
 from django.core.files.temp import NamedTemporaryFile
 from django.db.models.query import QuerySet
-from django.http import (HttpRequest, HttpResponse, HttpResponseRedirect,
-                         JsonResponse)
+from django.http import HttpRequest, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.views import View
@@ -29,19 +29,45 @@ from .forms import ProfileForm
 from .models import Location
 
 User = get_user_model()
+ADMIN_ID = settings.TELEGRAM_ADMIN_ID
 
 
 class Authentication:
+    """Класс для аутентификации пользователей и регистрации новых пользователей в системе.
+
+    ### Attributes:
+    - valid_time (`int`): Время в минутах, в течение которого действует ссылка для аутентификации.
+
+    ### Methods:
+    - __init__(self, update: Update, context: CallbackContext): Инициализация объекта класса.
+    - register(self) -> Dict[str, Any]: Регистрация нового пользователя.
+    - authorization(self) -> Dict[str, Any]: Аутентификация пользователя.
+    - send_messages(self, reply_text): Отправка сообщений пользователю.
+    - check_chat_type(self): Проверка типа чата пользователя.
+
+    """
     valid_time: int = 5
 
     def __init__(self, update: Update, context: CallbackContext):
+        """Инициализация объекта класса.
+
+        ### Args:
+            update (`Update`): Объект, представляющий Telegram Update.
+            context (`CallbackContext`): Объект, представляющий контекст Callback Query.
+
+        """
         self.update = update
         self.context = context
         self.chat = update.effective_chat
         self.tg_user = update.effective_user
 
-    def register(self, ) -> Dict[str, Any]:
-        """Регистрация или обновление пользователя."""
+    def register(self) -> Dict[str, Any]:
+        """Регистрация нового пользователя в системе.
+
+        ### Returns:
+        - Dict[str, Any]: Результат регистрации пользователя.
+
+        """
         if self.check_chat_type():
             return JsonResponse({"error": "Chat type not private."})
 
@@ -86,7 +112,12 @@ class Authentication:
         return JsonResponse({"ok": "User created."})
 
     def authorization(self) -> Dict[str, Any]:
-        """Получение ссылки для авторизации на сайте."""
+        """Аутентификация пользователя.
+
+        ### Returns:
+        - Dict[str, Any]: Результат аутентификации пользователя.
+
+        """
         if self.check_chat_type():
             return JsonResponse({"error": "Chat type not private."})
 
@@ -104,6 +135,16 @@ class Authentication:
 
         user.first_name = self.tg_user.first_name
         user.last_name = self.tg_user.last_name
+
+        if User.objects.filter(phone_number=self.update.message.contact.phone_number).exists():
+            reply_text = (
+                'Пользователь с таким номером телефона, уже существует.'
+                'Напишите пожалуйста об этом инциденте разработчику - https://t.me/Borokin'
+            )
+            self.context.bot.send_message(self.chat.id, reply_text)
+        else:
+            user.phone_number = self.update.message.contact.phone_number
+
         user.validation_key = validation_key
         user.validation_key_time = timezone.now().astimezone(timezone.utc)
         reply_text = [
@@ -112,11 +153,33 @@ class Authentication:
         ]
         message_id = self.send_messages(reply_text)
         user.validation_message_id = message_id
-        user.save()
+        try:
+            user.save()
+        except Exception as err:
+            delete_messages_by_time.apply_async(
+                args=[self.chat.id, message_id],
+                countdown=0
+            )
+
+            reply_text = 'Произошла непредвиденная ошибка. Разработчики уже занимаются её устранением 💡.'
+            self.context.bot.send_message(self.chat.id, reply_text)
+
+            traceback_str = traceback.format_exc()
+            error_message = f'Ошибка авторизации:\n{err}\n{traceback_str[-2000:]}'
+            self.context.bot.send_message(ADMIN_ID, error_message)
+
         return JsonResponse({"ok": "Link sent."})
 
-    def send_messages(self, reply_text):
-        """Отправка сообщений в чат"""
+    def send_messages(self, reply_text) -> None:
+        """Отправка сообщений пользователю.
+
+        ### Args:
+        - reply_text (`List`): Список текстовых сообщений для отправки.
+
+        ### Returns:
+        - int: Идентификатор последнего отправленного сообщения.
+
+        """
         for text in reply_text:
             message_id = self.update.message.reply_text(
                 text=text,
@@ -130,7 +193,12 @@ class Authentication:
         return message_id
 
     def check_chat_type(self):
-        """Проверка типа чата."""
+        """Проверка типа чата пользователя.
+
+        ### Returns:
+            bool: True, если тип чата не является "private", иначе False.
+
+        """
         if self.chat.type != 'private':
             message_id = self.context.bot.send_message(
                 self.chat.id,
@@ -147,16 +215,28 @@ class Authentication:
     @staticmethod
     def get_password(length):
         """
-        Password Generator:
-        length - password length
+        Генератор паролей.
+
+        ### Args:
+        - length (`int`): Длина пароля.
+
+        ### Returns:
+        - `str`: Сгенерированный пароль.
+
         """
         character_set = string.digits + string.ascii_letters
         return ''.join(secrets.choice(character_set) for _ in range(length))
 
     @staticmethod
     @app.task(ignore_result=True)
-    def add_profile_picture(tg_user_id, user):
-        """Добавляет фотографию профиля юзера."""
+    def add_profile_picture(tg_user_id: int, user: OrderedDict):
+        """Добавляет фотографию профиля юзера.
+
+        ### Args:
+        - tg_user_id (`int`): Идентификатор пользователя в Telegram.
+        - user (`OrderedDict`): Сериализованный объект пользователя.
+
+        """
         user = ModelDataSerializer.deserialize(user)
         url = f'https://api.telegram.org/bot{settings.TELEGRAM_TOKEN}/getUserProfilePhotos'
         params = {'user_id': tg_user_id}
@@ -184,17 +264,28 @@ class Authentication:
 
 
 class LoginTgView(View):
+    """Класс для обработки аутентификации пользователя через Telegram виджет.
 
-    def post(self,
-             request: HttpRequest,
-             *args: Any, **kwargs: Any
-             ) -> HttpRequest:
+    ### Methods:
+        post(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpRequest: Обработка POST-запроса для аутентификации.
 
+    """
+
+    def post(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpRequest:
+        """Обработка POST-запроса для аутентификации.
+
+        ### Args:
+        - request (`HttpRequest`): HTTP-запрос.
+        - *args: Переменные позиционных аргументов.
+        - **kwargs: Переменные ключевых аргументов.
+
+        ### Returns:
+        - HttpRequest: HTTP-ответ.
+
+        """
         data = request.GET
         if not HashCheck(data).check_hash():
-            return render(request, 'users/error.html', {
-                'msg': 'Bad hash!'
-            })
+            return render(request, 'users/error.html', {'msg': 'Bad hash!'})
 
         photo_url = data.pop('photo_url')
         response = requests.GET.get(photo_url)
@@ -215,10 +306,31 @@ class LoginTgView(View):
 
 
 class LoginTgLinkView(View):
+    """Класс для авторизации пользователя по ссылке из Телеграм.
+
+    ### Attributes:
+    - valid_time (`int`): Время действия ссылки в минутах.
+
+    ### Methods:
+    - get: Авторизует пользователя по ссылке из Телеграм.
+
+    """
     valid_time: int = 10
 
     def get(self, request: HttpRequest, user_id: str, key: str, *args: Any, **kwargs: Any) -> HttpRequest:
-        """Авторизует пользователя по ссылке из Телеграм."""
+        """Авторизует пользователя по ссылке из Телеграм.
+
+        ### Args:
+        - request (HttpRequest): HTTP-запрос.
+        - user_id (str): Идентификатор пользователя в Телеграм.
+        - key (str): Ключ для авторизации.
+        - *args: Переменные позиционных аргументов.
+        - **kwargs: Переменные ключевых аргументов.
+
+        ### Returns:
+        - HttpRequest: HTTP-ответ.
+
+        """
         user_id = int(user_id)
         key = str(key)
         user = User.objects.filter(tg_id=user_id).first()
@@ -237,7 +349,16 @@ class LoginTgLinkView(View):
 
 @login_required
 def accounts_profile(request: HttpRequest, username: str) -> HttpResponse:
-    """Профиль юзера."""
+    """Просмотр и редактирование профиля пользователя.
+
+    ### Args:
+    - request (`HttpRequest`): HTTP-запрос.
+    - username (`str`): Имя пользователя.
+
+    ### Returns:
+    - HttpResponse: HTTP-ответ.
+
+    """
     user = get_object_or_404(User.objects, username=username)
     if user != request.user:
         redirect('index')
@@ -260,33 +381,32 @@ def accounts_profile(request: HttpRequest, username: str) -> HttpResponse:
     return render(request, template, context)
 
 
-def login_token(request: HttpRequest, user_id: int = None,
-                password: str = None) -> HttpResponseRedirect:
-    """Аутентификация пользователя через Телеграмм."""
-    user = authenticate(request, username=user_id, password=password)
-    if not user:
-        return redirect('users:login')
-    login(request, user)
-    return redirect('index')
-
-
 def get_coordinates(tg_id: int) -> QuerySet[Location]:
-    """
-    Получение последних координат пользователя.
+    """Получение последних координат пользователя.
 
-    Принимает username=user_id (:obj:`int`)
+    ### Args:
+    - tg_id (`int`) - Телеграмм id пользователя.
 
-    Возвращает :obj:`QuerySet[Location]`:
-    - latitude (:obj:`float`)
-    - longitude (:obj:`float`)
-    - timezone (:obj:`str`)
+    ### Returns:
+    - `QuerySet[Location]`:
+        - latitude (:obj:`float`)
+        - longitude (:obj:`float`)
+        - timezone (:obj:`str`)
     """
     user = User.objects.filter(tg_id=tg_id).first()
     return user.locations.first() if user else None
 
 
 def set_coordinates(update: Update, _: CallbackContext) -> None:
-    """Получение часового пояса и запись в данных в БД."""
+    """Получение часового пояса на основе координат пользователя и запись его в базу данных.
+
+    ### Args:
+    - update (`Update`): Объект обновления из Telegram.
+    - context (`CallbackContext`): Контекст обработчика.
+
+    ### Returns:
+    - None
+    """
     chat = update.effective_chat
     user_id = chat.id
     latitude = update.message.location.latitude
@@ -305,10 +425,16 @@ def set_coordinates(update: Update, _: CallbackContext) -> None:
 
 
 def block(request: HttpRequest) -> HttpResponse:
-    """Блокировка при серии ввода неправильных данных при авторизации."""
-    text = (
-        f'Вы заблокированы на {int(settings.DEFENDER_COOLOFF_TIME/60)} минут!'
-    )
+    """Блокировка пользователя после нескольких неудачных попыток авторизации.
+
+    ### Args:
+    - request (`HttpRequest`): HTTP-запрос, который вызвал эту функцию.
+
+    ### Returns:
+    - HttpResponse: Страница с сообщением о блокировке.
+
+    """
+    text = f'Вы заблокированы на {int(settings.DEFENDER_COOLOFF_TIME/60)} минут!'
     context = {
         'text': text,
     }

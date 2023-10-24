@@ -19,6 +19,8 @@ def clear_commands(update: Update) -> None:
 
         if update.message.location:
             text = 'delete'
+        elif update.message.contact:
+            text = 'delete'
         else:
             if update.message.text:
                 text = update.message.text.replace('/', '')

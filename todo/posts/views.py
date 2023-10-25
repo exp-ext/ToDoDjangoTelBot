@@ -1,3 +1,4 @@
+import re
 from typing import Any, Dict
 
 from advertising.models import PartnerBanner
@@ -6,7 +7,8 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Q
 from django.db.models.query import QuerySet
-from django.http import HttpRequest, HttpResponse, HttpResponseRedirect
+from django.http import (HttpRequest, HttpResponse, HttpResponseRedirect,
+                         JsonResponse)
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse_lazy
 from django.views import View
@@ -34,14 +36,26 @@ class SearchListView(ListView):
     paginate_by = PAGINATE_BY
 
     def get(self, request, *args, **kwargs):
-        self.keyword = self.request.GET.get('q', '')
-        if not self.keyword:
+        self.keyword = request.GET.get('q', '')
+        term = request.GET.get('term', '')
+        if not self.keyword and not term:
             return redirect('posts:index_posts')
+        if term:
+            self.keyword = term
+            qs = self.get_queryset()
+            qs = qs.filter(text__icontains=self.keyword).values_list('text', flat=True)
+            matching_words = set()
+            for item in qs:
+                words = re.findall(r'\b\w+\b', item)
+                for word in words:
+                    if self.keyword in word and word:
+                        matching_words.add(word)
+            return JsonResponse(list(matching_words), safe=False)
         return super().get(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs) -> Dict[str, Any]:
         context = super().get_context_data(**kwargs)
-        context['keyword'] = self.request.GET.get('q', '')
+        context['keyword'] = self.keyword
         return context
 
     def get_queryset(self) -> QuerySet(Post):

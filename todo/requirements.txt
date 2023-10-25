@@ -7,6 +7,7 @@ pytils~=0.4.1
 python-dotenv~=1.0.0
 sorl-thumbnail~=12.9.0
 django-phonenumber-field[phonenumbers]~=7.1.0
+django-autocomplete-light~=3.9.7
 
 psycopg2-binary
 

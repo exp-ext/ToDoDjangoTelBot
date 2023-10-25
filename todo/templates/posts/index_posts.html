@@ -7,6 +7,8 @@
   <meta name="robots" content="index, follow">
   <meta name="author" content="Your To-Do">
   <link rel="stylesheet" href="{% static 'css/moving_units.css' %}">
+  <link rel="stylesheet" href="{% static 'css/hover-effects.css' %}">
+  <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.1/themes/base/jquery-ui.css">
 {% endblock %}
 
 {% block title %}Публикации{% endblock %}
@@ -17,7 +19,7 @@
 
     {% include 'posts/includes/switcher.html' %}
 
-    <div class="moving-unit _anim-items">
+    <div class="moving-unit _anim-items _anim-no-hide">
       {% include 'posts/includes/search.html' %}
     </div> 
 
@@ -30,4 +32,17 @@
     {% include 'posts/includes/paginator.html' %}
   </div> 
 
+{% endblock %}
+
+{% block javascript %}
+  <script  src="{% static 'js/script.js' %}"></script>
+
+  <script>
+    $(document).ready(function() {
+      $("#search-input").autocomplete({
+        source: "{% url 'posts:search' %}",
+        minLength: 3
+      });
+    });
+  </script>
 {% endblock %}

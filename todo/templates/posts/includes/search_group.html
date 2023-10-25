@@ -4,29 +4,32 @@
 
 {% block head %}  
   <link rel="stylesheet" href="{% static 'css/hover-effects.css' %}">
-  <link rel="stylesheet" href="{% static 'css/search.css' %}">
+  <link rel="stylesheet" href="{% static 'css/group-search.css' %}"> 
 {% endblock %}
 
 
 <ul>
-{% for group in group_list %}
-  <div class="search-font">
-    <li>{{ group.grouper|center:"15" }}
-    {% thumbnail group.grouper.image "960x150" crop="center" upscale=True as im %}
-      <img class="card-img my-2" src="{{ im.url }}">
-    {% endthumbnail %}
-  </div>
-    <ul>
-        {% for post in group.list %}
-          <li class="my-3">
-            <a class="text_search" href="{% url 'posts:post_detail' post.pk %}">
-            {{ post.text|striptags|slice:":200" }} ... 
-            </a>
-          </li>
-        {% endfor %}
-    </ul>
-    </li>
-{% endfor %}
+  {% for group in group_list %}
+
+      <li>
+        {{ group.grouper|center:"15" }}
+
+        {% thumbnail group.grouper.image "960x150" crop="center" upscale=True as im %}
+          <img class="card-img my-2" src="{{ im.url }}">
+        {% endthumbnail %}
+
+        <ul>
+          {% for post in group.list %}
+            <li class="my-3">
+              <a href="{% url 'posts:post_detail' post.pk %}">
+                <strong>{{ post.title }}:</strong> {{ post.text|striptags|slice:":200" }} ...
+              </a>
+            </li>
+          {% endfor %}
+        </ul>
+
+      </li>
+  {% endfor %}
 </ul>
 
 

@@ -8,10 +8,14 @@
 
 {% block content %}
 
-  {% if request|is_mobile %}
-    {% include 'core/includes/space.html' %}
-  {% else %}
-    {% include 'core/includes/gears404.html' %}
-  {% endif %}
-  
+  <div class="container-fluid py-5">
+
+    {% if request|is_mobile %}
+      {% include 'core/includes/space.html' %}
+    {% else %}
+      {% include 'core/includes/gears404.html' %}
+    {% endif %}
+    
+  </div> 
+
 {% endblock %} 

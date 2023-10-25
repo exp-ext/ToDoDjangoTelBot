@@ -78,6 +78,8 @@ THIRD_PARTY_APPS = [
     'django_user_agents',
     'django_ckeditor_5',
     'storages',
+    'dal',
+    'dal_select2',
 ]
 
 PROJECT_APPS = [

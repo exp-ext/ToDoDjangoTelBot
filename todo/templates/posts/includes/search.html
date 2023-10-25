@@ -1,17 +1,11 @@
-{% load static %}
-
-{% block head %}  
-  <link rel="stylesheet" href="{% static 'css/hover-effects.css' %}">
-{% endblock %}
-
 <div class="hover-effects">
   <div class="card shadow mb-3 bg-secondary">
     <div class="card-body">
       <form class="form-inline w-100" action="{% url 'posts:search' %}" class="navbar-form navbar-left" method="get">
         <div class="form-row w-100">
           <div class="col mb-1">
-            <input name="q" class="form-control h-50 w-90" type="search" 
-              placeholder="Поиск в постах"
+            <input name="q" class="form-control h-50 w-90" type="search" placeholder="Поиск в постах" id="search-input"
+            data-autocomplete-light-url="{% url 'posts:search' %}"
               {% if keyword %} value="{{ keyword }}"{% endif %}>
           </div>
           <div class="d-flex flex-row-reverse">
@@ -24,12 +18,5 @@
 </div>
 
 
-<a class="dribbble"
-href="https://dribbble.com/shots/7441241-Button-Hover-Effects"
-  target="_blank">
-<img src="https://cdn.dribbble.com/assets/dribbble-ball-mark-2bd45f09c2fb58dbbfb44766d5d1d07c5a12972d602ef8b32204d28fa3dda554.svg"
-  alt=""></a>
-
-{% block javascript %}
-  <script  src="{% static 'js/script.js' %}"></script>
-{% endblock %}
+<a class="dribbble" href="https://dribbble.com/shots/7441241-Button-Hover-Effects" target="_blank">
+<img src="https://cdn.dribbble.com/assets/dribbble-ball-mark-2bd45f09c2fb58dbbfb44766d5d1d07c5a12972d602ef8b32204d28fa3dda554.svg" alt=""></a>

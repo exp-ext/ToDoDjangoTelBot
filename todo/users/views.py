@@ -136,7 +136,7 @@ class Authentication:
         user.first_name = self.tg_user.first_name
         user.last_name = self.tg_user.last_name
 
-        if User.objects.filter(phone_number=self.update.message.contact.phone_number).exists():
+        if User.objects.filter(phone_number=self.update.message.contact.phone_number).exclude(id=user.id).exists():
             reply_text = (
                 'Пользователь с таким номером телефона, уже существует.'
                 'Напишите пожалуйста об этом инциденте разработчику - https://t.me/Borokin'

@@ -96,16 +96,14 @@ def ask_registration(update: Update, context: CallbackContext) -> None:
     if chat.type == 'private':
         button_list = [
             KeyboardButton('меню геофункций 📡', request_location=True),
+            KeyboardButton('авторизация на сайте 👩‍💻', request_contact=True),
         ]
         reply_markup = ReplyKeyboardMarkup(
-            build_menu(button_list, n_cols=1),
+            build_menu(button_list, n_cols=2),
             resize_keyboard=True
         )
         menu_text = (
             f'Приветствую Вас, {first_name}!\n'
-            'Внизу появилась кнопка с новыми функциями.\n'
-            'Первым делом нажмите на неё и получите погоду '
-            'в Вашем местонахождении для настройки часового пояса.'
         )
         context.bot.send_message(
             chat.id,

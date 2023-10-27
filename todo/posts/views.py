@@ -1,17 +1,22 @@
+import re
 from typing import Any, Dict
 
+from advertising.models import PartnerBanner
 from core.views import get_status_in_group, linkages_check, paginator_handler
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.db.models import Q
+from django.db.models import Count, Q
 from django.db.models.query import QuerySet
-from django.http import HttpRequest, HttpResponse, HttpResponseRedirect
+from django.http import (HttpRequest, HttpResponse, HttpResponseRedirect,
+                         JsonResponse)
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse_lazy
 from django.views import View
 from django.views.generic import CreateView, ListView, UpdateView
 from django.views.generic.detail import DetailView
 from django.views.generic.edit import FormView
+from django_user_agents.utils import get_user_agent
 from users.models import Group, GroupMailing
 
 from .forms import CommentForm, GroupMailingForm, PostForm
@@ -32,14 +37,47 @@ class SearchListView(ListView):
     paginate_by = PAGINATE_BY
 
     def get(self, request, *args, **kwargs):
-        self.keyword = self.request.GET.get('q', '')
-        if not self.keyword:
+        self.keyword = request.GET.get('q', '')
+        term = request.GET.get('term', '')
+        if not self.keyword and not term:
             return redirect('posts:index_posts')
+        if term and ' ' in term:
+            return self.term_queryset_answer(term)
+        if term:
+            return self.term_answer(term)
         return super().get(request, *args, **kwargs)
+
+    def term_answer(self, term):
+        """Автодополнение."""
+        self.keyword = term
+        qs = self.get_queryset()
+        qs = qs.filter(text__icontains=self.keyword).values_list('text', flat=True)
+        matching_words = set()
+        for item in qs:
+            words = re.findall(r'\b\w+\b', item)
+            for word in words:
+                if self.keyword in word and word:
+                    matching_words.add(word)
+        return JsonResponse(list(matching_words)[:10], safe=False)
+
+    def term_queryset_answer(self, term):
+        """Возврат фильтрованного о поиску queryset."""
+        self.keyword = term
+        queryset = self.get_queryset()
+        queryset = queryset.annotate(match_count=Count('text'))
+        queryset = queryset.order_by('-match_count')
+        results = []
+
+        for item in queryset[:3]:
+            results.append({
+                'label': item.title,
+                'link': f'https://www.{settings.DOMAIN}/posts/{item.id}/',
+            })
+        return JsonResponse(results, safe=False)
 
     def get_context_data(self, **kwargs) -> Dict[str, Any]:
         context = super().get_context_data(**kwargs)
-        context['keyword'] = self.request.GET.get('q', '')
+        context['keyword'] = self.keyword
         return context
 
     def get_queryset(self) -> QuerySet(Post):
@@ -121,11 +159,13 @@ class GroupPostsListView(ListView):
 
     def get_context_data(self, **kwargs: Any) -> Dict[str, Any]:
         context = super().get_context_data(**kwargs)
+        user_agent = get_user_agent(self.request)
         context |= {
             'group': self.group,
             'is_admin': self.is_admin,
             'form': self.form,
             'forism_check': self.forism_check,
+            'is_mobile': user_agent.is_mobile,
         }
         return context
 
@@ -169,11 +209,13 @@ class ProfileDetailView(DetailView):
         context = super().get_context_data(**kwargs)
         post_list = self.get_user_posts().select_related('author', 'group')
         page_obj = paginator_handler(self.request, post_list, PAGINATE_BY)
+        user_agent = get_user_agent(self.request)
         user = self.request.user
         context |= {
             'page_obj': page_obj,
             'posts_count': page_obj.paginator.count,
-            'following': False if user.is_anonymous else user.follower.filter(author=self.object).exists()
+            'following': False if user.is_anonymous else user.follower.filter(author=self.object).exists(),
+            'is_mobile': user_agent.is_mobile,
         }
         return context
 
@@ -237,8 +279,7 @@ class PostUpdateView(LoginRequiredMixin, UpdateView):
         initial['is_edit'] = True
         return initial
 
-    def get(self, request: HttpRequest, *args: Any, **kwargs: Any
-            ) -> HttpRequest:
+    def get(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpRequest:
         linkages_check(request.user)
         post = self.get_object()
         if post.author != request.user:
@@ -268,9 +309,16 @@ class PostDetailView(DetailView):
     def get_context_data(self, **kwargs: Any) -> Dict[str, Any]:
         context = super().get_context_data(**kwargs)
         post = self.get_object()
-        context['authors_posts_count'] = post.author.posts.count()
-        context['comments'] = post.comments.all()
-        context['form'] = CommentForm(self.request.POST or None)
+        user_agent = get_user_agent(self.request)
+        all_banners = PartnerBanner.objects.all()
+        random_banner = all_banners.order_by('?').first()
+        context |= {
+            'authors_posts_count': post.author.posts.count(),
+            'comments': post.comments.all(),
+            'form': CommentForm(self.request.POST or None),
+            'is_mobile': user_agent.is_mobile,
+            'advertising': random_banner if random_banner else False
+        }
         return context
 
 
@@ -331,7 +379,7 @@ class FollowIndexListView(LoginRequiredMixin, ListView):
 
 class ProfileFollowView(LoginRequiredMixin, View):
     """Подписка на пользователя в его профиле."""
-    def get(self, request: HttpRequest, username: str) -> HttpResponseRedirect:
+    def post(self, request: HttpRequest, username: str) -> HttpResponseRedirect:
         author = get_object_or_404(User, username=username)
         if author != request.user:
             Follow.objects.get_or_create(user=request.user, author=author)
@@ -340,7 +388,7 @@ class ProfileFollowView(LoginRequiredMixin, View):
 
 class ProfileUnfollowView(LoginRequiredMixin, View):
     """Отписка от пользователя в его профиле."""
-    def get(self, request: HttpRequest, username: str) -> HttpResponseRedirect:
+    def post(self, request: HttpRequest, username: str) -> HttpResponseRedirect:
         author = get_object_or_404(User, username=username)
         Follow.objects.filter(user=request.user, author=author).delete()
         return redirect('posts:profile', username=username)
@@ -348,7 +396,7 @@ class ProfileUnfollowView(LoginRequiredMixin, View):
 
 class PostDeleteView(LoginRequiredMixin, View):
     """Удаление поста."""
-    def get(self, request: HttpRequest, post_id: int) -> HttpResponseRedirect:
+    def post(self, request: HttpRequest, post_id: int) -> HttpResponseRedirect:
         post = get_object_or_404(Post, pk=post_id)
         if post.author == request.user:
             post.delete()

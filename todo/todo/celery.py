@@ -33,4 +33,8 @@ app.conf.beat_schedule = {
         'task': 'core.tasks.backup',
         'schedule': crontab(hour=1, minute=0),
     },
+    'send_telegram_mailing': {
+        'task': 'telbot.tasks.send_telegram_mailing',
+        'schedule': crontab(minute='*/10'),
+    },
 }

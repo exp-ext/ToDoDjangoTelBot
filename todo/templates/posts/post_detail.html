@@ -18,8 +18,14 @@
   {% endthumbnail %}
   <meta property="og:image:alt" content="{{ post.title }}" />
 
+  {% if post.image %} 
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:image" content="https://www.yourtodo.ru{{ post.image.url }}">
+  {% endif %}
+
   <link rel="stylesheet" href="{% static 'css/hover-effects.css' %}">
-  
+  <link rel="stylesheet" href="{% static 'css/moving_units.css' %}">
+
 {% endblock %}
 
 {% block title %} Запись: {{ post }} {% endblock %}
@@ -27,14 +33,14 @@
 {% block content %}
 
   <div class="container-fluid py-5">
-    <div class="row py-5">
+    <div class="row py-3">
 
       <aside class="col-lg-2 col-sm-12">
         <div class="hover-effects">
-          <ul class="list-group">
+          <ul class="list-group shadow group-unit _anim-items _anim-no-hide">
             <li class="list-group-item bg-secondary">
               <p>Дата публикации:<br/>~ {{ post.created_at|date:"d E Y" }}</p>
-            </li>        
+            </li>
             {% if post.group and post.group.link %}
                 <li class="list-group-item  bg-secondary">
                   <p>Группа:<br/>{{ post.group }}</p>
@@ -49,29 +55,43 @@
             <li class="list-group-item justify-content-between align-items-center bg-secondary">
               <p>Всего постов автора:  <span> {{ authors_posts_count }} </span></p>
               
-              <a type="button" class="button fast white" href="{% url 'posts:profile' post.author %}">
+              <a type="button" class="btn button fast white" href="{% url 'posts:profile' post.author %}">
                 все &#160 посты &#160 пользователя            
               </a>
             </li>
-            <li class="list-group-item bg-secondary">
-              {% if post.author == user %}  
-              <li class="list-group-item bg-secondary">      
-                <a class="button" href="{% url 'posts:post_edit' post.pk  %}">
-                  изменить&#160пост
-                </a> 
-              </li>
-              <li class="list-group-item  bg-secondary">
-                <a class="button reverse dark" href="{% url 'posts:post_delete' post.pk %}">
-                  удалить&#160пост                    
-                </a> 
-              </li>                
+
+              {% if post.author == user %}
+
+                <li class="list-group-item bg-secondary">  
+                  <form method="patch" action="{% url 'posts:post_edit' post.pk %}">
+                    {% csrf_token %}
+                      <button type="submit" class="button w-100">изменить&#160пост</button>
+                  </form>
+                </li>
+
+                <li class="list-group-item bg-secondary">
+                  <form method="post" action="{% url 'posts:post_delete' post.pk %}">
+                    {% csrf_token %}
+                      <button type="submit" class="button reverse dark w-100">удалить&#160пост</button>
+                  </form>
+                </li>
+
               {% endif %}
-            </li>
+
           </ul>
-        </div> 
+        </div>
+
+        <div class="card p-1 bg-light rounded shadow group-unit _anim-items _anim-no-hide my-2"> 
+          {% include 'includes/yabodyadvertising.html' %}
+        </div>
+
+        {% if advertising and not is_mobile %}
+          {% include 'posts/includes/advertising.html' %}
+        {% endif %}
+
       </aside>
 
-      <article class="col-lg-8 col-sm-12 bg-light rounded">            
+      <article class="col-lg-8 col-sm-12 bg-light rounded shadow">            
         <div class="lobster"> 
           <h1>{{ post.title }}</h1>
         </div>      
@@ -83,7 +103,13 @@
             {{ post.text|safe }}
           </div> 
         </p>
+
+        {% if advertising and is_mobile %}
+          {% include 'posts/includes/advertising.html' %}
+        {% endif %}
+
         {% include 'posts/includes/comments.html' %}
+
       </article>   
 
     </div>

@@ -87,6 +87,7 @@ PROJECT_APPS = [
     'telbot.apps.TelbotConfig',
     'posts.apps.PostsConfig',
     'ai.apps.AiConfig',
+    'advertising.apps.AdvertisingConfig',
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + PROJECT_APPS

@@ -36,26 +36,14 @@ class TasksListView(LoginRequiredMixin, ListView):
                 .filter(Q(user=user) | Q(group_id__in=groups_id))
                 .annotate(
                     relevance=Case(
-                        When(
-                            server_datetime__gte=now,
-                            then=1
-                        ),
-                        When(
-                            server_datetime__lt=now,
-                            then=2
-                        ),
+                        When(server_datetime__gte=now, then=1),
+                        When(server_datetime__lt=now, then=2),
                         output_field=IntegerField(),
                     )
                 ).annotate(
                     timediff=Case(
-                        When(
-                            server_datetime__gte=now,
-                            then=F('server_datetime') - now
-                        ),
-                        When(
-                            server_datetime__lt=now,
-                            then=now - F('server_datetime')
-                        ),
+                        When(server_datetime__gte=now, then=F('server_datetime') - now),
+                        When(server_datetime__lt=now, then=now - F('server_datetime')),
                         output_field=DurationField(),
                     )
                 ).exclude(
@@ -142,8 +130,7 @@ class TaskUpdateView(LoginRequiredMixin, UpdateView):
         initial['is_edit'] = True
         return initial
 
-    def get(self, request: HttpRequest, *args: Any, **kwargs: Any
-            ) -> HttpRequest:
+    def get(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpRequest:
         linkages_check(request.user)
         return super().get(request, *args, **kwargs)
 
@@ -163,7 +150,7 @@ class TaskUpdateView(LoginRequiredMixin, UpdateView):
 
 class TaskDeleteView(LoginRequiredMixin, View):
     """Удаление записи."""
-    def get(self, request: HttpRequest, task_id: int) -> HttpResponseRedirect:
+    def post(self, request: HttpRequest, task_id: int) -> HttpResponseRedirect:
         task = get_object_or_404(Task, pk=task_id)
         redirecting = 'tasks:birthdays' if task.it_birthday else 'tasks:notes'
         if task.user == request.user:

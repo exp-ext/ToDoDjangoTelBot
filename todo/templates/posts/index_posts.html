@@ -36,13 +36,32 @@
 
 {% block javascript %}
   <script  src="{% static 'js/script.js' %}"></script>
-
   <script>
     $(document).ready(function() {
       $("#search-input").autocomplete({
         source: "{% url 'posts:search' %}",
-        minLength: 3
-      });
-    });
+        minLength: 3,
+        focus: function(event, ui) {
+          $("#search-input").val(ui.item.label); // Устанавливаем текст в поле ввода при фокусировке
+          return false;
+        },
+        select: function(event, ui) {
+          if (ui.item.link) {
+            window.location.href = ui.item.link; // Перенаправляем на страницу, связанную с выбранным элементом
+          } else {
+            $("#search-input").val(ui.item.label); // Вставляем текст в поле ввода
+          }
+          return false;
+        },
+      }).data("ui-autocomplete")._renderItem = function(ul, item) {
+        var listItem = $("<li>");
+        if (item.link) {
+          listItem.append("<a href='" + item.link + "'>" + item.label + "</a>");
+        } else {
+          listItem.append("<div>" + item.label + "</div>");
+        }
+        return listItem.appendTo(ul);
+      };
+    });    
   </script>
 {% endblock %}

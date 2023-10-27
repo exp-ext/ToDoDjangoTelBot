@@ -4,7 +4,7 @@
 {% block title %}Ваш персональный менеджер задач{% endblock %}
 
 {% block head %}
-  <meta name="description" content="YourToDo - простой и удобный инструмент для управления вашими задачами. Организуйте свои дела и достигайте успеха!"/>
+  <meta name="description" content="YourToDo - простой и удобный инструмент для управления вашими задачами."/>
   <meta name="keywords" content="менеджер задач, задачи, планирование, cписок дел, управление временем, напоминания, список дел, календарь событий, ежедневник, телеграмм бот">
   <meta name="robots" content="index, follow">
   <meta name="author" content="Your To-Do">
@@ -141,21 +141,21 @@
       <div class="row">
         <div class="col-lg-4">          
           <img class="img-fluid rounded-circle shadow tenses_image _anim-items _anim-no-hide" width="140" height="140" src="{% static 'img/index/4_past.png' %}"></img>
-          <div class="tenses _anim-items">
+          <div class="tenses _anim-items _anim-no-hide">
             <h2>Прошлое</h2>
             <p>Часто возникала необходимость напоминания большому количеству людей о начале какого-либо мероприятия. Оттуда и родилась идея создать Telegram ToDo manager.</p>
           </div>
         </div><!-- /.col-lg-4 -->
         <div class="col-lg-4">          
           <img class="img-fluid rounded-circle shadow tenses_image _anim-items _anim-no-hide" width="140" height="140" src="{% static 'img/index/4_present.png' %}"></img>
-          <div class="tenses _anim-items">
+          <div class="tenses _anim-items _anim-no-hide">
             <h2>Настоящее</h2>
             <p>На данном этапе своей жизни система находится в разработке. Но уже сейчас есть множество функций, которые ждут своего пользователя.</p>
           </div>
         </div><!-- /.col-lg-4 -->
         <div class="col-lg-4">
           <img class="img-fluid rounded-circle shadow tenses_image _anim-items _anim-no-hide" width="140" height="140" src="{% static 'img/index/4_future.png' %}"></img>
-          <div class="tenses _anim-items">
+          <div class="tenses _anim-items _anim-no-hide">
             <h2>Будущее</h2>
             <p>В дальнейшем все обязательно должно перерасти во что-то более технологичное. Возможно будет соцсеть, а возможно что-то новое. Это пока останется секретом.</p>
           </div>
@@ -173,12 +173,16 @@
         <div class="row featurette">
 
           <div class="col-md-7 d-flex align-items-center">
-            <div class="text-blog _anim-items">
+            <div class="text-blog _anim-items _anim-no-hide">
               <h2 class="featurette-Заголовок">Регистр<span class="text-muted">ация...</span></h2>
               <p class="lead">
-                Для регистрации в системе, перейдите <a href="https://t.me/BorFAsbot">в личный чат с Евой</a>, нажмите кнопку &lt;Меню&gt; и запросите регистрацию.
+                - перейдите в чат c <a href="https://t.me/BorFAsbot">Искуственным Интеллектом Eva</a>
+                <br>
+                - нажав кнопку <span><button class="btn btn-primary btn-sm rounded-circle">Меню</button></span> запросите регистрацию
+                <br>
+                Всё остальное произойдет автоматически.
                 <br><br>
-                Чтобы настроить часовой пояс отличный от МСК, рекомендуется проверить погоду, используя появившуюся кнопку &lt;Показать меню&gt;.
+                Чтобы настроить часовой пояс отличный от МСК, рекомендуется использовать идну из геофункций в <span><button class="btn btn-secondary btn-sm">меню геофункций📡</button></span>;
                 <br><br>
                 <strong>Для корректной работы в групповых чатах, после добавления бота в группу, сделайте его администратором.</strong>      
               </p>
@@ -186,7 +190,7 @@
           </div>
 
           <div class="col-md-5">
-            <div class="right-image-blog _anim-items">
+            <div class="right-image-blog _anim-items _anim-no-hide">
               <img class="bd-placeholder-img bd-placeholder-img-lg featurette-image img-fluid mx-auto shadow" width="500" height="500"
                 src="{% static 'img/index/register.webp' %}">
               </img>
@@ -202,7 +206,7 @@
 
       <div class="row featurette">
         <div class="col-md-7 order-md-2 d-flex align-items-center">
-          <div class="text-blog _anim-items">
+          <div class="text-blog _anim-items _anim-no-hide">
             <h2 class="featurette-Заголовок">Основные <span class="text-muted">функции.</span></h2>
             <div class="lead">
               <p>📅 Telegram ToDo management</p>
@@ -218,7 +222,7 @@
           </div>
         </div>
         <div class="col-md-5 order-md-1">
-          <div class="{% if is_mobile %} right-image-blog {% else %} image-blog {% endif %} _anim-items">
+          <div class="{% if is_mobile %} right-image-blog {% else %} image-blog {% endif %} _anim-items _anim-no-hide">
             <img class="bd-placeholder-img bd-placeholder-img-lg featurette-image img-fluid mx-auto shadow" width="500" height="500"
               src="{% static 'img/index/menu.webp' %}">
             </img>
@@ -232,7 +236,7 @@
 
       <div class="row featurette">
         <div class="col-md-7 d-flex align-items-center">
-          <div class="text-blog _anim-items">
+          <div class="text-blog _anim-items _anim-no-hide">
             <h2 class="featurette-Заголовок">Описание работы  <span class="text-muted">основного модуля.</span></h2>
             <h4 style="color: #080144;">- Кнопки меню:</h4>
             <ol style="list-style: none;">
@@ -272,7 +276,7 @@
           </div>
         </div>
         <div class="col-md-5">
-          <div class="right-image-blog _anim-items">
+          <div class="right-image-blog _anim-items _anim-no-hide">
             <img class="bd-placeholder-img bd-placeholder-img-lg featurette-image img-fluid mx-auto shadow" width="500" height="500"
               src="{% static 'img/index/message.webp' %}">
             </img>
@@ -285,15 +289,15 @@
 
       <div class="row featurette">
         <div class="col-md-7 order-md-2 d-flex align-items-center">
-          <div class="text-blog _anim-items">
+          <div class="text-blog _anim-items _anim-no-hide">
             <h2 class="featurette-Заголовок">Управление <span class="text-muted">с сайта.</span></h2>
             <p class="lead">
-              После регистрации и аутентификации на сайте, Вы сможете использовать веб-функции управления напоминаниями, в том числе создавать, редактировать и добавлять фото к записям.
+              После регистрации и аутентификации на сайте, Вы сможете использовать веб-функции управления напоминаниями.
             </p>
           </div>
         </div>
         <div class="col-md-5 order-md-1">
-          <div class="{% if is_mobile %} right-image-blog {% else %} image-blog {% endif %} _anim-items">
+          <div class="{% if is_mobile %} right-image-blog {% else %} image-blog {% endif %} _anim-items _anim-no-hide">
             <img class="bd-placeholder-img bd-placeholder-img-lg featurette-image img-fluid mx-auto shadow" width="500" height="500"
               src="{% static 'img/index/site_menu.webp' %}">
             </img>
@@ -305,7 +309,7 @@
   
         <div class="row featurette">
           <div class="col-md-7 d-flex align-items-center">
-            <div class="text-blog _anim-items">
+            <div class="text-blog _anim-items _anim-no-hide">
               <h2 class="featurette-Заголовок">Заметки  <span class="text-muted"></span></h2>
               <p class="lead">
                 Telegram-чаты являются источником вдохновения для создания Заметок. Поэтому в Your Todo мы обеспечили возможность их хранения. И сделали это по тому же принципу:<br><br> 
@@ -314,7 +318,7 @@
             </div>
           </div>
           <div class="col-md-5">
-            <div class="right-image-blog _anim-items">
+            <div class="right-image-blog _anim-items _anim-no-hide">
               <img class="bd-placeholder-img bd-placeholder-img-lg featurette-image img-fluid mx-auto shadow" width="500" height="500"
                 src="{% static 'img/index/notes.webp' %}">
               </img>

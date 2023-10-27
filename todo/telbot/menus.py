@@ -104,9 +104,6 @@ def ask_registration(update: Update, context: CallbackContext) -> None:
         )
         menu_text = (
             f'Приветствую Вас, {first_name}!\n'
-            'Внизу появилась кнопка с новыми функциями.\n'
-            'Первым делом нажмите на неё и получите погоду '
-            'в Вашем местонахождении для настройки часового пояса.'
         )
         context.bot.send_message(
             chat.id,

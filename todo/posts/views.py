@@ -3,9 +3,10 @@ from typing import Any, Dict
 
 from advertising.models import PartnerBanner
 from core.views import get_status_in_group, linkages_check, paginator_handler
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.db.models import Q
+from django.db.models import Count, Q
 from django.db.models.query import QuerySet
 from django.http import (HttpRequest, HttpResponse, HttpResponseRedirect,
                          JsonResponse)
@@ -40,18 +41,39 @@ class SearchListView(ListView):
         term = request.GET.get('term', '')
         if not self.keyword and not term:
             return redirect('posts:index_posts')
+        if term and ' ' in term:
+            return self.term_queryset_answer(term)
         if term:
-            self.keyword = term
-            qs = self.get_queryset()
-            qs = qs.filter(text__icontains=self.keyword).values_list('text', flat=True)
-            matching_words = set()
-            for item in qs:
-                words = re.findall(r'\b\w+\b', item)
-                for word in words:
-                    if self.keyword in word and word:
-                        matching_words.add(word)
-            return JsonResponse(list(matching_words), safe=False)
+            return self.term_answer(term)
         return super().get(request, *args, **kwargs)
+
+    def term_answer(self, term):
+        """Автодополнение."""
+        self.keyword = term
+        qs = self.get_queryset()
+        qs = qs.filter(text__icontains=self.keyword).values_list('text', flat=True)
+        matching_words = set()
+        for item in qs:
+            words = re.findall(r'\b\w+\b', item)
+            for word in words:
+                if self.keyword in word and word:
+                    matching_words.add(word)
+        return JsonResponse(list(matching_words)[:10], safe=False)
+
+    def term_queryset_answer(self, term):
+        """Возврат фильтрованного о поиску queryset."""
+        self.keyword = term
+        queryset = self.get_queryset()
+        queryset = queryset.annotate(match_count=Count('text'))
+        queryset = queryset.order_by('-match_count')
+        results = []
+
+        for item in queryset[:3]:
+            results.append({
+                'label': item.title,
+                'link': f'https://www.{settings.DOMAIN}/posts/{item.id}/',
+            })
+        return JsonResponse(results, safe=False)
 
     def get_context_data(self, **kwargs) -> Dict[str, Any]:
         context = super().get_context_data(**kwargs)
@@ -366,7 +388,7 @@ class ProfileFollowView(LoginRequiredMixin, View):
 
 class ProfileUnfollowView(LoginRequiredMixin, View):
     """Отписка от пользователя в его профиле."""
-    def get(self, request: HttpRequest, username: str) -> HttpResponseRedirect:
+    def post(self, request: HttpRequest, username: str) -> HttpResponseRedirect:
         author = get_object_or_404(User, username=username)
         Follow.objects.filter(user=request.user, author=author).delete()
         return redirect('posts:profile', username=username)
@@ -374,7 +396,7 @@ class ProfileUnfollowView(LoginRequiredMixin, View):
 
 class PostDeleteView(LoginRequiredMixin, View):
     """Удаление поста."""
-    def get(self, request: HttpRequest, post_id: int) -> HttpResponseRedirect:
+    def post(self, request: HttpRequest, post_id: int) -> HttpResponseRedirect:
         post = get_object_or_404(Post, pk=post_id)
         if post.author == request.user:
             post.delete()

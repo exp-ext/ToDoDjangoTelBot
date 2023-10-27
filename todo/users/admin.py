@@ -34,17 +34,14 @@ class UserAdmin(admin.ModelAdmin):
         'is_superuser',
     )
     fieldsets = (
-        ('Данные пользователя', {
-            'fields': ('tg_id', 'username', 'first_name', 'last_name')
-        }),
+        ('Данные пользователя', {'fields': ('tg_id', 'username', 'first_name', 'last_name')}),
         ('Аватар', {'fields': ('image', 'preview')}),
-        ('Категория и статус', {
-            'fields': ('is_active', 'is_staff', 'role', 'is_superuser')
-        }),
+        ('Категория и статус', {'fields': ('is_active', 'is_staff', 'role', 'is_superuser')}),
+        ('Контакты', {'fields': ('phone_number', 'email',)}),
         ('Группы и связи', {'fields': ('favorite_group',)}),
     )
     inlines = (GroupConnectionsInline, UserLocationInline)
-    search_fields = ('last_name',)
+    search_fields = ('last_name', 'phone_number', 'email')
     list_filter = (
         ('is_staff', admin.BooleanFieldListFilter),
         ('last_login', admin.DateFieldListFilter),

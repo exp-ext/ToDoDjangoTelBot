@@ -7,6 +7,7 @@ from .views import (AddCommentView, FollowIndexListView, GroupPostsListView,
 
 urlpatterns = [
     path('', IndexPostsListView.as_view(), name='index_posts'),
+    path('term', SearchListView.as_view(), name='search'),
     path('s', SearchListView.as_view(), name='search'),
     path('group/<slug:slug>/', GroupPostsListView.as_view(), name='group_list'),
     path('create/', PostCreateView.as_view(), name='post_create'),

@@ -16,7 +16,6 @@ from ..models import HistoryAI
 ADMIN_ID = settings.TELEGRAM_ADMIN_ID
 
 User = get_user_model()
-redis_client = settings.REDIS_CLIENT
 
 
 class GetAnswerGPT():
@@ -35,7 +34,9 @@ class GetAnswerGPT():
     STORY_WINDOWS_TIME = 30
     MAX_TYPING_TIME = 10
 
-    def __init__(self, update: Update, context: CallbackContext) -> None:
+    def __init__(self,
+                 update: Update,
+                 context: CallbackContext) -> None:
         self.update = update
         self.context = context
         self.user = None
@@ -51,8 +52,10 @@ class GetAnswerGPT():
             {
                 'role': 'system',
                 'content':
-                    'Your name is Eva and you are an experienced senior software developer with extensive experience leading '
-                    'teams, mentoring all developers, and delivering high-quality software solutions to customers. You can '
+                    'Your name is Eva and you are an experienced senior '
+                    'software developer with extensive experience leading '
+                    'teams, mentoring junior developers, and delivering '
+                    'high-quality software solutions to customers. You can '
                     'give answers in Markdown format using only:'
                     '*bold text* _italic text_'
                     '[inline URL](http://www.example.com/)'
@@ -91,7 +94,7 @@ class GetAnswerGPT():
         try:
             asyncio.create_task(self.send_typing_periodically())
             await self.request_to_openai()
-            asyncio.create_task(self.create_history_ai())
+            asyncio.create_task(self.create_update_history_ai())
 
         except Exception as err:
             self.context.bot.send_message(
@@ -100,7 +103,6 @@ class GetAnswerGPT():
             )
         finally:
             await self.reply_to_user()
-            await self.del_mess_in_redis()
 
     @sync_to_async
     def reply_to_user(self) -> None:
@@ -115,7 +117,7 @@ class GetAnswerGPT():
         except telegram.error.BadRequest:
             self.context.bot.send_message(
                 chat_id=self.update.effective_chat.id,
-                text=GetAnswerGPT.ERROR_TEXT,
+                text=self.answer_text,
                 reply_to_message_id=self.update.message.message_id,
             )
         except Exception as err:
@@ -157,7 +159,7 @@ class GetAnswerGPT():
             self.user
             .history_ai
             .filter(created_at__range=[self.time_start, self.current_time])
-            .exclude(answer__isnull=True)
+            .exclude(answer__in=[None, GetAnswerGPT.ERROR_TEXT])
             .values('question', 'question_tokens', 'answer', 'answer_tokens')
         )
         max_tokens = self.message_tokens + 120
@@ -179,29 +181,27 @@ class GetAnswerGPT():
             ])
         self.prompt.append({'role': 'user', 'content': self.message_text})
 
-    @sync_to_async
-    def check_in_works(self) -> bool:
-        """Проверяет нет ли уже в работе этого запроса в Redis."""
-        queries = redis_client.lrange(f'gpt_user:{self.user.id}', 0, -1)
-        if self.message_text.encode('utf-8') in queries:
+    async def check_in_works(self) -> bool:
+        """Проверяет нет ли уже в работе этого запроса."""
+        await self.get_request_massage()
+        if self.request_massage:
             return True
-        redis_client.lpush(f'gpt_user:{self.user.id}', self.message_text)
+        asyncio.create_task(self.create_update_history_ai())
         return False
 
-    @sync_to_async
-    def del_mess_in_redis(self) -> bool:
-        """Удаляет входящее сообщение из Redis."""
-        redis_client.lrem(f'gpt_user:{self.user.id}', 1, self.message_text.encode('utf-8'))
-
-    async def create_history_ai(self):
-        """Создаём запись в БД."""
-        self.request_massage = HistoryAI(
-            user=self.user,
-            question=self.message_text,
-            question_tokens=self.message_tokens,
-            answer=self.answer_text,
-            answer_tokens=self.answer_tokens
-        )
+    async def create_update_history_ai(self):
+        """Создаём или обновляет запись в БД."""
+        if self.request_massage:
+            self.request_massage.answer = self.answer_text
+            self.request_massage.answer_tokens = self.answer_tokens
+        else:
+            self.request_massage = HistoryAI(
+                user=self.user,
+                question=self.message_text,
+                question_tokens=self.message_tokens,
+                answer=self.answer_text,
+                answer_tokens=self.answer_tokens
+            )
         await self.request_massage.save()
 
     @sync_to_async

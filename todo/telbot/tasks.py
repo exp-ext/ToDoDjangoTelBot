@@ -6,6 +6,7 @@ import requests
 from celery import Celery
 from dateutil.relativedelta import relativedelta
 from django.apps import apps as django_apps
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db.models.query import QuerySet
 from telegram import ParseMode
@@ -14,14 +15,10 @@ from .loader import bot
 
 User = get_user_model()
 Group = django_apps.get_model(app_label='users', model_name='Group')
-GroupMailing = django_apps.get_model(
-    app_label='users',
-    model_name='GroupMailing'
-)
+GroupMailing = django_apps.get_model(app_label='users', model_name='GroupMailing')
 Task = django_apps.get_model(app_label='tasks', model_name='Task')
-GroupConnections = django_apps.get_model(
-    app_label='users', model_name='GroupConnections'
-)
+GroupConnections = django_apps.get_model(app_label='users', model_name='GroupConnections')
+TelegramMailing = django_apps.get_model(app_label='advertising', model_name='TelegramMailing')
 
 app = Celery()
 
@@ -33,9 +30,7 @@ EXTEND = {
 }
 
 
-def sending_messages(tasks: QuerySet[Task],
-                     this_datetime: datetime,
-                     event_text: str = '') -> str:
+def sending_messages(tasks: QuerySet[Task], this_datetime: datetime, event_text: str = '') -> str:
     """Перебор записей и отправка их адресатам."""
     messages = dict()
 
@@ -66,9 +61,7 @@ def sending_messages(tasks: QuerySet[Task],
 
         header = '' if task.it_birthday else f'<b>-- {header} -></b>'
         picture = f'<a href="{task.picture_link}">​​​​​​</a>'
-        messages[recipient]['reply_text'] += (
-            f'{header}{picture}\n{task.text}\n\n'
-        )
+        messages[recipient]['reply_text'] += f'{header}{picture}\n{task.text}\n\n'
 
         if not task.it_birthday:
             if task.reminder_period == 'N':
@@ -137,10 +130,7 @@ def send_forismatic_quotes() -> str:
         if mailing_groups.mailing_type == 'forismatic_quotes':
             try:
                 response = requests.get(*request)
-                msg = (
-                    '*Мысли великих людей:*\n'
-                    + response.text
-                )
+                msg = '*Мысли великих людей:*\n' + response.text
                 bot.send_message(
                     chat_id=mailing_groups.group.chat_id,
                     text=msg,
@@ -151,3 +141,31 @@ def send_forismatic_quotes() -> str:
             except Exception:
                 continue
     return f'Quotes were sent to {count} groups'
+
+
+@app.task
+def send_telegram_mailing() -> str:
+    """Рассылка Телеграмм спама. Проверка каждый час."""
+    current_time = datetime.now(timezone.utc)
+    start_time = current_time - timedelta(minutes=10)
+    mailing_list = TelegramMailing.objects.filter(remind_at__range=[start_time, current_time])
+    count = 0
+
+    for item in mailing_list:
+        if item.target == 'u':
+            recipients = User.objects.all().exclude(tg_id=None)
+        else:
+            recipients = Group.objects.all().exclude(tg_id=None)
+
+        link = item.reference if item.reference else f'https://www.{settings.DOMAIN}/{item.image.url}'
+
+        for recipient in recipients:
+            message_text = f'<a href="{link}">​​​​​​</a>\n{item.text}'
+            bot.send_message(
+                chat_id=recipient.tg_id if item.target == 'u' else recipient.chat_id,
+                text=message_text,
+                parse_mode=ParseMode.HTML
+            )
+            count += 1
+
+    return f'Telegram Mailing sent to {count} objects'

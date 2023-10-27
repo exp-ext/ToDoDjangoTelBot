@@ -27,44 +27,30 @@ def setup_dispatcher(dp: Dispatcher):
     """
     # команды
     dp.add_handler(
-        CommandHandler('auth', ask_auth)
-    )
-
-    dp.add_handler(
         CommandHandler('registration', ask_registration)
     )
-
     # основное меню и его Handler's
     dp.add_handler(
         CommandHandler('main_menu', main_menu)
     )
     dp.add_handler(
         ConversationHandler(
-            entry_points=[CallbackQueryHandler(first_step_add,
-                                               pattern='^add_first_step$')],
-            states={
-                'add_note': [MessageHandler(Filters.text, add_notes)]
-            },
+            entry_points=[CallbackQueryHandler(first_step_add, pattern='^add_first_step$')],
+            states={'add_note': [MessageHandler(Filters.text, add_notes)]},
             fallbacks=[MessageHandler(Filters.regex('cancel'), cancel)]
         )
     )
     dp.add_handler(
         ConversationHandler(
-            entry_points=[CallbackQueryHandler(first_step_show,
-                                               pattern='^show_first_step$')],
-            states={
-                'show_note': [MessageHandler(Filters.text, show_at_date)]
-            },
+            entry_points=[CallbackQueryHandler(first_step_show, pattern='^show_first_step$')],
+            states={'show_note': [MessageHandler(Filters.text, show_at_date)]},
             fallbacks=[MessageHandler(Filters.regex('cancel'), cancel)]
         )
     )
     dp.add_handler(
         ConversationHandler(
-            entry_points=[CallbackQueryHandler(first_step_dell,
-                                               pattern='^del_first_step$')],
-            states={
-                'del_note': [MessageHandler(Filters.text, del_notes)]
-            },
+            entry_points=[CallbackQueryHandler(first_step_dell, pattern='^del_first_step$')],
+            states={'del_note': [MessageHandler(Filters.text, del_notes)]},
             fallbacks=[MessageHandler(Filters.regex('cancel'), cancel)]
         )
     )
@@ -76,11 +62,8 @@ def setup_dispatcher(dp: Dispatcher):
     )
     dp.add_handler(
         ConversationHandler(
-            entry_points=[CallbackQueryHandler(first_step_get_image,
-                                               pattern='^gen_image_first$')],
-            states={
-                'image_gen': [MessageHandler(Filters.text, get_image_dall_e)]
-            },
+            entry_points=[CallbackQueryHandler(first_step_get_image, pattern='^gen_image_first$')],
+            states={'image_gen': [MessageHandler(Filters.text, get_image_dall_e)]},
             fallbacks=[MessageHandler(Filters.regex('cancel'), cancel)]
         )
     )
@@ -89,6 +72,9 @@ def setup_dispatcher(dp: Dispatcher):
     )
     dp.add_handler(
         MessageHandler(Filters.location, private_menu)
+    )
+    dp.add_handler(
+        MessageHandler(Filters.contact, ask_auth)
     )
     dp.add_handler(
         CallbackQueryHandler(current_weather, pattern='^weather_per_day$')
@@ -103,30 +89,19 @@ def setup_dispatcher(dp: Dispatcher):
         CallbackQueryHandler(where_to_go, pattern='^show_festivals$')
     )
     dp.add_handler(
-        MessageHandler(
-            Filters.regex(r'Ева|Eva'),
-            get_answer_davinci_public
-        )
+        MessageHandler(Filters.regex(r'Ева|Eva'), get_answer_davinci_public)
     )
     dp.add_handler(
-        MessageHandler(
-            Filters.regex('->'),
-            send_translation
-        )
+        MessageHandler(Filters.regex('->'), send_translation)
     )
     dp.add_handler(
         CommandHandler('show_my_links', show_my_links)
     )
     dp.add_handler(
-        MessageHandler(
-            Filters.voice, send_audio_transcription
-        )
+        MessageHandler(Filters.voice, send_audio_transcription)
     )
     dp.add_handler(
-        MessageHandler(
-            Filters.text,
-            get_answer_davinci_person
-        )
+        MessageHandler(Filters.text, get_answer_davinci_person)
     )
     return dp
 

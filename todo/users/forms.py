@@ -52,9 +52,7 @@ class ProfileForm(forms.ModelForm):
             'birthday',
         )
         widgets = {
-            'image': forms.FileInput(
-                attrs={'onchange': 'form.submit()'}
-            )
+            'image': forms.FileInput(attrs={'onchange': 'form.submit()'})
         }
         labels = {
             'username': 'Имя пользователя',
@@ -64,14 +62,13 @@ class ProfileForm(forms.ModelForm):
         super(ProfileForm, self).__init__(*args, **kwargs)
         self.fields['username'].widget.attrs['readonly'] = True
         self.fields['tg_id'].widget.attrs['readonly'] = True
+        self.fields['phone_number'].widget.attrs['readonly'] = True
         user = kwargs.get('instance')
         self.fields['favorite_group'] = forms.ModelChoiceField(
             queryset=user.groups_connections.all()
         )
         self.fields['favorite_group'].required = False
-        self.fields['favorite_group'].label = (
-            'Группа по умолчанию для действий без выбора группы'
-        )
+        self.fields['favorite_group'].label = 'Группа по умолчанию для действий, без выбора группы'
 
     def clean_favorite_group(self):
         favorite_group = self.cleaned_data['favorite_group']
@@ -83,8 +80,6 @@ class ProfileForm(forms.ModelForm):
         image = self.cleaned_data.get("image")
         if not image:
             raise forms.ValidationError("No image!")
-        if image.size > 10000000:
-            raise forms.ValidationError(
-                "Размер вашего фото превышает разрешенный в 1мб."
-            )
+        if image.size > 100000000:
+            raise forms.ValidationError("Размер вашего фото превышает разрешенный в 10мб.")
         return image

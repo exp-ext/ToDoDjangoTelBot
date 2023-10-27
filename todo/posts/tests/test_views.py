@@ -240,7 +240,7 @@ class PostViewsTests(TestCase):
 
     def test_post_in_feed(self):
         """Тест появления поста у подписанных и неподписанных пользователей."""
-        self.followers_authorized_client.get(self.profile_follow)
+        self.followers_authorized_client.post(self.profile_follow)
         # при подписке пост отображаются в index
         text = 'Новая запись пользователя появляется в ленте'
         Post.objects.create(
@@ -254,7 +254,7 @@ class PostViewsTests(TestCase):
             'не найден проверочный текст в последнем посте автора'
         )
         # после отписки, из follow_index приходит 0 постов
-        self.followers_authorized_client.get(self.profile_unfollow)
+        self.followers_authorized_client.post(self.profile_unfollow)
         response = self.followers_authorized_client.get(self.follow_index)
         object = response.context['page_obj'].object_list
         self.assertEqual(object.count(), 0)

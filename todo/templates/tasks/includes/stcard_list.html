@@ -36,10 +36,19 @@
         {% endif %}     
 
         {% if note.user == request.user %}
-          <a class="btn btn-outline-secondary shadow" href="{% url 'tasks:task_edit' note.pk %}" class="card-link">изменить</a>
-          <a class="btn btn-outline-dark shadow" href="{% url 'tasks:task_delete' note.pk %}" class="card-link">удалить</a>
+
+            <form method="patch" action="{% url 'tasks:task_edit' note.pk %}">
+              {% csrf_token %}
+                <button type="submit" class="btn btn-outline-secondary shadow w-100">изменить</button>
+            </form>
+
+            <form method="post" action="{% url 'tasks:task_delete' note.pk %}">
+              {% csrf_token %}
+                <button type="submit" class="btn btn-outline-dark shadow w-100">удалить</button>
+            </form>
+
         {% else %}
-          <a class="btn btn-outline-secondary shadow" href="{% url 'posts:profile' note.user %}" class="card-link">Создано: {{ note.user.get_full_name }}</a>
+          <a class=" shadow" href="{% url 'posts:profile' note.user %}" class="card-link">Создано: {{ note.user.get_full_name }}</a>
         {% endif %} 
 
   </div>

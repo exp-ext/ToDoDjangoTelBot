@@ -18,8 +18,10 @@
   {% endthumbnail %}
   <meta property="og:image:alt" content="{{ post.title }}" />
 
-  <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:image" content="https://www.yourtodo.ru{{ post.image.url }}">
+  {% if post.image %} 
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:image" content="https://www.yourtodo.ru{{ post.image.url }}">
+  {% endif %}
 
   <link rel="stylesheet" href="{% static 'css/hover-effects.css' %}">
   <link rel="stylesheet" href="{% static 'css/moving_units.css' %}">
@@ -53,7 +55,7 @@
             <li class="list-group-item justify-content-between align-items-center bg-secondary">
               <p>Всего постов автора:  <span> {{ authors_posts_count }} </span></p>
               
-              <a type="button" class="button fast white" href="{% url 'posts:profile' post.author %}">
+              <a type="button" class="btn button fast white" href="{% url 'posts:profile' post.author %}">
                 все &#160 посты &#160 пользователя            
               </a>
             </li>
@@ -63,18 +65,14 @@
                 <li class="list-group-item bg-secondary">  
                   <form method="patch" action="{% url 'posts:post_edit' post.pk %}">
                     {% csrf_token %}
-                    <div class="button">
-                      <button type="submit" class="button">изменить&#160пост</button>
-                    </form>
+                      <button type="submit" class="button w-100">изменить&#160пост</button>
                   </form>
                 </li>
 
                 <li class="list-group-item bg-secondary">
                   <form method="post" action="{% url 'posts:post_delete' post.pk %}">
                     {% csrf_token %}
-                    <div class="button reverse dark">
-                      <button type="submit">удалить&#160пост</button>
-                    </div>
+                      <button type="submit" class="button reverse dark w-100">удалить&#160пост</button>
                   </form>
                 </li>
 
@@ -87,7 +85,7 @@
           {% include 'includes/yabodyadvertising.html' %}
         </div>
 
-        {% if not is_mobile %}
+        {% if advertising and not is_mobile %}
           {% include 'posts/includes/advertising.html' %}
         {% endif %}
 
@@ -106,7 +104,7 @@
           </div> 
         </p>
 
-        {% if is_mobile %}
+        {% if advertising and is_mobile %}
           {% include 'posts/includes/advertising.html' %}
         {% endif %}
 

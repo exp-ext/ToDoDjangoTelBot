@@ -379,7 +379,7 @@ class FollowIndexListView(LoginRequiredMixin, ListView):
 
 class ProfileFollowView(LoginRequiredMixin, View):
     """Подписка на пользователя в его профиле."""
-    def get(self, request: HttpRequest, username: str) -> HttpResponseRedirect:
+    def post(self, request: HttpRequest, username: str) -> HttpResponseRedirect:
         author = get_object_or_404(User, username=username)
         if author != request.user:
             Follow.objects.get_or_create(user=request.user, author=author)

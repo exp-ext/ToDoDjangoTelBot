@@ -14,10 +14,12 @@ class TaskURLTests(TestCase):
     def setUpClass(cls):
         super().setUpClass()
         cls.user = User.objects.create_user(
+            tg_id=176432323321,
             username='user_tasks_url_test',
             password='1234GLKLl5',
         )
         cls.somebody = User.objects.create_user(
+            tg_id=1235672123453321,
             username='somebody_tasks_url_test',
             password='54321',
         )

@@ -1,6 +1,5 @@
 import secrets
 import string
-import traceback
 import uuid
 from datetime import timedelta
 from typing import Any, Dict, OrderedDict
@@ -71,38 +70,37 @@ class Authentication:
         if self.check_chat_type():
             return JsonResponse({"error": "Chat type not private."})
 
-        validation_key = self.get_password(length=28)
-        user, _ = User.objects.update_or_create(
-            tg_id=self.tg_user.id,
-            username=self.tg_user.username,
-            defaults={
-                'first_name': self.tg_user.first_name,
-                'last_name': self.tg_user.last_name,
-                'validation_key': validation_key,
-                'validation_key_time': timezone.now().astimezone(timezone.utc),
-            }
-        )
+        try:
+            validation_key = self.get_password(length=28)
+            user, _ = User.objects.get_or_create(tg_id=self.tg_user.id)
+            user.username = self.tg_user.username if self.tg_user.username else 'n-' + str(1010101 + user.id)[::-1]
+            user.first_name = self.tg_user.first_name
+            user.last_name = self.tg_user.last_name
+            user.validation_key = validation_key
+            user.validation_key_time = timezone.now().astimezone(timezone.utc)
 
-        if not user.image:
-            self.add_profile_picture.apply_async(
-                args=(self.tg_user.id, ModelDataSerializer.serialize(user),)
-            )
+            if not user.image:
+                self.add_profile_picture.apply_async(
+                    args=(self.tg_user.id, ModelDataSerializer.serialize(user),)
+                )
+            password = self.get_password(length=15)
+            user.set_password(password)
+            reply_text = [
+                'Вы успешно зарегистрированы в проекте Your To-Do'
+                'Ниже логин и пароль для входа в личный кабинет:\n'
+                '⤵️\n',
+                f'{self.tg_user.username}\n',
+                f'{password}\n',
+                f'Для авторизации на [сайте](https://www.{settings.DOMAIN}) пройдите по ссылке'
+                f'[https://www.{settings.DOMAIN}/auth/](https://www.{settings.DOMAIN}/auth/login/tg/{self.tg_user.id}/{validation_key}/)'
+            ]
+            message_id = self.send_messages(reply_text)
+            user.validation_message_id = message_id
+            user.save()
+        except Exception as err:
+            error_message = f'Ошибка регистрации:\n{err}'
+            self.context.bot.send_message(ADMIN_ID, error_message)
 
-        password = self.get_password(length=15)
-        user.set_password(password)
-        reply_text = [
-            'Вы успешно зарегистрированы в [проекте Your To-Do]'
-            f'(https://www.{settings.DOMAIN}/).\n'
-            'Ниже логин и пароль для входа в личный кабинет:\n'
-            f'⤵️\n',
-            f'{self.tg_user.username}\n',
-            f'{password}\n',
-            f'Для авторизации на [сайте](https://www.{settings.DOMAIN}) пройдите по ссылке'
-            f'[https://www.{settings.DOMAIN}/auth/](https://www.{settings.DOMAIN}/auth/login/tg/{self.tg_user.id}/{validation_key}/)'
-        ]
-        message_id = self.send_messages(reply_text)
-        user.validation_message_id = message_id
-        user.save()
         if not user.locations.exists():
             Location.objects.create(
                 user=user,
@@ -160,12 +158,9 @@ class Authentication:
                 args=[self.chat.id, message_id],
                 countdown=0
             )
-
             reply_text = 'Произошла непредвиденная ошибка. Разработчики уже занимаются её устранением 💡.'
             self.context.bot.send_message(self.chat.id, reply_text)
-
-            traceback_str = traceback.format_exc()
-            error_message = f'Ошибка авторизации:\n{err}\n{traceback_str[-2000:]}'
+            error_message = f'Ошибка авторизации:\n{err}'
             self.context.bot.send_message(ADMIN_ID, error_message)
 
         return JsonResponse({"ok": "Link sent."})

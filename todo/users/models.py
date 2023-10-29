@@ -99,26 +99,14 @@ class User(AbstractUser):
         ADMIN = 'admin', _('Администратор')
         USER = 'user', _('Пользователь')
 
-    tg_id = models.IntegerField(_('Telegram ID'), null=True, blank=True)
+    tg_id = models.IntegerField(_('Telegram ID'), unique=True)
     username_validator = UnicodeUsernameValidator()
-    username = models.CharField(
-        _('Имя пользователя'),
-        max_length=150,
-        unique=True,
-        help_text=_(
-            'Required. 150 characters or fewer. '
-            'Letters, digits and @/./+/-/_ only.'
-        ),
-        validators=[username_validator],
-        error_messages={
-            "unique": _("A user with that username already exists."),
-        },
-    )
-    phone_number = PhoneNumberField(_('номер телефона'), unique=True, null=True, blank=True)
+    username = models.CharField(_('Имя пользователя'), unique=True, max_length=150)
+    phone_number = PhoneNumberField(_('номер телефона'), null=True, blank=True)
     email = models.EmailField(_('email'), null=True, blank=True)
 
     birthday = models.DateField(_('Дата рождения'), blank=True, null=True)
-    image = ImageField(_('Аватар'), upload_to='users', blank=True)
+    image = ImageField(_('Аватар'), upload_to='users', blank=True, null=True)
     favorite_group = models.ForeignKey(Group, on_delete=models.SET_NULL, blank=True, null=True, related_name='users')
 
     role = models.CharField(_('Пользовательская роль'), max_length=10, choices=Role.choices, default=Role.USER)

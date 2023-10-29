@@ -14,15 +14,16 @@ User = get_user_model()
 
 def first_step_dell(update: Update, context: CallbackContext):
     chat = update.effective_chat
+    message_thread_id = update.effective_message.message_thread_id
     req_text = (
         f'*{update.effective_user.first_name}*, '
-        'введите дату и часть текста заметки,\n'
-        'или del для отмены операции'
+        'введите дату и часть текста заметки которую планируете удалить 🖍'
     )
     message_id = context.bot.send_message(
         chat.id,
         req_text,
-        parse_mode='Markdown'
+        parse_mode='Markdown',
+        message_thread_id=message_thread_id
     ).message_id
     context.user_data['del_message'] = message_id
     remove_keyboard(update, context)
@@ -32,7 +33,7 @@ def first_step_dell(update: Update, context: CallbackContext):
 def del_notes(update: Update, context: CallbackContext):
     """Удаление записи в модели Task."""
     chat = update.effective_chat
-
+    message_thread_id = update.effective_message.message_thread_id
     user = get_object_or_404(
         User,
         username=update.message.from_user.username
@@ -69,10 +70,8 @@ def del_notes(update: Update, context: CallbackContext):
             if count > 0:
                 tasks.delete()
                 reply_text = (
-                    f'Напоминани{"е" if count == 1 else "я"} с текстом '
-                    f'*<{pars.only_message}>*\n'
-                    'на дату: '
-                    f'*{datetime.strftime(pars.user_date, "%d.%m.%Y")}*\n'
+                    f'Напоминани{"е" if count == 1 else "я"} с текстом  *<{pars.only_message}>*\n'
+                    f'на дату: *{datetime.strftime(pars.user_date, "%d.%m.%Y")}*\n'
                     f'Удален{"о" if count == 1 else "ы"} безвозвратно'
                     f'{"." if count==1 else "в количестве "+str(count)+"шт."}'
                 )
@@ -88,7 +87,7 @@ def del_notes(update: Update, context: CallbackContext):
                 f'*{update.message.from_user.first_name}*, '
                 'не удалось разобрать что это за дата 🧐. Попробуйте снова 🙄.'
             )
-        send_service_message(chat.id, reply_text, 'Markdown')
+        send_service_message(chat.id, reply_text, 'Markdown', message_thread_id)
     except Exception as error:
         raise KeyError(error)
     finally:

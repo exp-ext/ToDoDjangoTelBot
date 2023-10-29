@@ -16,6 +16,7 @@ class TaskViewsTests(TestCase):
     def setUpClass(cls):
         super().setUpClass()
         cls.user_author = User.objects.create_user(
+            tg_id=12335643234221,
             username='author_tasks_views',
             password='1234GLKLl5',
         )

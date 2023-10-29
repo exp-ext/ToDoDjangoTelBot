@@ -27,24 +27,21 @@ def set_user_in_redis(tg_user: Update.effective_user, user: User):
 
 
 def get_or_create_user(tg_user):
-    """Возвращает User. Метод нужен для перехода на новую модель."""
+    """Возвращает User."""
     red_user = None
     if settings.IS_NOT_TESTS:
-        red_user = redis_client.get(f"user:{tg_user.id}")
+        redis_value = redis_client.get(f"user:{tg_user.id}")
+        if redis_value is not None:
+            red_user = redis_value.decode('utf-8')
+            red_user = json.loads(red_user)
 
     if not red_user:
         user = (
             User.objects
-            .filter(username=tg_user.username)
+            .filter(tg_id=tg_user.id)
             .select_related('favorite_group')
             .first()
         )
-        if not user:
-            user = User.objects.filter(username=tg_user.id).first()
-            if user:
-                user.tg_id = tg_user.id
-                user.username = tg_user.username
-                user.save()
         if user:
             red_user = set_user_in_redis(tg_user, user)
     return red_user
@@ -86,13 +83,13 @@ def check_registration(update: Update, context: CallbackContext, answers: dict) 
             group.save()
 
         if not red_user.get('favorite_group'):
-            user = User.objects.filter(username=tg_user.id).first()
+            user = User.objects.filter(tg_id=tg_user.id).first()
             user.favorite_group = group
             user.save()
             any_changes = True
 
         if group.id not in red_user.get('groups_connections'):
-            user = User.objects.filter(username=tg_user.username).first()
+            user = user if user else User.objects.filter(tg_id=tg_user.id).first()
             GroupConnections.objects.get_or_create(
                 user=user,
                 group=group

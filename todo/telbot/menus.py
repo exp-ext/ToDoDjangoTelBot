@@ -28,6 +28,7 @@ def build_menu(buttons: Iterable[Any], n_cols: int,
 def main_menu(update: Update, context: CallbackContext) -> None:
     """Кнопки основного меню на экран."""
     chat = update.effective_chat
+    message_thread_id = update.effective_message.message_thread_id
     user_name = update.effective_user.first_name
 
     answers = {
@@ -49,15 +50,14 @@ def main_menu(update: Update, context: CallbackContext) -> None:
         reply_markup = InlineKeyboardMarkup(build_menu(button_list, n_cols=2))
 
         menu_text = (
-            "* 💡  ГЛАВНОЕ МЕНЮ  💡 *".center(25, " ")
-            + "\n"
-            + f"для пользователя {user_name}".center(25, " ")
+            "* 💡  ГЛАВНОЕ МЕНЮ  💡 *".center(25, " ") + "\n" + f"для пользователя {user_name}".center(25, " ")
         )
         context.bot.send_message(
             chat.id,
             menu_text,
             reply_markup=reply_markup,
-            parse_mode='Markdown'
+            parse_mode='Markdown',
+            message_thread_id=message_thread_id
         )
 
 
@@ -116,6 +116,7 @@ def ask_registration(update: Update, context: CallbackContext) -> None:
 def show_my_links(update: Update, context: CallbackContext):
     """Выводит ссылки на бота и на основной сайт."""
     chat = update.effective_chat
+    message_thread_id = update.effective_message.message_thread_id
     button_list = [
         InlineKeyboardButton(text='Телеграмм',
                              url=context.bot.link),
@@ -127,7 +128,8 @@ def show_my_links(update: Update, context: CallbackContext):
     message_id = context.bot.send_message(
         chat.id,
         menu_text,
-        reply_markup=reply_markup
+        reply_markup=reply_markup,
+        message_thread_id=message_thread_id
     ).message_id
     delete_messages_by_time.apply_async(
         args=[chat.id, message_id],

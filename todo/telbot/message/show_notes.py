@@ -17,15 +17,16 @@ User = get_user_model()
 
 def first_step_show(update: Update, context: CallbackContext):
     chat = update.effective_chat
+    message_thread_id = update.effective_message.message_thread_id
     req_text = (
         f'*{update.effective_user.first_name}*, '
-        'введите дату, на которую хотите вывести заметки\n'
-        'или *end* для отмены операции'
+        'введите дату, на которую хотите вывести заметки 📆'
     )
     message_id = context.bot.send_message(
         chat.id,
         req_text,
-        parse_mode='Markdown'
+        parse_mode='Markdown',
+        message_thread_id=message_thread_id
     ).message_id
     context.user_data['del_message'] = message_id
     remove_keyboard(update, context)
@@ -38,7 +39,6 @@ def show_at_date(update: Update, context: CallbackContext):
     в зависимости от private или group.
     """
     chat = update.effective_chat
-
     user = get_object_or_404(
         User,
         username=update.effective_user.username
@@ -88,6 +88,7 @@ def show(update: Update, context: CallbackContext,
     Отправляет в чат сообщение со списком событий.
     """
     chat = update.effective_chat
+    message_thread_id = update.effective_message.message_thread_id
     tg_user = update.effective_user
     user = get_object_or_404(
         User,
@@ -190,5 +191,6 @@ def show(update: Update, context: CallbackContext,
     context.bot.send_message(
         chat_id=chat.id,
         text=note_sort,
-        parse_mode=ParseMode.HTML
+        parse_mode=ParseMode.HTML,
+        message_thread_id=message_thread_id
     )

@@ -12,10 +12,12 @@ class PostURLTests(TestCase):
     def setUpClass(cls):
         super().setUpClass()
         cls.user = User.objects.create_user(
+            tg_id=8523123321,
             username='author_posts_urls',
             password='1234GLKLl5',
         )
         cls.somebody = User.objects.create_user(
+            tg_id=1254553321,
             username='user_posts_urls',
             password='54321',
         )

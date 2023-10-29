@@ -17,15 +17,16 @@ User = get_user_model()
 
 def first_step_add(update: Update, context: CallbackContext):
     chat = update.effective_chat
+    message_thread_id = update.effective_message.message_thread_id
     req_text = (
         f'*{update.effective_user.first_name}*, '
-        'введите текст заметки с датой и временем,\n'
-        'или *end* для отмены операции'
+        'введите текст заметки с датой и временем 🖌'
     )
     message_id = context.bot.send_message(
         chat.id,
         req_text,
-        parse_mode='Markdown'
+        parse_mode='Markdown',
+        message_thread_id=message_thread_id
     ).message_id
     context.user_data['del_message'] = message_id
     remove_keyboard(update, context)
@@ -35,6 +36,7 @@ def first_step_add(update: Update, context: CallbackContext):
 def add_notes(update: Update, context: CallbackContext):
     """Добавление записи в модель Task."""
     chat = update.effective_chat
+    message_thread_id = update.effective_message.message_thread_id
     user = get_object_or_404(
         User,
         username=update.message.from_user.username
@@ -76,7 +78,7 @@ def add_notes(update: Update, context: CallbackContext):
                         'Очень похожее напоминание присутствует в задачах.\n'
                         'Запись отклонена.'
                     )
-                    send_service_message(chat.id, reply_text)
+                    send_service_message(chat.id, reply_text, message_thread_id)
                     return ConversationHandler.END
 
             birthday = pars.birthday
@@ -114,7 +116,7 @@ def add_notes(update: Update, context: CallbackContext):
                 'не удалось разобрать что это за дата 🧐. Попробуйте снова 🙄.'
             )
 
-        send_service_message(chat.id, reply_text, 'Markdown')
+        send_service_message(chat.id, reply_text, 'Markdown', message_thread_id)
     except Exception as error:
         raise KeyError(error)
     finally:

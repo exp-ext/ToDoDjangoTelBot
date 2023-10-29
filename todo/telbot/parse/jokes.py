@@ -28,8 +28,8 @@ def joke_parsing(all: bool = False) -> str:
 def show_joke(update: Update, context: CallbackContext) -> None:
     """Отправляет анекдот в час вызвавший функцию."""
     chat = update.effective_chat
-
-    context.bot.send_message(chat.id, joke_parsing())
+    message_thread_id = update.effective_message.message_thread_id
+    context.bot.send_message(chat.id, joke_parsing(), message_thread_id=message_thread_id)
 
     del_menu_id = update.effective_message.message_id
     context.bot.delete_message(chat.id, del_menu_id)

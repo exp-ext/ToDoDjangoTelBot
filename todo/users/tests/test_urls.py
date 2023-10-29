@@ -10,6 +10,7 @@ class UsersURLTests(TestCase):
     def setUpClass(cls):
         super().setUpClass()
         cls.user = User.objects.create_user(
+            tg_id=123321,
             username='user_users_urls',
             password="12345",
         )

@@ -179,6 +179,7 @@ class GetAnswerDallE():
 
 def first_step_get_image(update: Update, context: CallbackContext):
     chat = update.effective_chat
+    message_thread_id = update.effective_message.message_thread_id
     req_text = (
         f'*{update.effective_user.first_name}*, '
         'введите текст для генерации картинки на английском языке'
@@ -186,7 +187,8 @@ def first_step_get_image(update: Update, context: CallbackContext):
     message_id = context.bot.send_message(
         chat.id,
         req_text,
-        parse_mode=ParseMode.MARKDOWN
+        parse_mode=ParseMode.MARKDOWN,
+        message_thread_id=message_thread_id
     ).message_id
     context.user_data['image_gen'] = message_id
     remove_keyboard(update, context)

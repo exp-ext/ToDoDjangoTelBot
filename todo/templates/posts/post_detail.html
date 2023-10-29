@@ -40,7 +40,16 @@
           <ul class="list-group shadow group-unit _anim-items _anim-no-hide">
             <li class="list-group-item bg-secondary">
               <p>Дата публикации:<br/>~ {{ post.created_at|date:"d E Y" }}</p>
+
+              <div class="wow fadeInUp animated" data-wow-duration="1200ms" style="visibility: visible; animation-duration: 1200ms; animation-name: fadeInUp;">
+                <p>
+                  <span class="counter-title">Просмотров</span>
+                  <i class="fa fa-user medium-icon"></i>
+                  <span class="timer counter alt-font appear" data-to="600" data-speed="7000">{{ counter }}</span>
+                </p>
+            </div>
             </li>
+
             {% if post.group and post.group.link %}
                 <li class="list-group-item  bg-secondary">
                   <p>Группа:<br/>{{ post.group }}</p>
@@ -124,6 +133,9 @@
 
 {% block javascript %}  
   <script src="{% static 'js/script.js' %}"></script>
+
+  <script src="{% static 'js/counter.js' %}"></script>
+
   <script async charset="utf-8" src="//cdn.embedly.com/widgets/platform.js"></script>
   <script>
     document.querySelectorAll( 'oembed[url]' ).forEach( element => {

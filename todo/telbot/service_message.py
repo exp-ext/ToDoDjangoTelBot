@@ -5,16 +5,21 @@ from .cleaner import delete_messages_by_time
 from .loader import bot
 
 
-def send_service_message(chat_id: int, reply_text: str,
-                         parse_mode: str = None) -> None:
+def send_service_message(chat_id: int, reply_text: str, parse_mode: str = None, message_thread_id: int = None) -> None:
     """
     Отправляет сообщение в чат и запускает процесс удаления сообщения
     с отсрочкой в 20 секунд.
     - chat_id (:obj:`int` | :obj:`str`) - ID чата.
     - reply_text (:obj:`str`) - текс сообщения
     - parse_mode (:obj:`str`) - Markdown or HTML.
+    - message_thread_id (:obj:`str`) - номер темы для супергрупп
     """
-    message_id = bot.send_message(chat_id, reply_text, parse_mode).message_id
+    message_id = bot.send_message(
+        chat_id,
+        reply_text,
+        parse_mode,
+        message_thread_id=message_thread_id
+    ).message_id
     delete_messages_by_time.apply_async(
         args=[chat_id, message_id],
         countdown=20

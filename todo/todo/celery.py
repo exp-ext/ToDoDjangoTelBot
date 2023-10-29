@@ -37,4 +37,8 @@ app.conf.beat_schedule = {
         'task': 'telbot.tasks.send_telegram_mailing',
         'schedule': crontab(minute='*/10'),
     },
+    'load_stat_data_to_postgres': {
+        'task': 'stats.tasks.load_to_database',
+        'schedule': crontab(minute='*/60'),
+    },
 }

@@ -30,10 +30,12 @@ class PostViewsTests(TestCase):
     def setUpClass(cls):
         super().setUpClass()
         cls.user_author = User.objects.create_user(
+            tg_id=123325321,
             username='author_posts_views',
             password='1234GLKLl5',
         )
         cls.user_action = User.objects.create_user(
+            tg_id=1233854232121,
             username='action_author_posts_views',
             password='123TKLDKlk45',
         )

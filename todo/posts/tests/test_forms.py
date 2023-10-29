@@ -29,10 +29,12 @@ class PostFormTests(TestCase):
     def setUpClass(cls):
         super().setUpClass()
         cls.user_author = User.objects.create_user(
+            tg_id=12332196,
             username='author_posts_form',
             password='1234GLKLl5',
         )
         cls.user_action = User.objects.create_user(
+            tg_id=12332189,
             username='comment_auth_posts_form',
             password='123TKLDKlk45',
         )

@@ -88,6 +88,7 @@ PROJECT_APPS = [
     'posts.apps.PostsConfig',
     'ai.apps.AiConfig',
     'advertising.apps.AdvertisingConfig',
+    'stats.apps.StatsConfig',
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + PROJECT_APPS
@@ -109,8 +110,6 @@ MIDDLEWARE = [
     'django_user_agents.middleware.UserAgentMiddleware',
     # debug_toolbar
     'debug_toolbar.middleware.DebugToolbarMiddleware',
-    # server error
-    'todo.middleware.ServerErrorHandlerMiddleware',
 ]
 
 ROOT_URLCONF = 'todo.urls'
@@ -339,6 +338,13 @@ REDIS_PASSWORD = os.getenv('REDIS_PASSWORD')
 
 REDIS_URL = f'redis://:{REDIS_PASSWORD}@{REDIS_HOST}:{REDIS_PORT}'
 
+REDIS_CLIENT = redis.StrictRedis(
+    host=REDIS_HOST,
+    port=REDIS_PORT,
+    db=0,
+    password=REDIS_PASSWORD
+)
+
 CHANNEL_LAYERS = {
     'default': {
         'BACKEND': 'channels_redis.core.RedisChannelLayer',
@@ -347,13 +353,6 @@ CHANNEL_LAYERS = {
         },
     },
 }
-
-REDIS_CLIENT = redis.StrictRedis(
-    host=REDIS_HOST,
-    port=REDIS_PORT,
-    db=0,
-    password=REDIS_PASSWORD
-)
 
 CELERY_BROKER_URL = f"{REDIS_URL}/0"
 CELERY_RESULT_BACKEND = CELERY_BROKER_URL

@@ -12,11 +12,11 @@ from ..cleaner import remove_keyboard
 from ..geoservis.support import get_distance
 
 
-def find_closest_lat_lon(data: Iterable[Mapping[str, float]],
-                         v: Mapping[str, float]
-                         ) -> Dict[str, float]:
-    """Перебирает координаты в data сравнивая их с v в функции get_distance
-       и возвращает те, что имеют минимальное расстояние между собой. """
+def find_closest_lat_lon(data: Iterable[Mapping[str, float]], v: Mapping[str, float]) -> Dict[str, float]:
+    """
+    Перебирает координаты в data сравнивая их с v в функции get_distance и возвращает те,
+    что имеют минимальное расстояние между собой.
+    """
     try:
         return min(
             data,
@@ -29,6 +29,7 @@ def find_closest_lat_lon(data: Iterable[Mapping[str, float]],
 def where_to_go(update: Update, context: CallbackContext):
     """Отправляет в чат список событий полученный с api kudago.com."""
     chat = update.effective_chat
+    message_thread_id = update.effective_message.message_thread_id
     date_today_int = dt.today()
     date_today = datetime.strftime(date_today_int, '%Y-%m-%d')
 
@@ -93,8 +94,7 @@ def where_to_go(update: Update, context: CallbackContext):
 
         text = (
             '[BCЕ МЕРОПРИЯТИЯ НА СЕГОДНЯ \n'
-            f'в ближайшем от Вас городе {city_name}]'
-            '(https://kudago.com/spb/festival/'
+            f'в ближайшем от Вас городе {city_name}](https://kudago.com/spb/festival/'
             f'?date={date_today}&hide_online=y&only_free=y)\n\n'
         )
         for item in next_data['results']:
@@ -104,8 +104,12 @@ def where_to_go(update: Update, context: CallbackContext):
             )
             text += '-------------\n'
 
-        context.bot.send_message(chat.id, text, parse_mode='Markdown')
-
+        context.bot.send_message(
+            chat.id,
+            text,
+            parse_mode='Markdown',
+            message_thread_id=message_thread_id
+        )
         remove_keyboard(update, context)
 
     except Exception as error:

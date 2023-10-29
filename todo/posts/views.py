@@ -1,3 +1,4 @@
+import json
 import re
 from typing import Any, Dict
 
@@ -23,7 +24,7 @@ from .forms import CommentForm, GroupMailingForm, PostForm
 from .models import Follow, Post
 
 User = get_user_model()
-
+redis_client = settings.REDIS_CLIENT
 PAGINATE_BY = 10
 
 
@@ -312,12 +313,32 @@ class PostDetailView(DetailView):
         user_agent = get_user_agent(self.request)
         all_banners = PartnerBanner.objects.all()
         random_banner = all_banners.order_by('?').first()
+
+        if redis_client.get(f'counter_post_{post.id}'):
+            counter = redis_client.incr(f'counter_post_{post.id}')
+        else:
+            counter = post.view_count.count()
+            redis_client.set(f'counter_post_{post.id}', counter)
+
+        agent_data = {
+            'post_id': post.id,
+            'browser': user_agent.browser.family,
+            'os': user_agent.os.family,
+            'is_bot': user_agent.is_bot,
+            'is_mobile': user_agent.is_mobile,
+            'is_pc': user_agent.is_pc,
+            'is_tablet': user_agent.is_tablet,
+            'is_touch_capable': user_agent.is_touch_capable,
+        }
+        serialized_agent_data = json.dumps(agent_data)
+        redis_client.lpush('list_agent_posts', json.dumps(serialized_agent_data))
         context |= {
             'authors_posts_count': post.author.posts.count(),
             'comments': post.comments.all(),
             'form': CommentForm(self.request.POST or None),
             'is_mobile': user_agent.is_mobile,
-            'advertising': random_banner if random_banner else False
+            'advertising': random_banner if random_banner else False,
+            'counter': counter,
         }
         return context
 

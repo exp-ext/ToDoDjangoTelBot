@@ -86,13 +86,13 @@ class Authentication:
             password = self.get_password(length=15)
             user.set_password(password)
             reply_text = [
-                'Вы успешно зарегистрированы в проекте Your To-Do'
+                'Вы успешно зарегистрированы в проекте Your To-Do.\n'
                 'Ниже логин и пароль для входа в личный кабинет:\n'
                 '⤵️\n',
                 f'{self.tg_user.username}\n',
                 f'{password}\n',
-                f'Для авторизации на [сайте](https://www.{settings.DOMAIN}) пройдите по ссылке'
-                f'[https://www.{settings.DOMAIN}/auth/](https://www.{settings.DOMAIN}/auth/login/tg/{self.tg_user.id}/{validation_key}/)'
+                f'Для быстрой авторизации на [сайте](https://www.{settings.DOMAIN}) пройдите по ссылке:\n〰\n'
+                f'✔️ [https://www.{settings.DOMAIN}/auth/](https://www.{settings.DOMAIN}/auth/login/tg/{self.tg_user.id}/{validation_key}/)\n〰'
             ]
             message_id = self.send_messages(reply_text)
             user.validation_message_id = message_id
@@ -146,8 +146,8 @@ class Authentication:
         user.validation_key = validation_key
         user.validation_key_time = timezone.now().astimezone(timezone.utc)
         reply_text = [
-            f'Для авторизации на [сайте](https://www.{settings.DOMAIN}) пройдите по ссылке'
-            f'[https://www.{settings.DOMAIN}/auth/](https://www.{settings.DOMAIN}/auth/login/tg/{self.tg_user.id}/{validation_key}/)'
+            f'Для быстрой авторизации на [сайте](https://www.{settings.DOMAIN}) пройдите по ссылке:\n〰\n'
+            f'✔️ [https://www.{settings.DOMAIN}/auth/](https://www.{settings.DOMAIN}/auth/login/tg/{self.tg_user.id}/{validation_key}/)\n〰'
         ]
         message_id = self.send_messages(reply_text)
         user.validation_message_id = message_id
@@ -329,6 +329,8 @@ class LoginTgLinkView(View):
         user_id = int(user_id)
         key = str(key)
         user = User.objects.filter(tg_id=user_id).first()
+        if not user:
+            return redirect('index')
 
         time_difference = timezone.now().astimezone(timezone.utc) - user.validation_key_time
         if user.validation_key == key and time_difference < timedelta(minutes=self.valid_time):

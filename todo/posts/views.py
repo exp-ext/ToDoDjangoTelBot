@@ -311,27 +311,44 @@ class PostDetailView(DetailView):
         context = super().get_context_data(**kwargs)
         post = self.get_object()
         user_agent = get_user_agent(self.request)
+        ip = self.get_client_ip()
         all_banners = PartnerBanner.objects.all()
         random_banner = all_banners.order_by('?').first()
 
-        if redis_client.get(f'counter_post_{post.id}'):
-            counter = redis_client.incr(f'counter_post_{post.id}')
-        else:
-            counter = post.view_count.count()
-            redis_client.set(f'counter_post_{post.id}', counter)
+        redis_key_post_ips = f'ips_post_{post.id}'
+        redis_key_post_counter = f'counter_post_{post.id}'
+        redis_key_agent_posts = 'list_agent_posts'
 
-        agent_data = {
-            'post_id': post.id,
-            'browser': user_agent.browser.family,
-            'os': user_agent.os.family,
-            'is_bot': user_agent.is_bot,
-            'is_mobile': user_agent.is_mobile,
-            'is_pc': user_agent.is_pc,
-            'is_tablet': user_agent.is_tablet,
-            'is_touch_capable': user_agent.is_touch_capable,
-        }
-        serialized_agent_data = json.dumps(agent_data)
-        redis_client.lpush('list_agent_posts', json.dumps(serialized_agent_data))
+        try:
+            check_ip = redis_client.sismember(redis_key_post_ips, ip)
+        except Exception:
+            check_ip = False
+            ip = '127.0.0.1'
+
+        if not check_ip:
+            if redis_client.get(redis_key_post_counter):
+                counter = redis_client.incr(redis_key_post_counter)
+            else:
+                counter = post.view_count.count()
+                redis_client.set(redis_key_post_counter, counter)
+
+            agent_data = {
+                'post_id': post.id,
+                'browser': user_agent.browser.family,
+                'os': user_agent.os.family,
+                'is_bot': user_agent.is_bot,
+                'is_mobile': user_agent.is_mobile,
+                'is_pc': user_agent.is_pc,
+                'is_tablet': user_agent.is_tablet,
+                'is_touch_capable': user_agent.is_touch_capable,
+            }
+            serialized_agent_data = json.dumps(agent_data)
+
+            redis_client.sadd(redis_key_post_ips, ip)
+            redis_client.lpush(redis_key_agent_posts, json.dumps(serialized_agent_data))
+        else:
+            counter = redis_client.get(redis_key_post_counter).decode('utf-8')
+
         context |= {
             'authors_posts_count': post.author.posts.count(),
             'comments': post.comments.all(),
@@ -341,6 +358,14 @@ class PostDetailView(DetailView):
             'counter': counter,
         }
         return context
+
+    def get_client_ip(self):
+        x_forwarded_for = self.request.META.get('HTTP_X_FORWARDED_FOR')
+        if x_forwarded_for:
+            ip = x_forwarded_for.split(',')[0]
+        else:
+            ip = self.request.META.get('REMOTE_ADDR')
+        return ip
 
 
 class AddCommentView(LoginRequiredMixin, FormView):

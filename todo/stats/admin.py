@@ -4,4 +4,29 @@ from stats.models import PostsCounter
 
 @admin.register(PostsCounter)
 class PartnerBannerAdmin(admin.ModelAdmin):
-    pass
+    list_display = (
+        'post',
+        'browser',
+        'is_bot',
+        'is_mobile',
+        'is_pc',
+        'is_tablet',
+        'is_touch_capable',
+    )
+
+    fieldsets = (
+        ('Пост', {'fields': ('post', )}),
+        ('Система', {'fields': ('browser', 'os',)}),
+        ('Сущность', {'fields': ('is_bot', 'is_mobile', 'is_pc', 'is_tablet', 'is_touch_capable')}),
+    )
+
+    search_fields = ('browser', 'os', )
+    list_filter = (
+        'post',
+        'browser',
+        ('is_bot', admin.BooleanFieldListFilter),
+        ('is_mobile', admin.BooleanFieldListFilter),
+        ('is_pc', admin.BooleanFieldListFilter),
+        ('is_tablet', admin.BooleanFieldListFilter),
+        ('is_touch_capable', admin.BooleanFieldListFilter),
+    )

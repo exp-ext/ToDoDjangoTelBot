@@ -137,15 +137,7 @@ ASGI_APPLICATION = 'todo.asgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.1/ref/settings/#databases
 
-SQLITE = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-        'TIME_ZONE': 'UTC',
-    }
-}
-
-POSTGRES = {
+DATABASES = {
     'default': {
         'ENGINE': os.getenv('POSTGRES_ENGINE'),
         'NAME': os.getenv('POSTGRES_DB'),
@@ -155,9 +147,6 @@ POSTGRES = {
         'PORT': os.getenv('POSTGRES_PORT'),
     }
 }
-
-IS_NOT_TESTS = int(os.getenv('IS_NOT_TESTS', default=0))
-DATABASES = POSTGRES if IS_NOT_TESTS else SQLITE
 
 # django-dbbackup
 DBBACKUP_CONNECTORS = {
@@ -366,7 +355,7 @@ CELERY_TASK_DEFAULT_QUEUE = 'default'
 CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
 
 # CACHE BACKEND
-REDISCACHE = {
+CACHES = {
     'default': {
         'BACKEND': 'django_redis.cache.RedisCache',
         'LOCATION': f'{REDIS_URL}',
@@ -375,15 +364,6 @@ REDISCACHE = {
         }
     }
 }
-
-LOCMEMCACHE = {
-    'default': {
-        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
-        'LOCATION': '127.0.0.1:11211',
-    }
-}
-
-CACHES = REDISCACHE if IS_NOT_TESTS else LOCMEMCACHE
 
 # USER AGENTS PARSING
 # Cache backend is optional, but recommended to speed up user agent parsing

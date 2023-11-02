@@ -59,7 +59,7 @@ class SearchListView(ListView):
             for word in words:
                 if self.keyword in word and word:
                     matching_words.add(word)
-        return JsonResponse(list(matching_words)[:10], safe=False)
+        return JsonResponse(list(matching_words)[:7], safe=False)
 
     def term_queryset_answer(self, term):
         """Возврат фильтрованного о поиску queryset."""
@@ -73,6 +73,7 @@ class SearchListView(ListView):
             results.append({
                 'label': item.title,
                 'link': f'https://www.{settings.DOMAIN}/posts/{item.id}/',
+                'image': item.image.url,
             })
         return JsonResponse(results, safe=False)
 

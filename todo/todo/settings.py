@@ -325,14 +325,25 @@ REDIS_HOST = os.getenv('REDIS_HOST', 'localhost')
 REDIS_PORT = os.getenv('REDIS_PORT', '6379')
 REDIS_PASSWORD = os.getenv('REDIS_PASSWORD')
 
-REDIS_URL = f'redis://:{REDIS_PASSWORD}@{REDIS_HOST}:{REDIS_PORT}'
+IS_TEST = int(os.getenv('IS_TEST', default=0))
 
-REDIS_CLIENT = redis.StrictRedis(
-    host=REDIS_HOST,
-    port=REDIS_PORT,
-    db=0,
-    password=REDIS_PASSWORD
-)
+if IS_TEST:
+    REDIS_URL = f'redis://{REDIS_HOST}:{REDIS_PORT}'
+    REDIS_CLIENT_DATA = {
+        'host': REDIS_HOST,
+        'port': REDIS_PORT,
+        'db': 0,
+    }
+else:
+    REDIS_URL = f'redis://:{REDIS_PASSWORD}@{REDIS_HOST}:{REDIS_PORT}'
+    REDIS_CLIENT_DATA = {
+        'host': REDIS_HOST,
+        'port': REDIS_PORT,
+        'db': 0,
+        'password': REDIS_PASSWORD
+    }
+
+REDIS_CLIENT = redis.StrictRedis(**REDIS_CLIENT_DATA)
 
 CHANNEL_LAYERS = {
     'default': {

@@ -8,6 +8,7 @@
   <meta name="author" content="Your To-Do">
   <link rel="stylesheet" href="{% static 'css/moving_units.css' %}">
   <link rel="stylesheet" href="{% static 'css/hover-effects.css' %}">
+  <link rel="stylesheet" href="{% static 'css/search.css' %}">
   <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.1/themes/base/jquery-ui.css">
 {% endblock %}
 
@@ -55,13 +56,14 @@
         },
       }).data("ui-autocomplete")._renderItem = function(ul, item) {
         var listItem = $("<li>");
+        listItem.addClass("ui-menu-item");
         if (item.link) {
-          listItem.append("<a href='" + item.link + "'>" + item.label + "</a>");
+          listItem.append("<img src='" + item.image + "' height='30'/>" + "<a href='" + item.link + "'>" + item.label + " </a>");
         } else {
           listItem.append("<div>" + item.label + "</div>");
         }
         return listItem.appendTo(ul);
       };
-    });    
+    });
   </script>
 {% endblock %}

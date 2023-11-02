@@ -1,0 +1,27 @@
+.ui-menu-item {
+    display: flex;
+    align-items: center;
+    padding: 5px;
+    color: #000;
+    font-weight: normal;
+  }
+  
+.ui-menu-item img {
+    margin-right: 10px; /* Расстояние между изображением и текстом */
+}
+
+.ui-menu-item:hover {
+    background-color: rgb(88, 88, 88);
+    color: white;
+    font-weight: bold;
+}
+
+.ui-menu-item a {
+    text-decoration: none;
+    color: #000;
+}
+
+.ui-menu-item a:hover  {
+    text-decoration: underline;
+    color: white;    
+}

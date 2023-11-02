@@ -21,19 +21,17 @@ def set_user_in_redis(tg_user: Update.effective_user, user: User):
         'favorite_group': user.favorite_group.id if user.favorite_group else None,
         'groups_connections': list(user.groups_connections.values_list('group__id', flat=True)),
     }
-    if settings.IS_NOT_TESTS:
-        redis_client.set(f"user:{tg_user.id}", json.dumps(red_user))
+    redis_client.set(f"user:{tg_user.id}", json.dumps(red_user))
     return red_user
 
 
 def get_or_create_user(tg_user):
     """Возвращает User."""
     red_user = None
-    if settings.IS_NOT_TESTS:
-        redis_value = redis_client.get(f"user:{tg_user.id}")
-        if redis_value is not None:
-            red_user = redis_value.decode('utf-8')
-            red_user = json.loads(red_user)
+    redis_value = redis_client.get(f"user:{tg_user.id}")
+    if redis_value is not None:
+        red_user = redis_value.decode('utf-8')
+        red_user = json.loads(red_user)
 
     if not red_user:
         user = (
@@ -70,9 +68,7 @@ def check_registration(update: Update, context: CallbackContext, answers: dict) 
         return False
 
     if chat.type != 'private':
-        group, created = Group.objects.get_or_create(
-            chat_id=chat.id
-        )
+        group, created = Group.objects.get_or_create(chat_id=chat.id)
         any_changes = False
         if group.link != chat.link:
             group.link = chat.link
@@ -90,10 +86,7 @@ def check_registration(update: Update, context: CallbackContext, answers: dict) 
 
         if group.id not in red_user.get('groups_connections'):
             user = user if user else User.objects.filter(tg_id=tg_user.id).first()
-            GroupConnections.objects.get_or_create(
-                user=user,
-                group=group
-            )
+            GroupConnections.objects.get_or_create(user=user, group=group)
             any_changes = True
 
         if any_changes:

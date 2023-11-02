@@ -21,11 +21,7 @@ jobs:
       redis:
         image: redis
         options: >-
-          --requirepass $REDIS_PASSWORD
-          --health-cmd "redis-cli ping"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
+          --requirepass ${REDIS_PASSWORD}
         ports:
           - 6379:6379
         env:

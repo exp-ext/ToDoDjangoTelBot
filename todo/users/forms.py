@@ -64,8 +64,9 @@ class ProfileForm(forms.ModelForm):
         self.fields['tg_id'].widget.attrs['readonly'] = True
         self.fields['phone_number'].widget.attrs['readonly'] = True
         user = kwargs.get('instance')
+        user_groups = user.groups_connections.values_list('group', flat=True)
         self.fields['favorite_group'] = forms.ModelChoiceField(
-            queryset=user.groups_connections.all()
+            queryset=Group.objects.filter(id__in=user_groups)
         )
         self.fields['favorite_group'].required = False
         self.fields['favorite_group'].label = 'Группа по умолчанию для действий, без выбора группы'

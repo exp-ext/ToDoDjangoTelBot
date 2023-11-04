@@ -27,21 +27,14 @@ def set_user_in_redis(tg_user: Update.effective_user, user: User):
 
 def get_or_create_user(tg_user):
     """Возвращает User."""
-    red_user = None
-    redis_value = redis_client.get(f"user:{tg_user.id}")
-    if redis_value is not None:
-        red_user = redis_value.decode('utf-8')
-        red_user = json.loads(red_user)
+    redis_key = f"user:{tg_user.id}"
+    red_user = redis_client.get(redis_key)
+    if red_user:
+        return json.loads(red_user.decode('utf-8'))
 
-    if not red_user:
-        user = (
-            User.objects
-            .filter(tg_id=tg_user.id)
-            .select_related('favorite_group')
-            .first()
-        )
-        if user:
-            red_user = set_user_in_redis(tg_user, user)
+    user = User.objects.filter(tg_id=tg_user.id).select_related('favorite_group').first()
+    if user:
+        red_user = set_user_in_redis(tg_user, user)
     return red_user
 
 
@@ -68,27 +61,35 @@ def check_registration(update: Update, context: CallbackContext, answers: dict) 
         return False
 
     if chat.type != 'private':
-        group, created = Group.objects.get_or_create(chat_id=chat.id)
-        any_changes = False
+        group, _ = Group.objects.get_or_create(chat_id=chat.id)
+
+        update_group = False
+        update_user = False
+
         if group.link != chat.link:
             group.link = chat.link
-            group.save()
+            update_group = True
 
-        if created or group.title != chat.title:
+        if group.title != chat.title:
             group.title = chat.title
-            group.save()
+            update_group = True
+
+        if not red_user.get('favorite_group') or group.id not in red_user.get('groups_connections'):
+            user = User.objects.filter(tg_id=tg_user.id).first()
 
         if not red_user.get('favorite_group'):
-            user = User.objects.filter(tg_id=tg_user.id).first()
             user.favorite_group = group
-            user.save()
-            any_changes = True
+            update_user = True
 
         if group.id not in red_user.get('groups_connections'):
-            user = user if user else User.objects.filter(tg_id=tg_user.id).first()
             GroupConnections.objects.get_or_create(user=user, group=group)
-            any_changes = True
+            update_user = True
 
-        if any_changes:
+        if update_group:
+            group.save()
+
+        if update_user:
+            user.save()
             set_user_in_redis(tg_user, user)
+
     return True

@@ -133,8 +133,7 @@ def show(update: Update, context: CallbackContext,
             utc_date = item.server_datetime
             user_date = utc_date.astimezone(user_tz)
             notes.append(
-                f'<b>{datetime.strftime(user_date, "%d.%m")} '
-                f'- <i>{item.text}</i></b>'
+                f'<b>{datetime.strftime(user_date, "%d.%m")}  - <i>{item.text}</i></b>'
             )
         else:
             if not at_date or item.server_datetime.year == at_date.year:
@@ -145,45 +144,34 @@ def show(update: Update, context: CallbackContext,
                 user_time = datetime.strftime(user_date, "%H:%M")
                 user_time = '' if user_time == '00:00' else f' в {user_time} '
                 if_owner = (
-                    f'- <i>автор {item.user.first_name} '
-                    f'{item.user.last_name}\n</i>'
+                    f'- <i>автор {item.user.first_name} {item.user.last_name}\n</i>'
                     if not group and item.user.username != str(tg_user.username) else ''
                 )
-                if_group = (
-                    f' в группе "{item.group.title}"'
-                    if not group and item.group else ' в этом чате'
-                )
+                if_group = f' в группе "{item.group.title}"' if not group and item.group else ''
                 notes.append(
                     f'{datetime.strftime(user_date, "%d.%m.%Y")} {user_time}'
                     f'- {item.text}\n'
                     f'{if_owner}'
-                    '<b><i>- напомню в '
-                    f'{datetime.strftime(remind, "%H:%M")}ч'
-                    f'{if_group}'
-                    '</i></b>\n'
+                    f'<b><i>- напомню в {datetime.strftime(remind, "%H:%M")}ч{if_group}</i></b>\n'
                 )
     if tasks:
         if it_birthday:
             note_sort = (
-                f'<strong>{update.effective_user.first_name}, '
-                'найдены записи Дней Рождений 🎉:</strong>\n'
+                f'<strong>{update.effective_user.first_name}, найдены записи Дней Рождений 🎉:</strong>\n'
                 '~~~~~~~~~~~~~~\n'
             )
         else:
             note_sort = (
-                f'<strong>{update.effective_user.first_name}, '
-                'в планах есть записи 📜:</strong>\n\n'
+                f'<strong>{update.effective_user.first_name},  в планах есть записи 📜:</strong>\n\n'
             )
     else:
         if it_birthday:
             note_sort = (
-                f'<strong>{update.effective_user.first_name}, '
-                'не найдены записи о Днях Рождений 🤷🏼</strong>\n'
+                f'<strong>{update.effective_user.first_name},  не найдены записи о Днях Рождений 🤷🏼</strong>\n'
             )
         else:
             note_sort = (
-                f'<strong>{update.effective_user.first_name}, '
-                'у нас нет никаких планов 🙅🏼‍♀️</strong>\n'
+                f'<strong>{update.effective_user.first_name},  у нас нет никаких планов 🙅🏼‍♀️</strong>\n'
             )
     for n in notes:
         note_sort = note_sort + f'{n}\n'

@@ -5,6 +5,7 @@ from core.views import similarity
 from core.widget import MinimalSplitDateTimeMultiWidget
 from django import forms
 from django.core.exceptions import ValidationError
+from users.models import Group
 
 from .models import Task
 
@@ -45,16 +46,12 @@ class TaskForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super(TaskForm, self).__init__(*args, **kwargs)
         user = kwargs.pop('initial').get('user')
-        instance = kwargs.get('instance')
-        groups_connections = user.groups_connections.all().select_related('user', 'group')
+        user_groups = user.groups_connections.values_list('group', flat=True)
         self.fields['group'] = forms.ModelChoiceField(
-            queryset=groups_connections,
-            initial=instance.group if instance else None
+            queryset=Group.objects.filter(id__in=user_groups)
         )
         self.fields['group'].required = False
-        self.fields['group'].label = (
-            'Место вывода сообщений о напоминании.'
-        )
+        self.fields['group'].label = 'Место вывода сообщений о напоминании.'
         self.fields['group'].help_text = (
             '<p style="color: #82818a;"> Оповещение придёт в личный чат, '
             'если оставить поле пустым.<br>'
@@ -67,16 +64,8 @@ class TaskForm(forms.ModelForm):
         user_tz = self.initial.get('tz')
         tz = pytz.timezone(user_tz)
         if server_datetime <= datetime.now(tz):
-            raise ValidationError(
-                'Назначенное время не может быть меньше текущего.'
-            )
+            raise ValidationError('Назначенное время не может быть меньше текущего.')
         return server_datetime
-
-    def clean_group(self):
-        group_connection = self.cleaned_data['group']
-        if group_connection:
-            return group_connection.group
-        return group_connection
 
     def clean_text(self):
         text = self.cleaned_data['text']
@@ -95,13 +84,9 @@ class TaskForm(forms.ModelForm):
                 group=group
             )
         else:
-            tasks = user.tasks.filter(
-                server_datetime__range=[start_datetime, end_datetime]
-            )
+            tasks = user.tasks.filter(server_datetime__range=[start_datetime, end_datetime])
         for task in tasks:
             simile = similarity(task.text, text)
             if simile > 0.62:
-                raise ValidationError(
-                    'Очень похожая запись уже присутствует в напоминаниях.'
-                )
+                raise ValidationError('Очень похожая запись уже присутствует в напоминаниях.')
         return text

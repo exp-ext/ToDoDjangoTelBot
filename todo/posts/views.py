@@ -122,6 +122,14 @@ class IndexPostsListView(ListView):
             )
         return post_list
 
+    def get_context_data(self, **kwargs: Any) -> Dict[str, Any]:
+        context = super().get_context_data(**kwargs)
+        user_agent = get_user_agent(self.request)
+        context |= {
+            'is_mobile': user_agent.is_mobile,
+        }
+        return context
+
 
 class GroupPostsListView(ListView):
     """

@@ -5,7 +5,6 @@
 
 <head>
 
-  {% include 'includes/yacounter.html' %}
   {% include 'includes/yaheadadvertising.html' %}
 
   <meta charset="utf-8">
@@ -50,10 +49,12 @@
       {% endblock%}
     </div>
 
-    {% block content %}
-    {% endblock%}
+    <div class="py-2">
+      {% block content %}
+      {% endblock%}
+    </div>
 
-    {% if request.user.is_authenticated %}
+    {% if request.user.is_authenticated and request.path != "/posts/" %}
       {% include 'includes/chatmodal.html' %}
     {% endif %}
 

@@ -1,6 +1,5 @@
 from django import forms
 from django.contrib.auth import get_user_model
-from django.shortcuts import get_object_or_404
 
 from .models import Group
 
@@ -70,12 +69,6 @@ class ProfileForm(forms.ModelForm):
         )
         self.fields['favorite_group'].required = False
         self.fields['favorite_group'].label = 'Группа по умолчанию для действий, без выбора группы'
-
-    def clean_favorite_group(self):
-        favorite_group = self.cleaned_data['favorite_group']
-        if favorite_group:
-            return get_object_or_404(Group, pk=favorite_group.group_id)
-        return favorite_group
 
     def clean_image(self):
         image = self.cleaned_data.get("image")

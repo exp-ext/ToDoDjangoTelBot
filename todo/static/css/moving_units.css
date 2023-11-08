@@ -15,7 +15,7 @@
   opacity: 0;
   transition: all 0.8s ease 0s;
 }
-  
+
 .group-unit._active {
   transform: translate(0px,0px);
   opacity: 1;

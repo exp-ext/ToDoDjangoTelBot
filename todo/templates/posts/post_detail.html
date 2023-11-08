@@ -25,6 +25,7 @@
 
   <link rel="stylesheet" href="{% static 'css/hover-effects.css' %}">
   <link rel="stylesheet" href="{% static 'css/moving_units.css' %}">
+  <link rel="stylesheet" href="{% static 'css/post_detail.css' %}">
 
 {% endblock %}
 
@@ -90,17 +91,25 @@
           </ul>
         </div>
 
-        <div class="card p-1 bg-light rounded shadow group-unit _anim-items _anim-no-hide my-2"> 
-          {% include 'includes/yabodyadvertising.html' %}
-        </div>
-
         {% if advertising and not is_mobile %}
           {% include 'posts/includes/advertising.html' %}
         {% endif %}
 
+        {% if is_mobile %}
       </aside>
+        <div class="card bg-light rounded shadow group-unit _anim-items _anim-no-hide my-2"> 
+          {% include 'includes/yabodyadvertising.html' %}
+        </div>
+        {% else %}
+          <div class="card p-1 bg-light rounded shadow group-unit _anim-items _anim-no-hide my-2"> 
+            {% include 'includes/yabodyadvertising.html' %}           
+          </div>
+      </aside>
+        {% endif %}
 
-      <article class="col-lg-8 col-sm-12 bg-light rounded shadow">            
+
+
+      <article class="col-lg-8 col-sm-12 bg-light rounded shadow">
         <div class="lobster"> 
           <h1>{{ post.title }}</h1>
         </div>      
@@ -109,7 +118,9 @@
         {% endthumbnail %}
         <p>
           <div class="ck ck-content">
-            {{ post.text|safe }}
+            <div class="table-wrap">
+              {{ post.text|safe }}
+            </div> 
           </div> 
         </p>
 
@@ -119,16 +130,17 @@
 
         {% include 'posts/includes/comments.html' %}
 
-      </article>   
+      </article> 
 
     </div>
   </div>
 
-  <a class="dribbble"
-  href="https://dribbble.com/shots/7441241-Button-Hover-Effects"
-    target="_blank">
-  <img src="https://cdn.dribbble.com/assets/dribbble-ball-mark-2bd45f09c2fb58dbbfb44766d5d1d07c5a12972d602ef8b32204d28fa3dda554.svg"
-    alt=""></a>
+  {% if is_mobile %}
+    {% include 'includes/yamobileflooradvertising.html' %}
+  {% endif %}
+
+  <a class="dribbble" href="https://dribbble.com/shots/7441241-Button-Hover-Effects" target="_blank">
+  <img src="https://cdn.dribbble.com/assets/dribbble-ball-mark-2bd45f09c2fb58dbbfb44766d5d1d07c5a12972d602ef8b32204d28fa3dda554.svg" alt=""></a>
 {% endblock %}
 
 {% block javascript %}  

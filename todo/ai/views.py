@@ -1,5 +1,4 @@
 import asyncio
-from typing import Any
 
 from django.http import HttpRequest, JsonResponse
 from django.views import View
@@ -9,12 +8,8 @@ from .utils import AnswerChatGPT, convert_markdown
 
 class AI(View):
 
-    def get(self,
-            request: HttpRequest,
-            *args: Any,
-            **kwargs: Any) -> HttpRequest:
+    def get(self, request: HttpRequest) -> JsonResponse:
         """Возвращает последние  запросов к ИИ."""
-
         history = (
             request.user
             .history_ai
@@ -35,21 +30,21 @@ class AI(View):
         }
         return JsonResponse(response_data, status=200)
 
-    def post(self,
-             request: HttpRequest,
-             *args: Any,
-             **kwargs: Any) -> HttpRequest:
+    def post(self, request: HttpRequest) -> JsonResponse:
         """Обращается к ИИ и отправляет ответ в PopUp."""
 
         question = request.POST.get('message')
         chat_id = request.POST.get('chat_id')
+        response_data = {}
 
         get_answer = AnswerChatGPT(request.user, question)
-        message = asyncio.run(get_answer.get_answer_davinci())
+        message = asyncio.run(get_answer.get_answer_from_ai())
 
-        message_html = convert_markdown(message)
-        response_data = {
-            'chat_id': chat_id,
-            'message': message_html,
-        }
-        return JsonResponse(response_data, status=200)
+        if message:
+            message_html = convert_markdown(message)
+            response_data = {
+                'chat_id': chat_id,
+                'message': message_html,
+            }
+            return JsonResponse(response_data, status=200)
+        return JsonResponse(response_data, status=102)

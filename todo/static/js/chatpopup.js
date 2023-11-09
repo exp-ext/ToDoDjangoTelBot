@@ -2,6 +2,7 @@ $(document).ready(function () {
     var element = $('.floating-chat');
     var myStorage = localStorage;
     var chatIsEmpty = true; // Переменная для отслеживания состояния чата
+    var isRequestPending = false; // Флаг активного запроса
 
     if (!myStorage.getItem('chatID')) {
         myStorage.setItem('chatID', createUUID());
@@ -84,28 +85,35 @@ $(document).ready(function () {
     }
 
     function sendNewMessage() {
+
         var userInput = $('.text-box');
         var newMessage = userInput.text().trim();
 
         if (!newMessage) return;
 
-        var messagesContainer = $('.messages');
-
+        if (isRequestPending) {
+            // Если запрос уже активен, не выполняем новый
+            console.log('A request is already pending. Please wait.');
+            return;
+        }
+        isRequestPending = true;
+    
+        var messagesContainer = $('.messages');    
         messagesContainer.append([
             '<li class="self">',
             newMessage,
             '</li>'
         ].join(''));
-
+    
         // Clean out old message
         userInput.text('');
         // Focus on input
         userInput.focus();
-
+    
         messagesContainer.finish().animate({
             scrollTop: messagesContainer.prop("scrollHeight")
         }, 250);
-
+    
         // Отправка сообщения на сервер
         var chat_id = myStorage.getItem('chatID');
         var data = {
@@ -114,22 +122,21 @@ $(document).ready(function () {
             csrfmiddlewaretoken: getCookie('csrftoken')
         };
 
-        // Блокируем поле ввода и показываем "typing"
-        userInput.attr("contenteditable", "false");
-        messagesContainer.append('<li class="typing">typing...</li>');
-        messagesContainer.scrollTop(messagesContainer.prop("scrollHeight"));
-
+        // Показываем "typing" рядом с названием ассистента
+        $('.typing-indicator').show();
+    
         // AJAX-запрос на сервер
         $.ajax({
             url: '/ai/message/',
             type: 'POST',
             dataType: 'json',
             data: data,
+            timeout: 600000,
             success: function (response) {
-                // Удаляем "typing"
-                messagesContainer.find('.typing').remove();
+                // Скрываем "typing"
+                $('.typing-indicator').hide();
                 chatIsEmpty = false;
-
+    
                 // Проверяем, совпадает ли chat_id
                 if (response.chat_id === chat_id) {
                     // Выводим ответ от сервера
@@ -139,15 +146,16 @@ $(document).ready(function () {
                         '</li>'
                     ].join(''));
                 }
-
+    
                 messagesContainer.scrollTop(messagesContainer.prop("scrollHeight"));
-
-                // Разблокируем поле ввода
-                userInput.attr("contenteditable", "true");
+    
+                isRequestPending = false;
             },
             error: function () {
-                // В случае ошибки также разблокируем поле ввода
-                userInput.attr("contenteditable", "true");
+                // Скрываем "typing" и в случае ошибки
+                $('.typing-indicator').hide();
+                // В случае ошибки также разблокируем отправку
+                isRequestPending = false;
             }
         });
     }

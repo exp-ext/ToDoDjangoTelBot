@@ -1,10 +1,12 @@
 <!-- Yandex.RTB R-A-3403802-4 -->
 <script>
-    window.yaContextCb.push(()=>{
-        Ya.Context.AdvManager.render({
-            "blockId": "R-A-3403802-4",
-            "type": "floorAd",
-            "platform": "desktop"
+    setTimeout(function() {
+        window.yaContextCb.push(()=>{
+            Ya.Context.AdvManager.render({
+                "blockId": "R-A-3403802-4",
+                "type": "floorAd",
+                "platform": "desktop"
+            })
         })
-    })
+    }, 20000); // Задержка в показе 20 000 миллисекунд = 20 секунд. 
 </script>

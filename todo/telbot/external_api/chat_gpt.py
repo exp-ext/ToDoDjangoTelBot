@@ -1,12 +1,12 @@
 import asyncio
 from datetime import datetime, timedelta, timezone
 
-import openai
 import telegram
 import tiktoken
 from asgiref.sync import sync_to_async
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from openai import AsyncOpenAI
 from telegram import ChatAction, ParseMode, Update
 from telegram.ext import CallbackContext
 
@@ -17,6 +17,7 @@ ADMIN_ID = settings.TELEGRAM_ADMIN_ID
 
 User = get_user_model()
 redis_client = settings.REDIS_CLIENT
+client = AsyncOpenAI(api_key=settings.CHAT_GPT_TOKEN,)
 
 
 class GetAnswerGPT():
@@ -29,7 +30,7 @@ class GetAnswerGPT():
         'Что-то пошло не так 🤷🏼\n'
         'Возможно большой наплыв запросов, которые я не успеваю обрабатывать 🤯'
     )
-    MODEL = 'gpt-3.5-turbo'
+    MODEL = 'gpt-3.5-turbo-1106'
     MAX_LONG_MESSAGE = 1024
     MAX_LONG_REQUEST = 4096
     STORY_WINDOWS_TIME = 30
@@ -58,11 +59,13 @@ class GetAnswerGPT():
                     '[inline URL](http://www.example.com/)'
                     '`inline fixed-width code`'
                     '``` pre-formatted fixed-width code block ```'
+                    'Text that is not code should be written in Russian.'
             }
         ]
         self.set_windows_time()
         self.set_message_text()
         self.set_user()
+        self.get_prompt()
 
     @classmethod
     def num_tokens_from_message(cls, message):
@@ -137,18 +140,17 @@ class GetAnswerGPT():
             if datetime.now() > time_stop:
                 break
 
-    @sync_to_async
-    def request_to_openai(self) -> None:
+    async def request_to_openai(self) -> None:
         """Делает запрос в OpenAI и выключает typing."""
-        self.get_prompt()
-        openai.api_key = settings.CHAT_GPT_TOKEN
-        answer = openai.ChatCompletion.create(
+
+        completion = await client.chat.completions.create(
             model=GetAnswerGPT.MODEL,
             messages=self.prompt,
             temperature=0.1,
         )
-        self.answer_text = answer.choices[0].message.get('content')
-        self.answer_tokens = self.num_tokens_from_message(self.answer_text)
+        self.answer_text = completion.choices[0].message.content
+        self.answer_tokens = completion.usage.completion_tokens
+        self.message_tokens = completion.usage.prompt_tokens
         self.event.set()
 
     def get_prompt(self) -> None:

@@ -39,6 +39,8 @@
     {% comment %} первая колонка {% endcomment %}
 
       <aside class="col-lg-3 col-sm-12">
+
+      {% if contents %}  
         
         <div class="card p-1 bg-light rounded shadow group-unit _anim-items _anim-no-hide mb-2">
           <div class="text-center">
@@ -50,6 +52,8 @@
             {%endfor%}
           </ul>
         </div>
+
+      {% endif %}
 
         {% if is_mobile %}
           <div class="card bg-light rounded shadow group-unit _anim-items _anim-no-hide my-2"> 

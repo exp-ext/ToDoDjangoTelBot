@@ -34,4 +34,6 @@ def create_contents(post_model: Dict[str, Any]) -> str:
 
     if contents:
         PostContents.objects.bulk_create(contents)
+    instance.text = text
+    instance.save()
     return 'Создано оглавление для поста '

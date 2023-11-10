@@ -3,6 +3,7 @@ import re
 from typing import Any, Dict
 
 from advertising.models import PartnerBanner
+from core.serializers import ModelDataSerializer
 from core.views import get_status_in_group, linkages_check, paginator_handler
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -19,7 +20,6 @@ from django.views.generic.detail import DetailView
 from django.views.generic.edit import FormView
 from django_user_agents.utils import get_user_agent
 from posts.tasks import create_contents
-from core.serializers import ModelDataSerializer
 from users.models import Group, GroupMailing
 
 from .forms import CommentForm, GroupMailingForm, PostForm

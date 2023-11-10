@@ -1,0 +1,12 @@
+<li> 
+     <a href="#{{ content.data.anchor }}" onclick="scrollDown(event)">{{ content.data.anchor }} </a>
+    {%if content.children %}
+        <ul>
+         {%for ch in content.children %}
+              {%with content=ch template_name="tree_template.html" %}
+                   {%include 'posts/includes/tree_template.html' %}
+              {%endwith%}
+         {%endfor%}
+         </ul>
+    {%endif%}
+</li>

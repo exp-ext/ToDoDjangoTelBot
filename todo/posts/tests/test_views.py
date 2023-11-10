@@ -82,7 +82,8 @@ class PostViewsTests(TestCase):
                 author=cls.user_author,
                 text=f'Тестовый пост с группой, №{count}',
                 group=cls.group if count < 12 else cls.group_not_hit,
-                image=uploaded
+                image=uploaded,
+                moderation='PS',
             )
         cls.index = reverse('posts:index_posts')
 
@@ -146,15 +147,9 @@ class PostViewsTests(TestCase):
                 response = self.authorized_client.get(name)
                 objects = response.context['page_obj']
                 last_object = objects[0]
-                self.assertEqual(
-                    last_object.author, self.post.author
-                )
-                self.assertEqual(
-                    last_object.group, self.post.group
-                )
-                self.assertEqual(
-                    last_object.image, self.post.image
-                )
+                self.assertEqual(last_object.author, self.post.author)
+                self.assertEqual(last_object.group, self.post.group)
+                self.assertEqual(last_object.image, self.post.image)
                 self.assertEqual(len(objects), 10)
                 self.assertIsInstance(objects.paginator, Paginator)
 
@@ -165,9 +160,7 @@ class PostViewsTests(TestCase):
 
                 elif name == self.profile:
                     username = response.context['author']
-                    self.assertEqual(
-                        username.username, self.user_author.username
-                    )
+                    self.assertEqual(username.username, self.user_author.username)
                     posts_count = response.context['posts_count']
                     self.assertEqual(posts_count, 13)
 
@@ -201,9 +194,7 @@ class PostViewsTests(TestCase):
                 }
                 for value, expected in form_fields.items():
                     with self.subTest(value=value):
-                        form_field = (
-                            response.context.get('form').fields.get(value)
-                        )
+                        form_field = response.context.get('form').fields.get(value)
                         self.assertIsInstance(form_field, expected)
 
     def test_follow_unfollow(self):
@@ -247,7 +238,8 @@ class PostViewsTests(TestCase):
         text = 'Новая запись пользователя появляется в ленте'
         Post.objects.create(
             author=self.user_author,
-            text=text
+            text=text,
+            moderation='PS',
         )
         response = self.followers_authorized_client.get(self.follow_index)
         followed_context = response.context['page_obj'].object_list

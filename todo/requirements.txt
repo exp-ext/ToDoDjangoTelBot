@@ -24,8 +24,9 @@ ua-parser~=0.16.1
 user-agents~=2.2.0
 
 # Django productions
-gunicorn~=21.2.0
-whitenoise~=6.5.0
+gunicorn
+daphne
+whitenoise
 
 # Bot & utils
 beautifulsoup4~=4.12.2

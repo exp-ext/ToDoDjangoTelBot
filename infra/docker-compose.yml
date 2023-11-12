@@ -45,6 +45,30 @@ services:
       - db
       - redis
 
+  ws:
+    build:
+      context: ../todo
+      dockerfile: Dockerfile
+      args:
+        DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY}
+    container_name: ws_django
+    restart: always
+    command: >
+      /bin/sh -c "daphne todo.asgi:application -b 0.0.0.0 -p 8080"
+    volumes:
+      - static_volume:/app/static/:rw
+      - media_volume:/app/media/:rw
+      - backup_volume:/app/backup/:rw
+      - cache_pip_volume:/root/.cache/pip/:rw
+      - cache_apt_volume:/var/cache/apt/archives/:rw
+    ports:
+      - "8080:8080"
+    env_file:
+      - ./.env
+    depends_on:
+      - db
+      - redis
+
   celery:
     build:
       context: ../todo

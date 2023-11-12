@@ -10,11 +10,23 @@ $(document).ready(function () {
         console.log("WebSocket connection opened:", event);
     };
 
+    function updateTypingIndicator() {
+        var selfMessagesCount = $('.messages .self').length;
+        var otherMessagesCount = $('.messages .other').length;
+    
+        if (selfMessagesCount !== otherMessagesCount) {
+            $('.typing-indicator').show();
+        } else {
+            $('.typing-indicator').hide();
+        }
+    }
+
     socket.onmessage = function(event) {
         var messages = $('.messages');
         const data = JSON.parse(event.data);
         messages.append(data.message);
         messages.scrollTop(messages.prop("scrollHeight"));
+        updateTypingIndicator();
     };
 
     socket.onclose = function(event) {

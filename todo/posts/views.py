@@ -3,7 +3,6 @@ import re
 from typing import Any, Dict
 
 from advertising.models import PartnerBanner
-from core.serializers import ModelDataSerializer
 from core.views import get_status_in_group, linkages_check, paginator_handler
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -19,7 +18,6 @@ from django.views.generic import CreateView, ListView, UpdateView
 from django.views.generic.detail import DetailView
 from django.views.generic.edit import FormView
 from django_user_agents.utils import get_user_agent
-from posts.tasks import create_contents
 from users.models import Group, GroupMailing
 
 from .forms import CommentForm, GroupMailingForm, PostForm
@@ -269,8 +267,6 @@ class PostCreateView(LoginRequiredMixin, CreateView):
         return super().form_valid(form)
 
     def get_success_url(self) -> Dict[str, Any]:
-        post_model = ModelDataSerializer.serialize(self.object)
-        create_contents.delay(post_model)
         return reverse_lazy('posts:profile', kwargs={'username': self.request.user.username})
 
 
@@ -296,8 +292,6 @@ class PostUpdateView(LoginRequiredMixin, UpdateView):
 
     def form_valid(self, form: PostForm) -> HttpResponseRedirect:
         post = form.save()
-        post_model = ModelDataSerializer.serialize(post)
-        create_contents.delay(post_model)
         return redirect('posts:post_detail', post_id=post.pk)
 
 

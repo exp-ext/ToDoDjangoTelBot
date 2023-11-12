@@ -12,7 +12,6 @@ from telbot.models import HistoryAI
 ADMIN_ID = settings.TELEGRAM_ADMIN_ID
 User = get_user_model()
 redis_client = settings.REDIS_CLIENT
-client = OpenAI(api_key=settings.CHAT_GPT_TOKEN,)
 
 
 class AnswerChatGPT():
@@ -37,16 +36,9 @@ class AnswerChatGPT():
             {
                 'role': 'system',
                 'content':
-                    'Your name is Eva and you are an experienced senior '
-                    'software developer with extensive experience leading '
-                    'teams, mentoring junior developers, and delivering '
-                    'high-quality software solutions to customers. You can '
-                    'give answers in HTML format using only:'
-                    '*bold text* _italic text_'
-                    '[inline URL](http://www.example.com/)'
-                    '`inline fixed-width code`'
-                    '``` pre-formatted fixed-width code block ```'
-                    'Text that is not code should be written in Russian.'
+                    'Your name is Eva and you are an experienced senior software developer with extensive experience leading '
+                    'teams, mentoring junior developers, and delivering high-quality software solutions to customers. You can '
+                    'give answers only in markdown format.'
             }
         ]
         self.message_tokens = AnswerChatGPT.num_tokens_from_message(message)
@@ -88,6 +80,7 @@ class AnswerChatGPT():
         Делает запрос в OpenAI.
         """
         self.get_prompt()
+        client = OpenAI(api_key=settings.CHAT_GPT_TOKEN)
         completion = client.chat.completions.create(
             model=AnswerChatGPT.MODEL,
             messages=self.prompt,

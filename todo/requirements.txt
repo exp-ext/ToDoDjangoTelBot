@@ -1,5 +1,5 @@
 # Djando + util
-Django==4.2.5
+Django~=4.2.7
 django-defender~=0.9.7
 django-dbbackup~=4.0.2
 pillow~=10.0.1
@@ -8,6 +8,7 @@ python-dotenv~=1.0.0
 sorl-thumbnail~=12.9.0
 django-phonenumber-field[phonenumbers]~=7.1.0
 django-treebeard~=4.7
+channels~=4.0.0
 
 psycopg2-binary
 

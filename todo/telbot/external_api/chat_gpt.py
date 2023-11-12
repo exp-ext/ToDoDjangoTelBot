@@ -17,7 +17,6 @@ ADMIN_ID = settings.TELEGRAM_ADMIN_ID
 
 User = get_user_model()
 redis_client = settings.REDIS_CLIENT
-client = AsyncOpenAI(api_key=settings.CHAT_GPT_TOKEN,)
 
 
 class GetAnswerGPT():
@@ -34,7 +33,7 @@ class GetAnswerGPT():
     MAX_LONG_MESSAGE = 1024
     MAX_LONG_REQUEST = 4096
     STORY_WINDOWS_TIME = 30
-    MAX_TYPING_TIME = 10
+    MAX_TYPING_TIME = 3
 
     def __init__(self, update: Update, context: CallbackContext) -> None:
         self.update = update
@@ -141,11 +140,13 @@ class GetAnswerGPT():
 
     async def request_to_openai(self) -> None:
         """Делает запрос в OpenAI и выключает typing."""
+        client = AsyncOpenAI(api_key=settings.CHAT_GPT_TOKEN)
 
         completion = await client.chat.completions.create(
             model=GetAnswerGPT.MODEL,
             messages=self.prompt,
             temperature=0.1,
+            timeout=300,
         )
         self.answer_text = completion.choices[0].message.content
         self.answer_tokens = completion.usage.completion_tokens

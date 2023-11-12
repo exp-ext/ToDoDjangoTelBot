@@ -27,7 +27,8 @@ class HistoryAI(Create):
     - answer_tokens (`PositiveIntegerField`): Количество токенов в ответе (может быть null).
 
     """
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='history_ai')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='history_ai', null=True, blank=True)
+    room_group_name = models.CharField(_('WEB чат'), max_length=128, null=True, blank=True)
     question = models.TextField(_('Вопрос'))
     question_tokens = models.PositiveIntegerField(null=True)
     answer = models.TextField(_('Ответ'))

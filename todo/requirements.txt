@@ -9,6 +9,8 @@ sorl-thumbnail~=12.9.0
 django-phonenumber-field[phonenumbers]~=7.1.0
 django-treebeard~=4.7
 channels~=4.0.0
+channels_redis~=4.1.0
+async-timeout~=4.0.3
 
 psycopg2-binary
 

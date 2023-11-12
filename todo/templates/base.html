@@ -1,5 +1,4 @@
 {% load static %}
-{% load user_agents %}
 
 <!DOCTYPE html>
 <html lang="ru">
@@ -55,9 +54,7 @@
       {% endblock%}
     </div>
 
-    {% if request.user.is_authenticated and request.path != "/posts/" %}
-      {% include 'includes/chatmodal.html' %}
-    {% endif %}
+    {% comment %} {% include 'includes/room.html' %} {% endcomment %}
 
   </main>
   
@@ -81,12 +78,14 @@
 
   <script src="https://code.jquery.com/ui/1.13.1/jquery-ui.min.js"></script>
 
-  <script src="{% static 'js/chatpopup.js' %}"></script>
+  <script src="{% static 'js/chat-popup.js' %}"></script>
 
   <script src="{% static 'js/carousel.js' %}"></script>
   
   {% block javascript %}
   {% endblock %}
+
+  {% include 'includes/room.html' %}
 
 </body>
 

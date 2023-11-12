@@ -4,6 +4,7 @@ from datetime import datetime, timedelta, timezone
 import telegram
 import tiktoken
 from asgiref.sync import sync_to_async
+from channels.db import database_sync_to_async
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from openai import AsyncOpenAI
@@ -63,7 +64,6 @@ class GetAnswerGPT():
         self.set_windows_time()
         self.set_message_text()
         self.set_user()
-        self.get_prompt()
 
     @classmethod
     def num_tokens_from_message(cls, message):
@@ -91,6 +91,7 @@ class GetAnswerGPT():
 
         try:
             asyncio.create_task(self.send_typing_periodically())
+            await self.get_prompt()
             await self.request_to_openai()
             asyncio.create_task(self.create_history_ai())
 
@@ -153,6 +154,7 @@ class GetAnswerGPT():
         self.message_tokens = completion.usage.prompt_tokens
         self.event.set()
 
+    @database_sync_to_async
     def get_prompt(self) -> None:
         """Prompt для запроса в OpenAI и модель user."""
         history = (
@@ -170,12 +172,10 @@ class GetAnswerGPT():
             self.prompt.extend([
                 {
                     'role': 'user',
-                    'name': self.user.username,
                     'content': item['question']
                 },
                 {
                     'role': 'assistant',
-                    'name': 'Eva',
                     'content': item['answer']
                 }
             ])
@@ -205,17 +205,6 @@ class GetAnswerGPT():
             answer_tokens=self.answer_tokens
         )
         await self.request_massage.save()
-
-    @sync_to_async
-    def get_request_massage(self) -> None:
-        """Получает сообщение из БД, если оно там есть."""
-        try:
-            self.request_massage = self.user.history_ai.get(
-                created_at__range=[self.time_start, self.current_time],
-                question=self.message_text
-            )
-        except HistoryAI.DoesNotExist:
-            pass
 
     def set_user(self) -> None:
         """Определяем и назначаем  атрибут user."""

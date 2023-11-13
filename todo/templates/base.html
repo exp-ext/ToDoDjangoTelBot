@@ -5,10 +5,10 @@
 
 <head>
 
-  {% include 'includes/yaheadadvertising.html' %}
-
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  {% include 'includes/yaheadadvertising.html' %}
  
   <link rel="icon" href="{% static 'img/fav/favicon.ico' %}" type="image/x-icon">
   <link rel="apple-touch-icon" sizes="180x180" href="{% static 'img/fav/apple-touch-icon.png' %}">
@@ -54,7 +54,7 @@
       {% endblock%}
     </div>
 
-    {% comment %} {% include 'includes/room.html' %} {% endcomment %}
+    {% include 'includes/chat-popup.html' %}
 
   </main>
   
@@ -85,7 +85,6 @@
   {% block javascript %}
   {% endblock %}
 
-  {% include 'includes/room.html' %}
 
 </body>
 

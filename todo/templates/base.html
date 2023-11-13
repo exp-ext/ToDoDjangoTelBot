@@ -5,11 +5,10 @@
 
 <head>
 
-  {% include 'includes/yacounter.html' %}
-  {% include 'includes/yaheadadvertising.html' %}
-
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  {% include 'includes/yaheadadvertising.html' %}
  
   <link rel="icon" href="{% static 'img/fav/favicon.ico' %}" type="image/x-icon">
   <link rel="apple-touch-icon" sizes="180x180" href="{% static 'img/fav/apple-touch-icon.png' %}">
@@ -41,7 +40,7 @@
 </head>
 
 <body>
-  
+
   {% include 'includes/header.html' %}
 
   <main>
@@ -50,12 +49,12 @@
       {% endblock%}
     </div>
 
-    {% block content %}
-    {% endblock%}
+    <div class="py-2">
+      {% block content %}
+      {% endblock%}
+    </div>
 
-    {% if request.user.is_authenticated %}
-      {% include 'includes/chatmodal.html' %}
-    {% endif %}
+    {% include 'includes/chat-popup.html' %}
 
   </main>
   
@@ -79,12 +78,13 @@
 
   <script src="https://code.jquery.com/ui/1.13.1/jquery-ui.min.js"></script>
 
-  <script src="{% static 'js/chatpopup.js' %}"></script>
+  <script src="{% static 'js/chat-popup.js' %}"></script>
 
   <script src="{% static 'js/carousel.js' %}"></script>
   
   {% block javascript %}
   {% endblock %}
+
 
 </body>
 

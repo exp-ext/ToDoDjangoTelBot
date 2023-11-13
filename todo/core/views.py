@@ -66,7 +66,7 @@ def linkages_check(user: QuerySet[User]) -> None:
     если в группе нет user(вышел или кикнули) то удаляет связь.
     """
     exit_status = ['kicked', 'left']
-    entries = user.groups_connections.prefetch_related('group')
+    entries = user.groups_connections.select_related('group')
     for entry in entries:
         try:
             result = bot.get_chat_member(

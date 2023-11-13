@@ -176,10 +176,16 @@ class Authentication:
 
         """
         for text in reply_text:
-            message_id = self.update.message.reply_text(
-                text=text,
-                parse_mode='Markdown'
-            ).message_id
+            try:
+                message_id = self.update.message.reply_text(
+                    text=text,
+                    parse_mode='Markdown'
+                ).message_id
+            except Exception:
+                message_id = self.update.message.reply_text(
+                    text=text,
+                ).message_id
+
         lifetime = 60 * self.valid_time
         delete_messages_by_time.apply_async(
             args=[self.chat.id, message_id],

@@ -1,5 +1,5 @@
 # Djando + util
-Django==4.2.5
+Django~=4.2.7
 django-defender~=0.9.7
 django-dbbackup~=4.0.2
 pillow~=10.0.1
@@ -7,11 +7,12 @@ pytils~=0.4.1
 python-dotenv~=1.0.0
 sorl-thumbnail~=12.9.0
 django-phonenumber-field[phonenumbers]~=7.1.0
+django-treebeard~=4.7
+channels~=4.0.0
+channels_redis~=4.1.0
+async-timeout~=4.0.3
 
 psycopg2-binary
-
-boto3~=1.28.62
-django-storages~=1.13.2
 
 # WYSIWYG editor
 django-ckeditor-5~=0.2.10
@@ -23,8 +24,9 @@ ua-parser~=0.16.1
 user-agents~=2.2.0
 
 # Django productions
-gunicorn~=21.2.0
-whitenoise~=6.5.0
+gunicorn
+daphne
+whitenoise
 
 # Bot & utils
 beautifulsoup4~=4.12.2
@@ -34,6 +36,7 @@ python-telegram-bot~=13.15
 timezonefinder~=6.2.0
 tzlocal~=4.3
 tiktoken~=0.3.3
+markdown~=3.5.1
 
 # detect language
 langdetect~=1.0.9

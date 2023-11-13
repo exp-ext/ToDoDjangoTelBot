@@ -26,8 +26,7 @@ class TasksListView(LoginRequiredMixin, ListView):
 
     def get_queryset(self) -> QuerySet(Task):
         user = self.request.user
-        groups = user.groups_connections.values('group_id')
-        groups_id = tuple(x['group_id'] for x in groups)
+        groups_id = user.groups_connections.values_list('group', flat=True)
 
         if self.request.resolver_match.view_name == 'tasks:notes':
             now = datetime.now(timezone.utc)
@@ -100,9 +99,7 @@ class TaskCreateView(LoginRequiredMixin, CreateView):
         return super().form_valid(form)
 
     def get_success_url(self) -> Dict[str, Any]:
-        redirecting = (
-            'tasks:birthdays' if self.it_birthday else 'tasks:notes'
-        )
+        redirecting = 'tasks:birthdays' if self.it_birthday else 'tasks:notes'
         return reverse_lazy(redirecting)
 
 
@@ -142,9 +139,7 @@ class TaskUpdateView(LoginRequiredMixin, UpdateView):
         return super().form_valid(form)
 
     def get_success_url(self) -> Dict[str, Any]:
-        redirecting = (
-            'tasks:birthdays' if self.it_birthday else 'tasks:notes'
-        )
+        redirecting = 'tasks:birthdays' if self.it_birthday else 'tasks:notes'
         return reverse_lazy(redirecting)
 
 
@@ -162,8 +157,5 @@ def generating_correct_text(text: str) -> str:
     """Возвращает текст с якорем в ссылках."""
     urls = re.findall(r'([^href=\"]https?://\S+)', text)
     for url in urls:
-        text = text.replace(
-            url,
-            f' <a href="{url.strip()}">{url.split("//")[-1].split("/")[0]}</a>'
-        )
+        text = text.replace(url, f' <a href="{url.strip()}">{url.split("//")[-1].split("/")[0]}</a>')
     return text

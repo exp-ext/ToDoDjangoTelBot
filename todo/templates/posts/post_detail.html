@@ -4,11 +4,11 @@
 
 {% block head %}
 
-  <meta name="description" content="Заметка это простой и удобный способ записывать и хранить важные мысли, идеи и задачи, чтобы ничего не потерять!"/>
-  <meta name="keywords" content="Telegram, заметки, организация заметок, Telegram инструмент, автор">
+  <meta name="description" content="Заметка это простой и удобный способ хранить Ваши важные мысли!"/>
+  <meta name="keywords" content="Telegram, заметки, организация заметок, Telegram инструмент, автор, Python, программирование, ИИ">
 
   <html prefix="og: http://ogp.me/ns#">    
-  <meta property="og:site_name" content="Заметка это простой и удобный способ записывать и хранить важные мысли, идеи и задачи, чтобы ничего не потерять!"/>
+  <meta property="og:site_name" content="Заметка это простой и удобный способ хранить Ваши важные мысли!"/>
   <meta property="og:title" content="{{ post.title }}"/>
   <meta property="og:type" content="article" />
   <meta property="og:url" content="https://www.yourtodo.ru{% url 'posts:post_detail' post.id %}" />
@@ -25,6 +25,7 @@
 
   <link rel="stylesheet" href="{% static 'css/hover-effects.css' %}">
   <link rel="stylesheet" href="{% static 'css/moving_units.css' %}">
+  <link rel="stylesheet" href="{% static 'css/post_detail.css' %}">
 
 {% endblock %}
 
@@ -35,11 +36,43 @@
   <div class="container-fluid py-5">
     <div class="row py-3">
 
-      <aside class="col-lg-2 col-sm-12">
+    {% comment %} первая колонка {% endcomment %}
+
+      <aside class="col-lg-3 col-sm-12">
+
+      {% if contents %}  
+        
+        <div class="card p-1 bg-light rounded shadow group-unit _anim-items _anim-no-hide mb-2">
+          <div class="text-center">
+            <h4><strong>Оглавление</strong></h4>
+          </div>
+          <ul>
+            {%for content in contents %}
+              {%include 'posts/includes/tree_template.html' %}
+            {%endfor%}
+          </ul>
+        </div>
+
+      {% endif %}
+
+        {% if is_mobile %}
+          <div class="card bg-light rounded shadow group-unit _anim-items _anim-no-hide my-2"> 
+            {% include 'includes/yabodyadvertising.html' %}
+          </div>
+        {% else %}
+          <div class="card p-1 bg-light rounded shadow group-unit _anim-items _anim-no-hide my-2"> 
+            {% include 'includes/yabodyadvertising.html' %}           
+          </div>
+        {% endif %}
+
+        {% if advertising and not is_mobile %}
+          {% include 'posts/includes/advertising.html' %}
+        {% endif %}
+
         <div class="hover-effects">
-          <ul class="list-group shadow group-unit _anim-items _anim-no-hide">
+          <ul class="list-group shadow group-unit _anim-items _anim-no-hide my-2">
             <li class="list-group-item bg-secondary">
-              <p>Дата публикации:<br/>~ {{ post.created_at|date:"d E Y" }}</p>
+              <p>Дата публикации: {{ post.created_at|date:"d E Y" }}</p>
 
               <div class="wow fadeInUp animated" data-wow-duration="1200ms" style="visibility: visible; animation-duration: 1200ms; animation-name: fadeInUp;">
                 <p>
@@ -52,21 +85,15 @@
 
             {% if post.group and post.group.link %}
                 <li class="list-group-item  bg-secondary">
-                  <p>Группа:<br/>{{ post.group }}</p>
-                  <a type="button" class="button fast white" href="{% url 'posts:group_list' post.group.slug%}">
-                    все &#160 записи &#160 группы
-                  </a>
+                  <p>Группа: {{ post.group }}</p>
+                  <a type="button" class="button fast white" href="{% url 'posts:group_list' post.group.slug%}">все &#160 записи &#160 группы</a>
                 </li>
             {% endif %} 
+
             <li class="list-group-item  bg-secondary">
-              <p>Автор:<br/>~ {{ post.author.get_full_name }}</p>
-            </li>
-            <li class="list-group-item justify-content-between align-items-center bg-secondary">
-              <p>Всего постов автора:  <span> {{ authors_posts_count }} </span></p>
-              
-              <a type="button" class="btn button fast white" href="{% url 'posts:profile' post.author %}">
-                все &#160 посты &#160 пользователя            
-              </a>
+              <p>Автор: {{ post.author.get_full_name }}</p>
+              <p>Всего постов автора:  <span> {{ authors_posts_count }} </span></p>              
+              <a type="button" class="btn button fast white" href="{% url 'posts:profile' post.author %}">все &#160 посты &#160 пользователя</a>
             </li>
 
               {% if post.author == user %}
@@ -90,17 +117,11 @@
           </ul>
         </div>
 
-        <div class="card p-1 bg-light rounded shadow group-unit _anim-items _anim-no-hide my-2"> 
-          {% include 'includes/yabodyadvertising.html' %}
-        </div>
-
-        {% if advertising and not is_mobile %}
-          {% include 'posts/includes/advertising.html' %}
-        {% endif %}
-
       </aside>
 
-      <article class="col-lg-8 col-sm-12 bg-light rounded shadow">            
+      {% comment %} вторая колонка {% endcomment %}
+
+      <article class="col-lg-8 col-sm-12 bg-light rounded shadow">
         <div class="lobster"> 
           <h1>{{ post.title }}</h1>
         </div>      
@@ -109,26 +130,33 @@
         {% endthumbnail %}
         <p>
           <div class="ck ck-content">
-            {{ post.text|safe }}
+            <div class="table-wrap">
+              {{ post.text|safe }}
+            </div> 
           </div> 
         </p>
 
-        {% if advertising and is_mobile %}
-          {% include 'posts/includes/advertising.html' %}
-        {% endif %}
-
         {% include 'posts/includes/comments.html' %}
 
-      </article>   
+      </article> 
 
     </div>
   </div>
 
-  <a class="dribbble"
-  href="https://dribbble.com/shots/7441241-Button-Hover-Effects"
-    target="_blank">
-  <img src="https://cdn.dribbble.com/assets/dribbble-ball-mark-2bd45f09c2fb58dbbfb44766d5d1d07c5a12972d602ef8b32204d28fa3dda554.svg"
-    alt=""></a>
+  {% if is_mobile %}
+    {% include 'includes/yamobileflooradvertising.html' %}
+  {% else %}
+    {% include 'includes/yapcflooradvertising.html' %}
+  {% endif %}
+
+  <aside class="col-lg-1 col-sm-12">
+    {% if advertising and is_mobile %}
+      {% include 'posts/includes/advertising.html' %}
+    {% endif %}
+  </aside>
+
+  <a class="dribbble" href="https://dribbble.com/shots/7441241-Button-Hover-Effects" target="_blank">
+  <img src="https://cdn.dribbble.com/assets/dribbble-ball-mark-2bd45f09c2fb58dbbfb44766d5d1d07c5a12972d602ef8b32204d28fa3dda554.svg" alt=""></a>
 {% endblock %}
 
 {% block javascript %}  
@@ -145,4 +173,24 @@
         element.appendChild( anchor );
     } );
   </script>
+
+  <script>
+    function scrollDown(event) {
+      event.preventDefault();
+  
+      var targetId = event.target.getAttribute("href").substring(1);
+      var targetElement = document.getElementById(targetId);
+  
+      if (targetElement) {
+          var offset = 64;
+          var targetPosition = targetElement.offsetTop - offset;
+  
+          window.scrollTo({
+              top: targetPosition,
+              behavior: "smooth"
+          });
+      }
+    }
+  </script>
+
 {% endblock %}

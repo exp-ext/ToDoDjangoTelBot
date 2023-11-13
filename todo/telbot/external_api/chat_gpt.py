@@ -1,12 +1,13 @@
 import asyncio
 from datetime import datetime, timedelta, timezone
 
-import openai
 import telegram
 import tiktoken
 from asgiref.sync import sync_to_async
+from channels.db import database_sync_to_async
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from openai import AsyncOpenAI
 from telegram import ChatAction, ParseMode, Update
 from telegram.ext import CallbackContext
 
@@ -29,11 +30,11 @@ class GetAnswerGPT():
         'Что-то пошло не так 🤷🏼\n'
         'Возможно большой наплыв запросов, которые я не успеваю обрабатывать 🤯'
     )
-    MODEL = 'gpt-3.5-turbo'
+    MODEL = 'gpt-3.5-turbo-1106'
     MAX_LONG_MESSAGE = 1024
     MAX_LONG_REQUEST = 4096
     STORY_WINDOWS_TIME = 30
-    MAX_TYPING_TIME = 10
+    MAX_TYPING_TIME = 3
 
     def __init__(self, update: Update, context: CallbackContext) -> None:
         self.update = update
@@ -51,7 +52,7 @@ class GetAnswerGPT():
             {
                 'role': 'system',
                 'content':
-                    'Your name is Eva and you are an experienced senior software developer with extensive experience leading '
+                    'Your name is Eva and you are an Russian experienced senior software developer with extensive experience leading '
                     'teams, mentoring all developers, and delivering high-quality software solutions to customers. You can '
                     'give answers in Markdown format using only:'
                     '*bold text* _italic text_'
@@ -90,6 +91,7 @@ class GetAnswerGPT():
 
         try:
             asyncio.create_task(self.send_typing_periodically())
+            await self.get_prompt()
             await self.request_to_openai()
             asyncio.create_task(self.create_history_ai())
 
@@ -137,20 +139,22 @@ class GetAnswerGPT():
             if datetime.now() > time_stop:
                 break
 
-    @sync_to_async
-    def request_to_openai(self) -> None:
+    async def request_to_openai(self) -> None:
         """Делает запрос в OpenAI и выключает typing."""
-        self.get_prompt()
-        openai.api_key = settings.CHAT_GPT_TOKEN
-        answer = openai.ChatCompletion.create(
+        client = AsyncOpenAI(api_key=settings.CHAT_GPT_TOKEN)
+
+        completion = await client.chat.completions.create(
             model=GetAnswerGPT.MODEL,
             messages=self.prompt,
             temperature=0.1,
+            timeout=300,
         )
-        self.answer_text = answer.choices[0].message.get('content')
-        self.answer_tokens = self.num_tokens_from_message(self.answer_text)
+        self.answer_text = completion.choices[0].message.content
+        self.answer_tokens = completion.usage.completion_tokens
+        self.message_tokens = completion.usage.prompt_tokens
         self.event.set()
 
+    @database_sync_to_async
     def get_prompt(self) -> None:
         """Prompt для запроса в OpenAI и модель user."""
         history = (
@@ -168,12 +172,10 @@ class GetAnswerGPT():
             self.prompt.extend([
                 {
                     'role': 'user',
-                    'name': self.user.username,
                     'content': item['question']
                 },
                 {
                     'role': 'assistant',
-                    'name': 'Eva',
                     'content': item['answer']
                 }
             ])
@@ -203,17 +205,6 @@ class GetAnswerGPT():
             answer_tokens=self.answer_tokens
         )
         await self.request_massage.save()
-
-    @sync_to_async
-    def get_request_massage(self) -> None:
-        """Получает сообщение из БД, если оно там есть."""
-        try:
-            self.request_massage = self.user.history_ai.get(
-                created_at__range=[self.time_start, self.current_time],
-                question=self.message_text
-            )
-        except HistoryAI.DoesNotExist:
-            pass
 
     def set_user(self) -> None:
         """Определяем и назначаем  атрибут user."""

@@ -2,7 +2,7 @@
 
 {% block head %}
   <link rel='stylesheet' href='https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css'>
-  <link rel="stylesheet" href="{% static 'css/chatpopup.css' %}">
+  <link rel="stylesheet" href="{% static 'css/chat-popup.css' %}">
 {% endblock %}
 
 {% csrf_token %}
@@ -13,7 +13,8 @@
   <div class="chat">
       <div class="header">
         <span class="title">
-          Eva assistent
+          Eva assistant
+          <span class="typing-indicator" style="display: none;"><span>t</span><span>y</span><span>p</span><span>i</span><span>n</span><span>g</span></span>
         </span>
         <button>
           <i class="fa fa-times" aria-hidden="true" style="font-size: 16px;"></i>
@@ -23,8 +24,10 @@
 
       </ul>
       <div class="footer">
-        <div class="text-box" contenteditable="true" disabled="true" data-text="поле ввода запроса..."></div>
+        <div class="text-box" type="text" id="message-input" contenteditable="true" disabled="true" data-text="поле ввода запроса..."></div>
         <button id="sendMessage">send</button>
       </div>
   </div>
+
 </div>
+ 

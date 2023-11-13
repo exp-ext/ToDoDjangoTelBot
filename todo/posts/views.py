@@ -21,7 +21,7 @@ from django_user_agents.utils import get_user_agent
 from users.models import Group, GroupMailing
 
 from .forms import CommentForm, GroupMailingForm, PostForm
-from .models import Follow, Post
+from .models import Follow, Post, PostContents
 
 User = get_user_model()
 redis_client = settings.REDIS_CLIENT
@@ -52,7 +52,7 @@ class SearchListView(ListView):
         """Автодополнение."""
         self.keyword = term
         qs = self.get_queryset()
-        qs = qs.filter(text__icontains=self.keyword).values_list('text', flat=True)
+        qs = qs.filter(text__icontains=self.keyword, moderation='PS').values_list('text', flat=True)
         matching_words = set()
         for item in qs:
             words = re.findall(r'\b\w+\b', item)
@@ -87,7 +87,7 @@ class SearchListView(ListView):
         post_list = (
             Post.objects
             .select_related('author', 'group')
-            .filter(Q(group__isnull=True) | Q(group__link__isnull=False), text__icontains=self.keyword)
+            .filter(Q(group__isnull=True) | Q(group__link__isnull=False), text__icontains=self.keyword, moderation='PS')
             .order_by('group')
         )
         if user.is_authenticated:
@@ -111,7 +111,7 @@ class IndexPostsListView(ListView):
 
     def get_queryset(self) -> QuerySet(Post):
         user = self.request.user
-        post_list = Post.objects.filter(Q(group__isnull=True) | Q(group__link__isnull=False))
+        post_list = Post.objects.filter(Q(group__isnull=True) | Q(group__link__isnull=False), moderation='PS')
         if user.is_authenticated:
             post_list |= Post.objects.filter(
                 group__in=(
@@ -121,6 +121,14 @@ class IndexPostsListView(ListView):
                 ),
             )
         return post_list
+
+    def get_context_data(self, **kwargs: Any) -> Dict[str, Any]:
+        context = super().get_context_data(**kwargs)
+        user_agent = get_user_agent(self.request)
+        context |= {
+            'is_mobile': user_agent.is_mobile,
+        }
+        return context
 
 
 class GroupPostsListView(ListView):
@@ -157,7 +165,7 @@ class GroupPostsListView(ListView):
         return super().dispatch(request, *args, **kwargs)
 
     def get_queryset(self) -> QuerySet(Post):
-        return self.group.posts.select_related('author', 'group')
+        return self.group.posts.select_related('author', 'group').filter(moderation='PS')
 
     def get_context_data(self, **kwargs: Any) -> Dict[str, Any]:
         context = super().get_context_data(**kwargs)
@@ -225,16 +233,13 @@ class ProfileDetailView(DetailView):
         groups = self.get_user_groups()
         return (
             self.object.posts
-            .filter(Q(group=None) | Q(group__in=groups) | Q(group__link__isnull=False))
+            .filter(Q(group=None) | Q(group__in=groups) | Q(group__link__isnull=False), moderation='PS')
             .select_related('author', 'group')
         )
 
     def get_user_groups(self) -> QuerySet(Group):
         if self.request.user.is_authenticated:
-            groups = (
-                self.request.user
-                .groups_connections.values_list('group_id', flat=True)
-            )
+            groups = self.request.user.groups_connections.values_list('group_id', flat=True)
             return Group.objects.filter(id__in=groups)
         return Group.objects.none()
 
@@ -262,10 +267,7 @@ class PostCreateView(LoginRequiredMixin, CreateView):
         return super().form_valid(form)
 
     def get_success_url(self) -> Dict[str, Any]:
-        return reverse_lazy(
-            'posts:profile',
-            kwargs={'username': self.request.user.username}
-        )
+        return reverse_lazy('posts:profile', kwargs={'username': self.request.user.username})
 
 
 class PostUpdateView(LoginRequiredMixin, UpdateView):
@@ -350,6 +352,9 @@ class PostDetailView(DetailView):
         else:
             counter = redis_client.get(redis_key_post_counter).decode('utf-8')
 
+        root_contents = post.contents.filter(is_root=True).first()
+        contents = PostContents.dump_bulk(root_contents) if root_contents else None
+
         context |= {
             'authors_posts_count': post.author.posts.count(),
             'comments': post.comments.all(),
@@ -357,6 +362,7 @@ class PostDetailView(DetailView):
             'is_mobile': user_agent.is_mobile,
             'advertising': random_banner if random_banner else False,
             'counter': counter,
+            'contents': contents[0].get('children', None) if contents else None,
         }
         return context
 
@@ -408,7 +414,7 @@ class FollowIndexListView(LoginRequiredMixin, ListView):
         user = self.request.user
         post_list = (
             Post.objects
-            .filter(author__following__user=user)
+            .filter(author__following__user=user, moderation='PS')
             .exclude(Q(group=True) & Q(group__link__isnull=True))
             .select_related('author', 'group')
         )

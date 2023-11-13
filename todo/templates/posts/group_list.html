@@ -3,8 +3,9 @@
 {% load static %}
 
 {% block head %}
-  <meta name="description" content="Ваша группа, Ваши Заметки - Организуйте общие мысли с легкостью с Your ToDo!"/>
+  <meta name="description" content="Ваша группа, Ваши Заметки - Организуйте общие мысли с Your ToDo!"/>
   <meta name="keywords" content="Telegram, заметки, организация заметок, Telegram инструмент, группа">
+  <meta name="robots" content="index, follow">
   <link rel="stylesheet" href="{% static 'css/moving_units.css' %}">
 {% endblock %}
 
@@ -13,40 +14,19 @@
 {% block headline %} 
 
   <div class="container py-5">
-      <div class="card mt-3 shadow rounded text-center bg-secondary {% if is_mobile %} group-unit {% else %} moving-unit {% endif %} _anim-items _anim-no-hide">
+      <div class="card shadow rounded text-center bg-secondary {% if is_mobile %} group-unit mt-3 {% else %} moving-unit mt-4 {% endif %} _anim-items _anim-no-hide">
 
         <div class="card-body">
           <h1 class="card-header">{{ group.title }}</h1>
           {% if group.description %}<p class="card-text p-3">Описание: "{{ group.description }}"</p>{% endif %}
           {% if group.link %}<p class="card-text">Пригласительная ссылка: <a href="{{ group.link }}">{{ group.link }}</a> </p>{% endif %}
         </div>
-      
+
         {% if is_admin %}
           <form actions="{% url 'posts:group_list' group.slug %}" method="POST">
             {% csrf_token %}
 
-            <fieldset>
-            <ul class="list-group list-group-horizontal">
-              <li class="list-group-item bg-secondary">
-                <p>Рассылка "Мысли великих людей"</p>
-                <div class="btn-group" role="group" aria-label="Базовая группа переключателей радио">
-                  {% for radio in form.forismatic_quotes %}
-                    <input type="radio" class="btn-check" id="{{ radio.id_for_label }}" autocomplete="off"                  
-                      {% if forism_check == False and radio.choice_label == "Выключена" %}
-                        checked
-                      {% elif forism_check == True and radio.choice_label == "Включена" %}
-                        checked
-                      {% endif %}
-                      {{ radio.tag }}>
-
-                    <label class="btn btn-outline-dark" for="{{ radio.id_for_label }}">
-                      {{ radio.choice_label }}
-                    </label>
-                  {% endfor %}
-                </div>
-              </li>
-            </ul>
-            </fieldset>
+            {% include 'posts/includes/mailings.html' %}
 
           </form>
         {% endif %}

@@ -1,4 +1,4 @@
-$(document).ready(function () {
+$(document).ready(function () {    
     var element = $('.floating-chat');
     var myStorage = localStorage;
     var chatIsEmpty = true;
@@ -82,22 +82,21 @@ $(document).ready(function () {
             });
         }
     }
-
+  
     function sendNewMessage() {
         var userInput = $('.text-box');
-        var newMessage = userInput.text().trim();
+        var newMessage = userInput.text().trim().replace(/\n/g, '<br>');
 
         if (!newMessage) return;
 
         var messagesContainer = $('.messages');    
 
-        userInput.text(''); // Clean out old message
+        userInput.text('');
 
         messagesContainer.finish().animate({
             scrollTop: messagesContainer.prop("scrollHeight")
         }, 250);
 
-        // Sending message through WebSocket
         var chat_id = myStorage.getItem('chatID');
         socket.send(JSON.stringify({ chat_id: chat_id, message: newMessage }));
     }
@@ -116,14 +115,45 @@ $(document).ready(function () {
         }, 500);
     }
 
+    function pasteIntoInput(el, text) {
+        el.focus();
+    
+        if (document.getSelection) {
+            var selection = window.getSelection();
+            var range = selection.getRangeAt(0);
+    
+            range.deleteContents();
+    
+            var currentText = el.innerText;
+    
+            if (!currentText.endsWith('\n') && text !== '\n') {
+                var textNode = document.createTextNode(text);
+    
+                range.insertNode(textNode);
+    
+                range.setStartAfter(textNode);
+                range.setEndAfter(textNode);
+    
+                selection.removeAllRanges();
+                selection.addRange(range);
+            }
+        }
+    }
+
     function onMetaAndEnter(event) {
-        if ((event.metaKey || event.ctrlKey) && event.keyCode == 13) {
-            sendNewMessage();
+        if (event.keyCode === 13) {
+            if (event.shiftKey) {
+                if (event.type == "keydown") {
+                    pasteIntoInput(this, "\n");
+                }
+            } else {
+                event.preventDefault();
+                sendNewMessage();
+            }
         }
     }
 
     function createUUID() {
-        // Генерация UUID
         var s = [];
         var hexDigits = "0123456789abcdef";
         for (var i = 0; i < 36; i++) {
@@ -137,10 +167,4 @@ $(document).ready(function () {
         return uuid;
     }
 
-    $('.text-box').keydown(function (event) {
-        if (event.keyCode === 13) {
-        event.preventDefault();
-        sendNewMessage();
-        }
-    });
 });

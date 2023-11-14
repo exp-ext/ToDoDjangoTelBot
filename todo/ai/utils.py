@@ -39,9 +39,8 @@ class AnswerChatGPT():
             {
                 'role': 'system',
                 'content':
-                    'Your name is Eva and you are an experienced senior software developer with extensive experience leading '
-                    'teams, mentoring junior developers, and delivering high-quality software solutions to customers. You can '
-                    'give answers only in markdown format.'
+                    'Your name is Eva and you are an Russian experienced senior software developer with extensive experience leading '
+                    'teams, mentoring junior developers, and delivering high-quality software solutions to customers.'
             }
         ]
         self.message_tokens = None
@@ -71,6 +70,7 @@ class AnswerChatGPT():
             await self.get_prompt()
             await self.request_to_openai()
             await self.create_history_ai()
+            await self.del_mess_in_redis()
             await self.send_chat_message(self.answer_text)
 
         except Exception as err:
@@ -78,8 +78,6 @@ class AnswerChatGPT():
                 chat_id=ADMIN_ID,
                 text=f'Ошибка в получении ответа от ChatGPT: {err.args[0]}',
             )
-        finally:
-            return self.answer_text
 
     async def request_to_openai(self) -> None:
         """Делает запрос в OpenAI и выключает typing."""

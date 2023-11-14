@@ -309,13 +309,18 @@
 }
 .floating-chat .chat .footer .text-box {
   border-radius: 3px;
-  min-height: 100%;
+  height: 100%;
   width: calc(100% - 70px); /* Adjust width to make room for the send button */
   margin-right: 5px;
   color: #000;
   overflow-y: auto;
   padding: 2px 5px;
   box-sizing: border-box; /* Include padding and border in the element's total width and height */
+  overflow-y: auto;
+  overflow-wrap: break-word; /* Разрешить перенос слов при необходимости */
+  white-space: pre-wrap; /* Поддерживать перенос строки */
+  min-height: 100%;
+  resize: vertical; /* Разрешить изменение размеров только по вертикали */
 }
 .floating-chat .chat .footer .text-box::-webkit-scrollbar {
   width: 5px;

@@ -1,7 +1,7 @@
 from bs4 import BeautifulSoup
 from core.models import Create
 from django.contrib.auth import get_user_model
-from django.db import models
+from django.db import models, transaction
 from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
 from django.utils.translation import gettext_lazy as _
@@ -86,6 +86,7 @@ class Post(Create):
 
 
 @receiver(pre_save, sender=Post)
+@transaction.atomic
 def pre_save_group(sender, instance, *args, **kwargs):
     """Пре-обработка текста поста перед сохранением.
 
@@ -107,6 +108,7 @@ def pre_save_group(sender, instance, *args, **kwargs):
 
 
 @receiver(post_save, sender=Post)
+@transaction.atomic
 def after_product_creation(sender, instance, created, **kwargs):
     """Обработка после сохранения поста.
 

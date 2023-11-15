@@ -43,47 +43,42 @@
 
 {% block content %}
 
-    <div id="myCarousel" class="carousel slide" data-ride="carousel">
+    <div id="myCarousel" class="carousel slide" data-bs-ride="carousel" data-bs-interval="5000">
       <ol class="carousel-indicators">
-        <li data-target="#myCarousel" data-slide-to="0" class="active"></li>
-        <li data-target="#myCarousel" data-slide-to="1"></li>
-        <li data-target="#myCarousel" data-slide-to="2"></li>
+        <li data-bs-target="#myCarousel" data-bs-slide-to="0" class="active"></li>
+        <li data-bs-target="#myCarousel" data-bs-slide-to="1"></li>
+        <li data-bs-target="#myCarousel" data-bs-slide-to="2"></li>
       </ol>
       <div class="carousel-inner">
 
         {% if request.user.is_anonymous %}
 
-          <div class="carousel-item active">
-
-
+          <div class="carousel-item active" data-bs-interval="5000">
             {% if is_mobile %}
-              <img class="img-fluid" src="{% static 'img/index/1_reg_ban_mob.webp' %}"></img>
+              <img src="{% static 'img/index/1_reg_ban_mob.webp' %}" class="d-block w-100" alt="Registration Banner">
             {% else %}
-              <img class="img-fluid" src="{% static 'img/index/1_reg_ban.webp' %}"></img>
-            {% endif %}  
-
+              <img src="{% static 'img/index/1_reg_ban.webp' %}" class="d-block w-100 h-auto" alt="Registration Banner">
+            {% endif %}
             <div class="container">
-              <div class="carousel-caption text-left">
+              <div class="carousel-caption">
                 <div class="lobster">
                   <h1>Регистрация</h1>
                   <p>&nbsp;</p>
                   <p>Она необходима, без неё бот не сможет разобратся где чьё напоминание. И кто в какой части мира живёт.</p>
                   <p>&nbsp;</p>
                   <p><a class="btn btn-lg btn-secondary shadow" href="#registration" role="button">Зарегистрироваться</a></p>
-                </div> 
+                </div>
               </div>
             </div>
           </div>
         {% endif %}
 
         <div class="carousel-item {% if request.user.is_authenticated %} active {% endif %}">
-
           {% if is_mobile %}
-            <img class="img-fluid" src="{% static 'img/index/2_func_ban_mob.webp' %}"></img>
+            <img src="{% static 'img/index/2_func_ban_mob.webp' %}" class="d-block w-100" alt="Functions Banner">
           {% else %}
-            <img class="img-fluid" src="{% static 'img/index/2_func_ban.webp' %}"></img>
+            <img src="{% static 'img/index/2_func_ban.webp' %}" class="d-block w-100 h-auto" alt="Functions Banner">
           {% endif %}
-          
           <div class="container">
             <div class="carousel-caption">
               <div class="lobster">
@@ -96,16 +91,15 @@
             </div>
           </div>
         </div>
-        <div class="carousel-item">
 
+        <div class="carousel-item">
           {% if is_mobile %}
-            <img class="img-fluid" src="{% static 'img/index/3_services_ban_mob.webp' %}"></img>
+            <img src="{% static 'img/index/3_services_ban_mob.webp' %}" class="d-block w-100" alt="Services Banner">
           {% else %}
-            <img class="img-fluid" src="{% static 'img/index/3_services_ban.webp' %}"></img>
+            <img src="{% static 'img/index/3_services_ban.webp' %}" class="d-block w-100 h-auto" alt="Services Banner">
           {% endif %}
-          
           <div class="container">
-            <div class="carousel-caption text-right">
+            <div class="carousel-caption">
               <div class="lobster">
                 <h1>Напоминания</h1>
                 <p>&nbsp;</p>
@@ -116,16 +110,19 @@
             </div>
           </div>
         </div>
+
       </div>
-      <a class="carousel-control-prev" href="#myCarousel" role="button" data-slide="prev">
+      <button class="carousel-control-prev" type="button" data-bs-target="#myCarousel" data-bs-slide="prev">
         <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-        <span class="sr-only">Previous</span>
-      </a>
-      <a class="carousel-control-next" href="#myCarousel" role="button" data-slide="next">
+        <span class="visually-hidden">Previous</span>
+      </button>
+      <button class="carousel-control-next" type="button" data-bs-target="#myCarousel" data-bs-slide="next">
         <span class="carousel-control-next-icon" aria-hidden="true"></span>
-        <span class="sr-only">Next</span>
-      </a>
+        <span class="visually-hidden">Next</span>
+      </button>
     </div>
+
+
 
     <p>&nbsp;</p>
     <p>&nbsp;</p>

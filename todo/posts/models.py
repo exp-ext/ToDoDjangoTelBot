@@ -8,7 +8,7 @@ from django.utils.translation import gettext_lazy as _
 from django_ckeditor_5.fields import CKEditor5Field
 from pytils.translit import slugify
 from sorl.thumbnail import ImageField
-from treebeard.al_tree import AL_Node
+from treebeard.mp_tree import MP_Node
 from users.models import Group
 
 User = get_user_model()
@@ -80,6 +80,10 @@ class Post(Create):
         verbose_name = _('пост')
         verbose_name_plural = _('посты')
         ordering = ('-created_at',)
+        indexes = [
+            models.Index(fields=['id']),
+            models.Index(fields=['author_id']),
+        ]
 
     def __str__(self) -> str:
         return self.title[:20]
@@ -120,37 +124,34 @@ def after_product_creation(sender, instance, created, **kwargs):
     """
     text = instance.text
     soup = BeautifulSoup(text, features="html.parser")
-    current_node_db = None
     instance.contents.all().delete()
-    base_node_db = PostContents.objects.create(post=instance, anchor=instance.title, is_root=True)
+    base_node = PostContents.add_root(post=instance, anchor=instance.title)
 
+    current_node = None
     for tag in soup.find_all(['h2', 'h4']):
-        tag_text = tag.text.strip()
+        anchor = tag.text.strip()
 
         if tag.name == 'h2':
-            current_node_db = PostContents.objects.create(post=instance, anchor=tag_text, parent=base_node_db)
-        elif tag.name == 'h4':
-            PostContents.objects.create(post=instance, anchor=tag_text, parent=current_node_db if current_node_db else base_node_db)
+            current_node = base_node.add_child(post=instance, anchor=anchor)
+        elif tag.name == 'h4' and current_node:
+            current_node.add_child(post=instance, anchor=anchor)
+        else:
+            base_node.add_child(post=instance, anchor=anchor)
 
 
-class PostContents(AL_Node):
+class PostContents(MP_Node):
     """Модель для хранения оглавления комментариев к посту.
 
     ### Attributes:
     - post (Post): Связь с постом, к которому относится оглавление.
     - title (str): Заголовок оглавления (максимум 250 символов).
     - anchor (str): Якорь оглавления (максимум 250 символов).
-    - parent (PostContents, optional): Связь с родительским оглавлением (если есть).
-    - desc (str): Описание оглавления (максимум 255 символов).
-    - is_root (bool): Флаг, указывающий, является ли оглавление корневым.
     - node_order_by (list): Порядок сортировки узлов.
     """
     post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='contents', verbose_name=_('пост'))
     anchor = models.CharField(_('заголовок/глава/раздел'), max_length=80)
 
-    parent = models.ForeignKey('self', related_name='children_set', null=True, db_index=True, on_delete=models.CASCADE)
-    is_root = models.BooleanField(default=False)
-    node_order_by = ['id',]
+    node_order_by = ['anchor',]
 
     class Meta:
         verbose_name = _('оглавление')

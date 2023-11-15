@@ -17,7 +17,7 @@ class AI(View):
                 .history_ai
                 .exclude(answer__in=[None, AnswerChatGPT.ERROR_TEXT])
                 .order_by('-created_at')
-                .values('question', 'answer')[:5]
+                .values('question', 'answer')[:20]
             )
             for item in history[::-1]:
                 data.append({

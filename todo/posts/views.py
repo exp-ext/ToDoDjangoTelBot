@@ -111,7 +111,11 @@ class IndexPostsListView(ListView):
 
     def get_queryset(self) -> QuerySet(Post):
         user = self.request.user
-        post_list = Post.objects.filter(Q(group__isnull=True) | Q(group__link__isnull=False), moderation='PS')
+        post_list = (
+            Post.objects
+            .filter(Q(group__isnull=True) | Q(group__link__isnull=False), moderation='PS')
+            .select_related('author', 'group')
+        )
         if user.is_authenticated:
             post_list |= Post.objects.filter(
                 group__in=(
@@ -312,7 +316,7 @@ class PostDetailView(DetailView):
 
     def get_context_data(self, **kwargs: Any) -> Dict[str, Any]:
         context = super().get_context_data(**kwargs)
-        post = self.get_object()
+        post = kwargs.get('object')
         user_agent = get_user_agent(self.request)
         ip = self.get_client_ip()
         all_banners = PartnerBanner.objects.all()
@@ -352,7 +356,8 @@ class PostDetailView(DetailView):
         else:
             counter = redis_client.get(redis_key_post_counter).decode('utf-8')
 
-        root_contents = post.contents.filter(is_root=True).first()
+        root_contents = post.contents.filter(depth=1).first()
+
         contents = PostContents.dump_bulk(root_contents) if root_contents else None
 
         context |= {

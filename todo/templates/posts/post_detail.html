@@ -46,7 +46,7 @@
           <div class="text-center">
             <h4><strong>Оглавление</strong></h4>
           </div>
-          <ul>
+          <ul class="list-unstyled">
             {%for content in contents %}
               {%include 'posts/includes/tree_template.html' %}
             {%endfor%}
@@ -190,6 +190,22 @@
               behavior: "smooth"
           });
       }
+    }
+  </script>
+
+  <script>
+    function toggleList(event, toggleIcon) {
+        const ul = toggleIcon.parentElement.querySelector('ul');
+        
+        if (ul) {
+            if (ul.style.display === "none" || ul.style.display === "") {
+                ul.style.display = "block";
+                toggleIcon.innerHTML = '<i class="bi bi-circle">';
+            } else {
+                ul.style.display = "none";
+                toggleIcon.innerHTML = '<i class="bi bi-plus-circle"></i>';
+            }
+        }
     }
   </script>
 

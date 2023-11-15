@@ -73,7 +73,7 @@
           </div>
         {% endif %}
 
-        <div class="carousel-item {% if request.user.is_authenticated %} active {% endif %}">
+        <div class="carousel-item {% if request.user.is_authenticated %} active {% endif %}" data-bs-interval="5000">
           {% if is_mobile %}
             <img src="{% static 'img/index/2_func_ban_mob.webp' %}" class="d-block w-100" alt="Functions Banner">
           {% else %}
@@ -328,4 +328,13 @@
 
     </div><!-- /.container -->
 
+{% endblock %}
+
+
+{% block javascript %}
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      var myCarousel = new bootstrap.Carousel(document.getElementById('myCarousel'));
+    });
+  </script>
 {% endblock %}

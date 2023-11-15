@@ -31,12 +31,8 @@
   opacity: 1;
 }
 .floating-chat.expand {
-  max-width: 90%;
-  min-width: 300px; /* Set a minimum width for resizing */
-  width: 600px; /* Initial width */
-  max-height: 92vh;
-  min-height: 200px; /* Set a minimum height for resizing */
-  height: 88vh; /* Initial height */
+  width: 30%; /* Initial width */
+  height: 87%; /* Initial height */
   border-radius: 20px;
   cursor: auto;
   opacity: 1;

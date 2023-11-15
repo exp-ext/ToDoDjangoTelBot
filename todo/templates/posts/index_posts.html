@@ -47,7 +47,7 @@
     $(document).ready(function() {
       $("#search-input").autocomplete({
         source: "{% url 'posts:search' %}",
-        minLength: 3,
+        minLength: 2,
         focus: function(event, ui) {
           $("#search-input").val(ui.item.label); // Устанавливаем текст в поле ввода при фокусировке
           return false;

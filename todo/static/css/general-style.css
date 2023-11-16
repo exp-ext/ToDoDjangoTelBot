@@ -82,3 +82,14 @@ font-family: 'Lobster';
   color: #070420;
   font-weight: 600;
 }
+
+.eva {
+  font-family: 'Playfair Display', serif;
+  font-weight: 500;
+  font-size: 20px;
+}
+
+.eva strong {
+  font-weight: bold;
+}
+

@@ -7,6 +7,10 @@
   position: fixed;
   bottom: 56px;
   right: 24px;
+  max-width: 56px;
+  max-height: 56px;
+  min-height: 56px;
+  min-width: 56px;
   width: 56px;
   height: 56px;
   transform: translateY(70px);
@@ -15,11 +19,14 @@
   opacity: 0;
   background-repeat: no-repeat;
   background-attachment: fixed;
-  background: #333;
+  background: #1f343d;
   z-index: 2;
-  resize: both; /* Allow resizing */
-  overflow: auto; /* Ensure the resize doesn't cause overflow */
 }
+
+.floating-chat i {
+  font-size: 24px; /* Регулируйте размер иконки по желанию */
+}
+
 .floating-chat.enter {
   transform: translateY(0);
   opacity: 0.6;
@@ -31,13 +38,19 @@
   opacity: 1;
 }
 .floating-chat.expand {
-  width: 30%; /* Initial width */
-  height: 87%; /* Initial height */
+  max-width: 70%;
+  min-width: 30%;
+  width: 30%;
+  max-height: 87%;
+  min-height: 87%;
+  height: 87%;
   border-radius: 20px;
   cursor: auto;
   opacity: 1;
   position: fixed;
   z-index: 9999;
+  resize: both;
+  overflow: auto;
 }
 .floating-chat:focus {
   outline: 0;

@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta, timezone
 
+import g4f
 import markdown
 import tiktoken
 from asgiref.sync import sync_to_async
@@ -46,12 +47,13 @@ class AnswerChatGPT():
         self.message_tokens = None
         self.set_windows_time()
 
-    async def num_tokens_from_message(self):
+    @classmethod
+    async def num_tokens_from_message(cls, message):
         try:
             encoding = tiktoken.encoding_for_model(AnswerChatGPT.MODEL)
         except KeyError:
             encoding = tiktoken.get_encoding("cl100k_base")
-        self.message_tokens = len(encoding.encode(self.message_text)) + 4
+        return len(encoding.encode(message)) + 4
 
     async def get_answer_from_ai(self) -> dict:
         """Основная логика."""
@@ -59,7 +61,7 @@ class AnswerChatGPT():
         if await self.check_in_works():
             return None
 
-        await self.num_tokens_from_message()
+        self.message_tokens = await self.num_tokens_from_message(self.message_text)
 
         if self.check_long_query:
             response_message = f'{self.user}, у Вас слишком большой текст запроса. Попробуйте сформулировать его короче.'
@@ -69,28 +71,47 @@ class AnswerChatGPT():
         try:
             await self.get_prompt()
             await self.request_to_openai()
-            await self.create_history_ai()
-            await self.del_mess_in_redis()
-            await self.send_chat_message(self.answer_text)
 
         except Exception as err:
+            await self.request_to_g4f()
             bot.send_message(
                 chat_id=ADMIN_ID,
-                text=f'Ошибка в получении ответа от ChatGPT: {err.args[0]}',
+                text=f'Ошибка в получении ответа от ChatGPT: {str(err)[1024]}',
             )
+        finally:
+            await self.send_chat_message(self.answer_text)
+            await self.create_history_ai()
+            await self.del_mess_in_redis()
 
     async def request_to_openai(self) -> None:
         """Делает запрос в OpenAI и выключает typing."""
-        client = AsyncOpenAI(api_key=settings.CHAT_GPT_TOKEN)
+        client = AsyncOpenAI(
+            api_key=settings.CHAT_GPT_TOKEN,
+            timeout=300,
+        )
         completion = await client.chat.completions.create(
             model=AnswerChatGPT.MODEL,
             messages=self.prompt,
             temperature=0.1,
-            timeout=300,
         )
         self.answer_text = completion.choices[0].message.content
         self.answer_tokens = completion.usage.completion_tokens
         self.message_tokens = completion.usage.prompt_tokens
+
+    async def request_to_g4f(self) -> None:
+        """Делает запрос в OpenAI и выключает typing."""
+        try:
+            completion = await g4f.ChatCompletion.create_async(
+                model=g4f.models.default,
+                messages=self.prompt,
+            )
+            self.answer_text = completion
+            self.answer_tokens = await self.num_tokens_from_message(completion)
+        except Exception as err:
+            bot.send_message(
+                chat_id=ADMIN_ID,
+                text=f'Error in request to g4f: {str(err)[1024]}',
+            )
 
     async def send_chat_message(self, message):
         await self.channel_layer.group_send(

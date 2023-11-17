@@ -42,7 +42,8 @@ markdown~=3.5.1
 langdetect~=1.0.9
 
 # ChatGPT
-openai
+openai~=1.3.2
+g4f
 
 # Distributed async tasks
 celery[redis]

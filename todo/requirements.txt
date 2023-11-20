@@ -12,6 +12,9 @@ channels~=4.0.0
 channels_redis~=4.1.0
 async-timeout~=4.0.3
 
+boto3~=1.28.62
+django-storages~=1.13.2
+
 psycopg2-binary
 
 # WYSIWYG editor

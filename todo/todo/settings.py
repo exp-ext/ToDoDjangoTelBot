@@ -9,11 +9,11 @@ https://docs.djangoproject.com/en/4.1/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.1/ref/settings/
 """
-
 import os
 import socket
 from pathlib import Path
 
+import boto3
 import redis
 from core.keygen import get_key
 from dotenv import load_dotenv
@@ -78,6 +78,7 @@ THIRD_PARTY_APPS = [
     'django_user_agents',
     'django_ckeditor_5',
     'treebeard',
+    'storages',
 ]
 
 PROJECT_APPS = [
@@ -205,24 +206,46 @@ USE_L10N = False
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.1/howto/static-files/
 
-STATIC_URL = '/static/'
-MEDIA_URL = '/media/'
-MEDIA_ROOT = Path(BASE_DIR).joinpath('media').resolve()
+AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID')
+AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY')
+AWS_S3_ENDPOINT_URL = os.getenv('AWS_S3_ENDPOINT_URL')
+AWS_S3_USE_SSL = int(os.getenv('AWS_S3_USE_SSL', default=0))
 
-DBBACKUP_STORAGE = 'django.core.files.storage.FileSystemStorage'
+STATIC_BUCKET_NAME = 'todo-static'
+MEDIA_BUCKET_NAME = 'todo-media'
+DATABASE_BUCKET_NAME = 'todo-database'
 
+USE_S3 = os.getenv('USE_S3', default=1)
+
+if USE_S3:
+    STATIC_URL = f'{AWS_S3_ENDPOINT_URL}/{STATIC_BUCKET_NAME}/'
+else:
+    STATIC_URL = '/static/'
+
+STATICFILES_STORAGE = 'todo.boto.StaticStorage'
+STATICFILES_DIRS = (BASE_DIR / 'static',)
+STATIC_ROOT = Path(BASE_DIR).joinpath('staticfiles').resolve()
+
+MEDIA_URL = f'{AWS_S3_ENDPOINT_URL}/{MEDIA_BUCKET_NAME}/'
+DEFAULT_FILE_STORAGE = 'todo.boto.MediaStorage'
+
+DBBACKUP_STORAGE = 'todo.boto.DataBaseStorage'
 DBBACKUP_STORAGE_OPTIONS = {
-    'location': Path(BASE_DIR).joinpath('backup').resolve()
+    'access_key': AWS_ACCESS_KEY_ID,
+    'secret_key': AWS_SECRET_ACCESS_KEY,
+    'bucket_name': DATABASE_BUCKET_NAME,
+    'default_acl': 'private',
 }
 
-if DEBUG:
-    STATICFILES_DIRS = (BASE_DIR / 'static',)
-else:
-    STATIC_ROOT = Path(BASE_DIR).joinpath('static').resolve()
+S3_CLIENT = boto3.client(
+    's3',
+    use_ssl=AWS_S3_USE_SSL,
+    aws_access_key_id=AWS_ACCESS_KEY_ID,
+    aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
+    endpoint_url=AWS_S3_ENDPOINT_URL
+)
 
 # Django-ckeditor
-CKEDITOR_5_FILE_STORAGE = 'posts.storage.CkeditorCustomStorage'
-
 CustomColorPalette = [
     {
         'color': 'hsl(4, 90%, 58%)',

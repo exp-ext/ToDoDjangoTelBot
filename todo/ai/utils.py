@@ -35,7 +35,7 @@ class AnswerChatGPT():
         self.current_time = None
         self.time_start = None
         self.answer_tokens = None
-        self.answer_text = None
+        self.answer_text = AnswerChatGPT.ERROR_TEXT
         self.prompt = [
             {
                 'role': 'system',

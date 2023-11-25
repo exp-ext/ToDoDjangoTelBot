@@ -1,7 +1,6 @@
 import asyncio
 from datetime import datetime, timedelta, timezone
 
-import g4f
 import telegram
 import tiktoken
 from asgiref.sync import sync_to_async
@@ -98,7 +97,6 @@ class GetAnswerGPT():
             await self.request_to_openai()
 
         except Exception as err:
-            await self.request_to_g4f()
             self.context.bot.send_message(
                 chat_id=ADMIN_ID,
                 text=f'Ошибка в получении ответа от ChatGPT: {str(err)[1024]}',
@@ -158,22 +156,6 @@ class GetAnswerGPT():
         self.answer_tokens = completion.usage.completion_tokens
         self.message_tokens = completion.usage.prompt_tokens
         self.event.set()
-
-    async def request_to_g4f(self) -> None:
-        """Делает запрос в OpenAI и выключает typing."""
-        try:
-            completion = await g4f.ChatCompletion.create_async(
-                model=g4f.models.default,
-                messages=self.prompt,
-            )
-            self.answer_text = completion
-            self.answer_tokens = await self.num_tokens_from_message(completion)
-            self.event.set()
-        except Exception as err:
-            self.context.bot.send_message(
-                chat_id=ADMIN_ID,
-                text=f'Error in request to g4f: {str(err)[1024]}',
-            )
 
     @database_sync_to_async
     def get_prompt(self) -> None:

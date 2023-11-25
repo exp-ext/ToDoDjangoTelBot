@@ -1,6 +1,5 @@
 from datetime import datetime, timedelta, timezone
 
-import g4f
 import markdown
 import tiktoken
 from asgiref.sync import sync_to_async
@@ -73,7 +72,6 @@ class AnswerChatGPT():
             await self.request_to_openai()
 
         except Exception as err:
-            await self.request_to_g4f()
             bot.send_message(
                 chat_id=ADMIN_ID,
                 text=f'Ошибка в получении ответа от ChatGPT: {str(err)[1024]}',
@@ -97,21 +95,6 @@ class AnswerChatGPT():
         self.answer_text = completion.choices[0].message.content
         self.answer_tokens = completion.usage.completion_tokens
         self.message_tokens = completion.usage.prompt_tokens
-
-    async def request_to_g4f(self) -> None:
-        """Делает запрос в OpenAI и выключает typing."""
-        try:
-            completion = await g4f.ChatCompletion.create_async(
-                model=g4f.models.default,
-                messages=self.prompt,
-            )
-            self.answer_text = completion
-            self.answer_tokens = await self.num_tokens_from_message(completion)
-        except Exception as err:
-            bot.send_message(
-                chat_id=ADMIN_ID,
-                text=f'Error in request to g4f: {str(err)[1024]}',
-            )
 
     async def send_chat_message(self, message):
         await self.channel_layer.group_send(

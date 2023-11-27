@@ -45,7 +45,9 @@ markdown~=3.5.1
 langdetect~=1.0.9
 
 # ChatGPT
-openai~=1.3.2
+openai
+httpx
+httpx-socks
 
 # Distributed async tasks
 celery[redis]

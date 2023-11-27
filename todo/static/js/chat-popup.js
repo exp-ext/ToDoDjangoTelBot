@@ -11,13 +11,13 @@ $(document).ready(function () {
     };
 
     function updateTypingIndicator() {
-        var selfMessagesCount = $('.messages .self').length;
-        var otherMessagesCount = $('.messages .other').length;
-    
-        if (selfMessagesCount !== otherMessagesCount) {
-            $('.typing-indicator').show();
-        } else {
+        var $messages = $('.messages');
+        var lastMessageIsOther = $messages.children().last().hasClass('other');
+
+        if (lastMessageIsOther) {
             $('.typing-indicator').hide();
+        } else {
+            $('.typing-indicator').show();
         }
     }
 

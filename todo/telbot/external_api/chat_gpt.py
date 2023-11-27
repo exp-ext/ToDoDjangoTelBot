@@ -1,12 +1,15 @@
 import asyncio
+import json
 from datetime import datetime, timedelta, timezone
 
+import httpx
 import telegram
 import tiktoken
 from asgiref.sync import sync_to_async
 from channels.db import database_sync_to_async
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from httpx_socks import AsyncProxyTransport
 from openai import AsyncOpenAI
 from telegram import ChatAction, ParseMode, Update
 from telegram.ext import CallbackContext
@@ -30,7 +33,7 @@ class GetAnswerGPT():
         'Что-то пошло не так 🤷🏼\n'
         'Возможно большой наплыв запросов, которые я не успеваю обрабатывать 🤯'
     )
-    MODEL = 'gpt-3.5-turbo'
+    MODEL = 'gpt-3.5-turbo-1106'
     MAX_LONG_MESSAGE = 1024
     MAX_LONG_REQUEST = 4096
     STORY_WINDOWS_TIME = 30
@@ -94,12 +97,12 @@ class GetAnswerGPT():
         try:
             asyncio.create_task(self.send_typing_periodically())
             await self.get_prompt()
-            await self.request_to_openai()
+            await self.httpx_request_to_openai()
 
         except Exception as err:
             self.context.bot.send_message(
                 chat_id=ADMIN_ID,
-                text=f'Ошибка в получении ответа от ChatGPT: {str(err)[1024]}',
+                text=f'Ошибка в получении ответа от ChatGPT: {str(err)[:1024]}',
             )
         finally:
             asyncio.create_task(self.create_history_ai())
@@ -119,13 +122,13 @@ class GetAnswerGPT():
         except telegram.error.BadRequest:
             self.context.bot.send_message(
                 chat_id=self.update.effective_chat.id,
-                text=GetAnswerGPT.ERROR_TEXT,
+                text=self.answer_text,
                 reply_to_message_id=self.update.message.message_id,
             )
         except Exception as err:
             self.context.bot.send_message(
                 chat_id=ADMIN_ID,
-                text=f'Ошибка при отправке ответа ChatGPT: {str(err)[1024]}',
+                text=f'Ошибка при отправке ответа ChatGPT: {str(err)[:1024]}',
             )
 
     async def send_typing_periodically(self) -> None:
@@ -148,7 +151,7 @@ class GetAnswerGPT():
             timeout=300,
         )
         completion = await client.chat.completions.create(
-            model=GetAnswerGPT.MODEL,
+            model=self.MODEL,
             messages=self.prompt,
             temperature=0.1
         )
@@ -156,6 +159,31 @@ class GetAnswerGPT():
         self.answer_tokens = completion.usage.completion_tokens
         self.message_tokens = completion.usage.prompt_tokens
         self.event.set()
+
+    async def httpx_request_to_openai(self) -> None:
+        """Делает запрос в OpenAI и выключает typing."""
+        transport = AsyncProxyTransport.from_url(settings.SOCKS5)
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {settings.CHAT_GPT_TOKEN}"
+        }
+        data = {
+            "model": self.MODEL,
+            "messages": self.prompt,
+            "temperature": 0.1
+        }
+        async with httpx.AsyncClient(transport=transport) as client:
+            response = await client.post(
+                "https://api.openai.com/v1/chat/completions",
+                headers=headers,
+                json=data,
+                timeout=60 * self.MAX_TYPING_TIME,
+            )
+            completion = json.loads(response.content)
+            self.answer_text = completion.get('choices')[0]['message']['content']
+            self.answer_tokens = completion.get('usage')['completion_tokens']
+            self.message_tokens = completion.get('usage')['prompt_tokens']
+            self.event.set()
 
     @database_sync_to_async
     def get_prompt(self) -> None:

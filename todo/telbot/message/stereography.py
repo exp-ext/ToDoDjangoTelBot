@@ -5,7 +5,6 @@ from datetime import datetime, timedelta, timezone
 
 import requests
 from asgiref.sync import sync_to_async
-from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.http import HttpResponseBadRequest
 from django.shortcuts import get_object_or_404
@@ -87,10 +86,7 @@ class AudioTranscription():
         """"
         Передаёт TYPING в чат Телеграм откуда пришёл запрос.
         """
-        time_stop = (
-            datetime.now()
-            + timedelta(minutes=AudioTranscription.MAX_TYPING_TIME)
-        )
+        time_stop = datetime.now() + timedelta(minutes=AudioTranscription.MAX_TYPING_TIME)
         while not self.event.is_set():
             self.context.bot.send_chat_action(
                 chat_id=self.update.effective_chat.id,
@@ -112,10 +108,7 @@ class AudioTranscription():
         files = [
             ('audio_file', ('audio.ogg', response.content, 'audio/ogg'))
         ]
-        url = (
-            'http://localhost:9090/asr'
-            if settings.DEBUG else 'http://todo_whisper:9090/asr'
-        )
+        url = 'http://127.0.0.1:9090/asr'
         params = {
             'task': 'transcribe',
             'language': 'ru',

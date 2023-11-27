@@ -8,6 +8,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         self.room_name = self.scope['url_route']['kwargs']['room_name']
         self.room_group_name = f"chat_{self.room_name}"
+        self.message_count = 0
 
         # Подключение к комнате
         await self.channel_layer.group_add(
@@ -29,12 +30,14 @@ class ChatConsumer(AsyncWebsocketConsumer):
         text_data_json = json.loads(text_data)
         message = text_data_json['message']
         user = self.scope['user']
+        self.message_count += 1
 
         send_eva = {
             'channel_layer': self.channel_layer,
             'room_group_name': self.room_group_name,
             'user': user,
             'message': message,
+            'message_count': self.message_count,
         }
 
         # Отправка запроса ИИ

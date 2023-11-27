@@ -28,6 +28,7 @@ YANDEX_GEO_API_TOKEN = os.getenv('YANDEX_GEO_API_TOKEN', default='some_token_to_
 
 CHAT_GPT_TOKEN = os.getenv('CHAT_GPT_TOKEN')
 TELEGRAM_ADMIN_ID = os.getenv('TELEGRAM_ADMIN_ID')
+SOCKS5 = os.getenv('SOCKS5')
 
 # mail service
 EMAIL_USE_TLS = True
@@ -215,7 +216,7 @@ STATIC_BUCKET_NAME = 'todo-static'
 MEDIA_BUCKET_NAME = 'todo-media'
 DATABASE_BUCKET_NAME = 'todo-database'
 
-USE_S3 = os.getenv('USE_S3', default=1)
+USE_S3 = os.getenv('USE_S3', default=0)
 
 if USE_S3:
     STATIC_URL = f'{AWS_S3_ENDPOINT_URL}/{STATIC_BUCKET_NAME}/'

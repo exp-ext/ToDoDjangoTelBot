@@ -194,13 +194,9 @@ LOGIN_REDIRECT_URL = 'index'
 # https://docs.djangoproject.com/en/4.1/topics/i18n/
 
 LANGUAGE_CODE = 'ru-RU'
-
 TIME_ZONE = 'UTC'
-
 USE_I18N = True
-
 USE_TZ = True
-
 # Для корректной работы виджета в форме профиля
 USE_L10N = False
 
@@ -216,14 +212,14 @@ STATIC_BUCKET_NAME = 'todo-static'
 MEDIA_BUCKET_NAME = 'todo-media'
 DATABASE_BUCKET_NAME = 'todo-database'
 
-USE_S3 = os.getenv('USE_S3', default=0)
+USE_S3 = int(os.getenv('USE_S3', default=0))
 
 if USE_S3:
     STATIC_URL = f'{AWS_S3_ENDPOINT_URL}/{STATIC_BUCKET_NAME}/'
+    STATICFILES_STORAGE = 'todo.boto.StaticStorage'
 else:
     STATIC_URL = '/static/'
 
-STATICFILES_STORAGE = 'todo.boto.StaticStorage'
 STATICFILES_DIRS = (BASE_DIR / 'static',)
 STATIC_ROOT = Path(BASE_DIR).joinpath('staticfiles').resolve()
 

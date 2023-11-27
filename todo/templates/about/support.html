@@ -1,19 +1,13 @@
 {% extends "base.html" %}
 {% load static %}
-
 {% block title %}Контакты{% endblock %}
-
 {% block head %}
   <meta name="description" content="Контакты для связи с разработчиком"/>
   <meta name="keywords" content="разработка приложений, WEB разработка, разработчик"> 
   <link rel="stylesheet" href="{% static 'css/about.css' %}">
 {% endblock %}
-
-
 {% block content %}
-
   <div class="container p-5">
-
     <div class="card bg-light shadow {% if is_mobile == False %} w-50 {% endif %} mx-auto my-4">
       <!-- Хедер карточки -->
       <div class="card-title text-center my-3">
@@ -23,48 +17,39 @@
           </div>
         </div>
       </div>
-
       <!-- Тело карточки -->
       <div class="card-body text-center">
-
         <div class="row justify-content-center">
           <div class="ico-wrap">
             <i class="fa fa-map-marker ico-contact"></i>
           </div>
         </div>
-
         <div class="row my-3">
           <h4 class="aio-icon-title">Наш фактический адрес:</h4>
           <div class="aio-icon-description">
             197227, г. Санкт-Петербург, пр-т. Сизова,
             <br>дом 12, корпус 1
           </div>
-        </div>
-    
+        </div>    
         <span class="clearfix"></span>
-
         <div class="row justify-content-center">    
           <div class="ico-wrap">
             <i class="fa fa-clock-o ico-contact"></i>
           </div>
         </div>
-
         <div class="row my-3">
           <h4 class="aio-icon-title">Время работы техподдержки:</h4>
           <div class="aio-icon-description">
             пн.-сб. с 9:00 до 20:00.
             <br>вс — выходной
           </div>
-        </div>
-    
-        <span class="clearfix"></span>
-    
+        </div>    
+        <span class="clearfix"></span>    
         <div class="row justify-content-center"> 
           <div class="ico-wrap">
             <i class="fa fa-phone ico-contact"></i>
           </div>
         </div>
-
         <div class="row my-3">
           <h4 class="aio-icon-title">Телефон для связи:</h4>
           <div class="aio-icon-description">
@@ -74,11 +59,7 @@
             </a>
           </div>
         </div>
-
       </div>
-
-    </div>
-    
+    </div>    
   </div>
-
-{% endblock %} 
+{% endblock %}

@@ -73,19 +73,17 @@ services:
   whisper:
     image: onerahmet/openai-whisper-asr-webservice:latest
     container_name: todo_whisper
-    expose:
-      - "9090:9090"
+    ports:
+      - "10000:9000"
     environment:
       - ASR_MODEL=base
-    volumes:
-      - whisper_volume:/root/.cache/whisper
+      - ASR_ENGINE=openai_whisper
 
   nginx:
     image: nginx:latest
     container_name: todo_nginx
     volumes:
       - ./nginx/default_dev.conf:/etc/nginx/conf.d/default.conf:ro
-      - media_volume:/var/html/media/:rw
     ports:
       - "80:80"
     network_mode: host
@@ -95,6 +93,4 @@ volumes:
   postgresql_volume:
   cache_pip_volume:
   cache_apt_volume:
-  whisper_volume:
   pgadmin_data_todo:
-  media_volume:

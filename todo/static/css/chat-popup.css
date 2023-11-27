@@ -22,11 +22,9 @@
   background: #1f343d;
   z-index: 2;
 }
-
 .floating-chat i {
-  font-size: 24px; /* Регулируйте размер иконки по желанию */
+  font-size: 24px;
 }
-
 .floating-chat.enter {
   transform: translateY(0);
   opacity: 0.6;
@@ -112,26 +110,19 @@
   font-size: 16px;
   font-weight: bold;
 }
-
-/* Определяем анимацию с именем 'blink' */
 @keyframes blink {
   0%, 100% { opacity: 0; }
   50% { opacity: 1; }
 }
-
 .floating-chat .chat .title .typing-indicator{
   color: #c71d1d;
 }
-
-/* Применяем анимацию к каждой букве */
 .floating-chat .chat .title .typing-indicator span {
-  animation-name: blink;           /* Имя анимации */
-  animation-duration: 1.4s;        /* Продолжительность анимации */
-  animation-iteration-count: infinite; /* Анимация будет повторяться бесконечно */
-  animation-fill-mode: both;       /* Стиль будет применяться до и после анимации */
+  animation-name: blink;
+  animation-duration: 1.4s;
+  animation-iteration-count: infinite;
+  animation-fill-mode: both;
 }
-
-/* Для каждой буквы задаем задержку, чтобы создать последовательное мигание */
 .floating-chat .chat .title .typing-indicator span:nth-child(1) {
   animation-delay: 0s;
 }
@@ -150,16 +141,15 @@
 .floating-chat .chat .title .typing-indicator span:nth-child(6) {
   animation-delay: 1s;
 }
-
 .floating-chat .chat .messages {
   padding: 10px;  
   margin: 0;
   list-style: none;
-  overflow-y: auto; /* Ensures vertical scrolling */
-  overflow-x: hidden; /* Ensures no horizontal scrolling */
+  overflow-y: auto;
+  overflow-x: hidden;
   flex-grow: 1;
   background: #444;
-  max-height: 80vh; /* Adjust the max-height to ensure the content is scrollable within the container */
+  max-height: 80vh;
 }
 .floating-chat .chat .messages::-webkit-scrollbar {
   width: 5px;
@@ -181,10 +171,10 @@
   margin-bottom: 20px;
   border-radius: 10px;
   background-color: #e3e6eb;
-  word-wrap: break-word; /* Fallback for older browsers */
-  overflow-wrap: break-word; /* Prevents the text from overflowing the container */
-  max-width: calc(100% - 28px - 20px); /* Adapted to include padding in the measurement */
-  box-sizing: border-box; /* Include padding and border in the element's total width and height */
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  max-width: calc(100% - 28px - 20px);
+  box-sizing: border-box;
 }
 .floating-chat .chat .messages li:after {
   position: absolute;
@@ -195,7 +185,7 @@
   border-top: 10px solid #e3e6eb;
 }
 .floating-chat .chat .messages li:empty:before {
-  content: '\00a0'; /* Non-breaking space to ensure empty list items maintain padding */
+  content: '\00a0';
 }
 .floating-chat .chat .messages li.other {
   animation: show-chat-odd 0.15s 1 ease-in;
@@ -219,16 +209,14 @@
   border-right: 10px solid transparent;
   right: -10px;
 }
-
 .floating-chat .chat .messages .pre {
-  max-width: 100%; /* Ensure code block doesn't exceed the width of .other */
-  overflow-x: auto; /* Add horizontal scrolling if code block is too wide */
-  margin: 0; /* Remove default margin from 'pre' if necessary */
-  padding: 0.5em; /* Add some padding inside code blocks */
-  background: #474444; /* Light background color for code blocks */
-  font-family: 'Courier New', Courier, monospace; /* Шрифт для кода */
+  max-width: 100%;
+  overflow-x: auto;
+  margin: 0;
+  padding: 0.5em;
+  background: #474444;
+  font-family: 'Courier New', Courier, monospace;
 }
-
 .floating-chat .chat .messages li.self {
   animation: show-chat-even 0.15s 1 ease-in;
   -moz-animation: show-chat-even 0.15s 1 ease-in;
@@ -251,7 +239,6 @@
   border-left: 10px solid transparent;
   left: -10px;
 }
-
 @keyframes show-chat-even {
   0% {
     margin-left: -480px;
@@ -307,7 +294,6 @@
 .floating-chat .chat .chat_list button {
   flex-shrink: 0;
 }
-
 .floating-chat .chat .footer {
   flex-shrink: 0;
   display: flex;
@@ -319,17 +305,17 @@
 .floating-chat .chat .footer .text-box {
   border-radius: 3px;
   height: 100%;
-  width: calc(100% - 70px); /* Adjust width to make room for the send button */
+  width: calc(100% - 70px);
   margin-right: 5px;
   color: #000;
   overflow-y: auto;
   padding: 2px 5px;
-  box-sizing: border-box; /* Include padding and border in the element's total width and height */
+  box-sizing: border-box;
   overflow-y: auto;
-  overflow-wrap: break-word; /* Разрешить перенос слов при необходимости */
-  white-space: pre-wrap; /* Поддерживать перенос строки */
+  overflow-wrap: break-word;
+  white-space: pre-wrap;
   min-height: 100%;
-  resize: vertical; /* Разрешить изменение размеров только по вертикали */
+  resize: vertical;
 }
 .floating-chat .chat .footer .text-box::-webkit-scrollbar {
   width: 5px;
@@ -397,7 +383,6 @@
   font-size: 10px;
   top: -10px;
 }
-
 @media screen and (max-width: 768px) {
   .floating-chat.expand {
     position: fixed;

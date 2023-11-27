@@ -2,13 +2,10 @@
 {% load static %}
 {% load user_filters %}
 {% load thumbnail %}
-
 {% block head %}  
   <link rel="stylesheet" href="{% static 'css/post-create.css' %}">
 {% endblock %}
-
 {% block title %} Редактор заметок {% endblock %}
-
 {% block content %}
   <div class="container py-5">     
     <div class="row justify-content-center py-3">
@@ -24,18 +21,15 @@
               </h1>
             </div class="lobster">
           </div>
-
           <form class="py-2" method="post" enctype="multipart/form-data"
           action="{% if form.initial.is_edit %}
                     {% url 'posts:post_edit' post_id=form.instance.id %}
                   {% else %} 
                     {% url 'posts:post_create' %} 
                   {% endif %}">
-
             {% csrf_token %}
             {{ form.media }}
-            {{ form.as_p }}      
-
+            {{ form.as_p }}
             <div class="d-flex justify-content-end">              
               <button type="submit" class="btn btn-primary">
                 {% if form.initial.is_edit %}
@@ -46,12 +40,9 @@
               </button>
             </div>
           </form>
-
       </div>
     </div>
   </div>
 {% endblock %}
-
-
 {% block javascript %}
 {% endblock %}

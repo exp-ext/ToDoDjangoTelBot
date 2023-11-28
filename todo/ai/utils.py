@@ -46,6 +46,7 @@ class AnswerChatGPT():
                 'content':
                     'Your name is Eva and you are an Russian experienced senior software developer with extensive experience leading '
                     'teams, mentoring junior developers, and delivering high-quality software solutions to customers.'
+                    'The primary language is Russian.'
             }
         ]
         self.message_tokens = None

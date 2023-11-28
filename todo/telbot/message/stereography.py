@@ -24,15 +24,17 @@ class AudioTranscription():
     """
     Отправляет в чат ответом на сообщение транскрибацию речи,
     порученную от АПИ openai-whisper-asr-webservice.
-
-    Для работы в режиме DEBAG необходимо запустить АПИ в контейнере:
-
-    docker run -d -p 9090:9090 -e ASR_MODEL=small \
-        onerahmet/openai-whisper-asr-webservice:latest
     """
     ERROR_TEXT = 'Что-то пошло не так 🤷🏼'
     STORY_WINDOWS_TIME = 11
     MAX_TYPING_TIME = 10
+    url = 'http://127.0.0.1:10000/asr/' if settings.USE_S3 or settings.DEBUG else 'http://todo_whisper:10000/asr/'
+    params = {
+        'task': 'transcribe',
+        'language': 'ru',
+        'output': 'json',
+    }
+    headers = {'accept': 'application/json'}
 
     def __init__(self, update: Update, context: CallbackContext) -> None:
         self.update = update
@@ -59,7 +61,7 @@ class AudioTranscription():
         except Exception as err:
             self.context.bot.send_message(
                 chat_id=ADMIN_ID,
-                text=f'Ошибка в Whisper: {err}',
+                text=f'Ошибка в Whisper: {str(err)[:1024]}',
             )
             self.transcription_text = AudioTranscription.ERROR_TEXT
         finally:
@@ -94,17 +96,10 @@ class AudioTranscription():
                 raise HttpResponseBadRequest("Bad Request")
 
             files = [('audio_file', ('audio.ogg', response.content, 'audio/ogg'))]
-            url = 'http://127.0.0.1:10000/asr'
-            params = {
-                'task': 'transcribe',
-                'language': 'ru',
-                'output': 'json',
-            }
-            headers = {'accept': 'application/json'}
             response = await client.post(
-                url=url,
-                headers=headers,
-                params=params,
+                url=self.url,
+                headers=self.headers,
+                params=self.params,
                 files=files
             )
             self.transcription_text = json.loads(response.content)['text']

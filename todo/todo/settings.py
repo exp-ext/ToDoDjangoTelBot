@@ -217,22 +217,30 @@ USE_S3 = int(os.getenv('USE_S3', default=0))
 if USE_S3:
     STATIC_URL = f'{AWS_S3_ENDPOINT_URL}/{STATIC_BUCKET_NAME}/'
     STATICFILES_STORAGE = 'todo.boto.StaticStorage'
+
+    MEDIA_URL = f'{AWS_S3_ENDPOINT_URL}/{MEDIA_BUCKET_NAME}/'
+    DEFAULT_FILE_STORAGE = 'todo.boto.MediaStorage'
+
+    DBBACKUP_STORAGE = 'todo.boto.DataBaseStorage'
+    DBBACKUP_STORAGE_OPTIONS = {
+        'access_key': AWS_ACCESS_KEY_ID,
+        'secret_key': AWS_SECRET_ACCESS_KEY,
+        'bucket_name': DATABASE_BUCKET_NAME,
+        'default_acl': 'private',
+    }
 else:
     STATIC_URL = '/static/'
 
+    MEDIA_URL = '/media/'
+    MEDIA_ROOT = Path(BASE_DIR).joinpath('media').resolve()
+
+    DBBACKUP_STORAGE = 'django.core.files.storage.FileSystemStorage'
+    DBBACKUP_STORAGE_OPTIONS = {
+        'location': Path(BASE_DIR).joinpath('backup').resolve()
+    }
+
 STATICFILES_DIRS = (BASE_DIR / 'static',)
 STATIC_ROOT = Path(BASE_DIR).joinpath('staticfiles').resolve()
-
-MEDIA_URL = f'{AWS_S3_ENDPOINT_URL}/{MEDIA_BUCKET_NAME}/'
-DEFAULT_FILE_STORAGE = 'todo.boto.MediaStorage'
-
-DBBACKUP_STORAGE = 'todo.boto.DataBaseStorage'
-DBBACKUP_STORAGE_OPTIONS = {
-    'access_key': AWS_ACCESS_KEY_ID,
-    'secret_key': AWS_SECRET_ACCESS_KEY,
-    'bucket_name': DATABASE_BUCKET_NAME,
-    'default_acl': 'private',
-}
 
 S3_CLIENT = boto3.client(
     's3',

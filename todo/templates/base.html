@@ -20,7 +20,7 @@
     referrerpolicy="no-referrer" />  
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Playfair+Display&display=swap">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.0.3/styles/default.min.css"> 
-  <link rel="stylesheet" href="{% static 'django_ckeditor_5/dist/styles.css' %}" type="text/css" media="all">
+  <link rel="stylesheet" href="{% static 'django_ckeditor_5/dist/styles.css' %}" type="text/css" media="all" rel="stylesheet">
   <link rel="stylesheet" href="{% static 'css/general-style.css' %}">
   {% block head %} {% endblock %}
   <title> {% block title %} {% endblock %} </title>
@@ -50,7 +50,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
   <script>hljs.highlightAll();</script>
   <script src="{% static 'js/chat-popup.js' %}"></script>
-  <script src="{% static 'js/anim-item.js' %}"></script>  
+  <script src="{% static 'js/anim-item.js' %}"></script>
   {% block javascript %}
   {% endblock %}
 </body>

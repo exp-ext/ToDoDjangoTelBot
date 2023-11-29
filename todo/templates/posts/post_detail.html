@@ -159,28 +159,23 @@
   <img src="https://cdn.dribbble.com/assets/dribbble-ball-mark-2bd45f09c2fb58dbbfb44766d5d1d07c5a12972d602ef8b32204d28fa3dda554.svg" alt=""></a>
 {% endblock %}
 
-{% block javascript %}  
-  <script src="{% static 'js/script.js' %}"></script>
-
-  <script src="{% static 'js/counter.js' %}"></script>
+{% block javascript %}
 
   <script async charset="utf-8" src="//cdn.embedly.com/widgets/platform.js"></script>
+  <script async src="{% static 'js/script.js' %}"></script>
+  <script async src="{% static 'js/counter.js' %}"></script>
+
   <script>
     document.querySelectorAll( 'oembed[url]' ).forEach( element => {
         const anchor = document.createElement( 'a' );
         anchor.setAttribute( 'href', element.getAttribute( 'url' ) );
         anchor.className = 'embedly-card';
         element.appendChild( anchor );
-    } );
-  </script>
-
-  <script>
+    });
     function scrollDown(event) {
-      event.preventDefault();
-  
+      event.preventDefault();  
       var targetId = event.target.getAttribute("href").substring(1);
-      var targetElement = document.getElementById(targetId);
-  
+      var targetElement = document.getElementById(targetId);  
       if (targetElement) {
           var offset = 64;
           var targetPosition = targetElement.offsetTop - offset;
@@ -191,12 +186,8 @@
           });
       }
     }
-  </script>
-
-  <script>
     function toggleList(event, toggleIcon) {
-        const ul = toggleIcon.parentElement.querySelector('ul');
-        
+        const ul = toggleIcon.parentElement.querySelector('ul');        
         if (ul) {
             if (ul.style.display === "none" || ul.style.display === "") {
                 ul.style.display = "block";
@@ -208,5 +199,4 @@
         }
     }
   </script>
-
 {% endblock %}

@@ -4,6 +4,10 @@
 
 {% block head %}
 
+  {% if advertisement_widget %}
+    {{ advertisement_widget.script|safe }}
+  {% endif %}
+
   <meta name="description" content="Заметка это простой и удобный способ хранить Ваши важные мысли!"/>
   <meta name="keywords" content="Telegram, заметки, организация заметок, Telegram инструмент, автор, Python, программирование, ИИ">
 
@@ -66,7 +70,9 @@
         {% endif %}
 
         {% if advertising and not is_mobile %}
-          {% include 'posts/includes/advertising.html' %}
+          <div class="ck ck-content">
+            {% include 'posts/includes/advertising.html' %}
+          </div>
         {% endif %}
 
         <div class="hover-effects">
@@ -122,6 +128,7 @@
       {% comment %} вторая колонка {% endcomment %}
 
       <article class="col-lg-8 col-sm-12 bg-light rounded shadow">
+        
         <div class="lobster"> 
           <h1>{{ post.title }}</h1>
         </div>      
@@ -134,26 +141,34 @@
               {{ post.text|safe }}
             </div> 
           </div> 
-        </p>
+        </p>  
 
+      </article>
+    </div>
+
+    <div class="row {% if advertising and is_mobile %} mb-3 {% else %} mb-4 {% endif %}">
+      <div class="col-lg-3 col-sm-12">
+      </div>
+      <div class="col-lg-8 col-sm-12 bg-light rounded shadow p-1">
+        <div id="marketWidget" class="rounded"></div>
         {% include 'posts/includes/comments.html' %}
-
-      </article> 
-
+      </div>
     </div>
   </div>
+
+  <aside class="col-lg-1 col-sm-12 mb-4">
+    {% if advertising and is_mobile %}
+      <div class="ck ck-content">
+        {% include 'posts/includes/advertising.html' %}
+      </div>     
+    {% endif %}
+  </aside>
 
   {% if is_mobile %}
     {% include 'includes/yamobileflooradvertising.html' %}
   {% else %}
     {% include 'includes/yapcflooradvertising.html' %}
   {% endif %}
-
-  <aside class="col-lg-1 col-sm-12">
-    {% if advertising and is_mobile %}
-      {% include 'posts/includes/advertising.html' %}
-    {% endif %}
-  </aside>
 
   <a class="dribbble" href="https://dribbble.com/shots/7441241-Button-Hover-Effects" target="_blank">
   <img src="https://cdn.dribbble.com/assets/dribbble-ball-mark-2bd45f09c2fb58dbbfb44766d5d1d07c5a12972d602ef8b32204d28fa3dda554.svg" alt=""></a>

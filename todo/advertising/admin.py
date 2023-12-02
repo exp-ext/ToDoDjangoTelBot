@@ -1,4 +1,4 @@
-from advertising.models import PartnerBanner, TelegramMailing
+from advertising.models import AdvertisementWidget, PartnerBanner, TelegramMailing
 from django.contrib import admin
 from django.utils.safestring import mark_safe
 
@@ -40,3 +40,14 @@ class TelegramMailingAdmin(admin.ModelAdmin):
     def get_fieldsets(self, request, obj=None):
         self.request = request
         return super().get_fieldsets(request, obj)
+
+
+@admin.register(AdvertisementWidget)
+class PartnerBannerAdmin(admin.ModelAdmin):
+    list_display = ('advertiser', 'title', 'created_at')
+    fieldsets = (
+        ('Данные не для представления на сайте', {'fields': ('created_at', 'title', 'advertiser')}),
+        ('Тип расположения', {'fields': ('form',)}),
+        ('Текст', {'fields': ('script',)}),
+    )
+    readonly_fields = ('created_at',)

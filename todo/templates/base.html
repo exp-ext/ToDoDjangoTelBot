@@ -2,6 +2,7 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
+  {% include 'includes/yaheadadvertising.html' %}
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" href="{% static 'img/fav/favicon.ico' %}" type="image/x-icon">
@@ -21,8 +22,7 @@
   {% block head %} {% endblock %}
   <title> {% block title %} {% endblock %} </title>
   <!-- pre loads js -->
-  <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
-  {% include 'includes/yaheadadvertising.html' %}
+  <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>  
 </head>
 <body>
   <!-- site loads -->
@@ -55,6 +55,7 @@
   <script async src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
   <link rel="stylesheet" href="{% static 'django_ckeditor_5/dist/styles.css' %}" type="text/css">
   <script defer src="{% static 'django_ckeditor_5/dist/bundle.js' %}"></script>
+  {% include 'includes/yacounter.html' %}
   <!-- script -->
   <script>hljs.highlightAll();</script>
   {% block javascript %}

@@ -1,4 +1,5 @@
-from advertising.models import AdvertisementWidget, PartnerBanner, TelegramMailing
+from advertising.models import (AdvertisementWidget, PartnerBanner,
+                                TelegramMailing)
 from django.contrib import admin
 from django.utils.safestring import mark_safe
 

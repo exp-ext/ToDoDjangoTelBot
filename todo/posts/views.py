@@ -1,5 +1,6 @@
 import json
 import re
+from collections import Counter
 from typing import Any, Dict
 
 from advertising.models import AdvertisementWidget, PartnerBanner
@@ -7,7 +8,7 @@ from core.views import get_status_in_group, linkages_check, paginator_handler
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.db.models import Count, Q
+from django.db.models import Case, Count, IntegerField, Q, When
 from django.db.models.query import QuerySet
 from django.http import (HttpRequest, HttpResponse, HttpResponseRedirect,
                          JsonResponse)
@@ -44,32 +45,35 @@ class SearchListView(ListView):
         term = request.GET.get('term', '')
         if not self.keyword and not term:
             return redirect('posts:index_posts')
-        if term and ' ' in term:
-            return self.term_queryset_answer(term)
         if term:
             return self.term_answer(term)
         return super().get(request, *args, **kwargs)
 
     def term_answer(self, term):
-        """Автодополнение."""
-        self.keyword = term
-        qs = self.get_queryset()
-        qs = qs.filter(text__icontains=self.keyword, moderation='PS').values_list('text', flat=True)
-        matching_words = set()
-        for item in qs:
-            words = re.findall(r'\b\w+\b', item)
-            for word in words:
-                if self.keyword in word and word:
-                    matching_words.add(word)
-        return JsonResponse(list(matching_words)[:7], safe=False)
-
-    def term_queryset_answer(self, term):
-        """Возврат фильтрованного о поиску queryset."""
+        """Автодополнение в поиске."""
         self.keyword = term
         queryset = self.get_queryset()
-        queryset = queryset.annotate(match_count=Count('text'))
-        queryset = queryset.order_by('-match_count')
-        results = []
+        queryset = (
+            queryset.filter(text__icontains=self.keyword, moderation='PS')
+            .annotate(
+                title_match=Case(
+                    When(title__icontains=self.keyword, then=1),
+                    default=0,
+                    output_field=IntegerField()
+                ),
+                text_match_count=Count('text')
+            ).order_by('-title_match', '-text_match_count')
+        )
+        qs = queryset.values_list('text', flat=True)
+        word_counts = Counter()
+
+        for item in qs[:5]:
+            words = re.findall(r'\b\w+\b', item.lower())
+            for word in words:
+                if self.keyword in word:
+                    word_counts[word] += 1
+
+        results = sorted(word_counts, key=lambda x: (-word_counts[x], len(x)))[:5]
 
         for item in queryset[:3]:
             results.append({

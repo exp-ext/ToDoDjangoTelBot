@@ -145,7 +145,7 @@ class PostContents(MP_Node):
     - anchor (str): Якорь оглавления (максимум 250 символов).
     """
     post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='contents', verbose_name=_('пост'))
-    anchor = models.CharField(_('заголовок/глава/раздел'), max_length=80)
+    anchor = models.CharField(_('заголовок/глава/раздел'), max_length=250)
 
     class Meta:
         verbose_name = _('оглавление')

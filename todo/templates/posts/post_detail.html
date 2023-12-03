@@ -146,11 +146,17 @@
       </article>
     </div>
 
+
+
     <div class="row {% if advertising and is_mobile %} mb-3 {% else %} mb-4 {% endif %}">
       <div class="col-lg-3 col-sm-12">
       </div>
-      <div class="col-lg-8 col-sm-12 bg-light rounded shadow p-1">
-        <div id="marketWidget" class="rounded"></div>
+      <div class="col-lg-8 col-sm-12 bg-light rounded shadow p-3">
+
+        {% if advertising and not is_mobile %}
+          <div id="marketWidget" class="rounded"></div>  
+        {% endif %}       
+
         {% include 'posts/includes/comments.html' %}
       </div>
     </div>

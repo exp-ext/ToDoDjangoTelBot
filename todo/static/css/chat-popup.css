@@ -214,8 +214,6 @@
   overflow-x: auto;
   margin: 0;
   padding: 0.5em;
-  background: #474444;
-  font-family: 'Courier New', Courier, monospace;
 }
 .floating-chat .chat .messages li.self {
   animation: show-chat-even 0.15s 1 ease-in;

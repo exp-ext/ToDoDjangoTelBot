@@ -23,7 +23,8 @@ class PostURLTests(TestCase):
         )
         cls.post = Post.objects.create(
             author=cls.user,
-            text='Тестовый пост' * 3
+            text='Тестовый пост' * 3,
+            moderation='PS'
         )
         cls.group = Group.objects.create(
             title='Тестовая группа',

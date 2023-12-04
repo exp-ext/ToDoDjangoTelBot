@@ -48,7 +48,8 @@ class PostFormTests(TestCase):
         cls.post = Post.objects.create(
             author=cls.user_author,
             text='Тестовый пост 222',
-            title='Тестовый титл 222'
+            title='Тестовый титл 222',
+            moderation='PS'
         )
         GroupConnections.objects.create(
             user=cls.user_author,
@@ -94,7 +95,6 @@ class PostFormTests(TestCase):
             content_type='image/gif'
         )
 
-    @skip
     def test_post_create_forms(self):
         """Форма создает заметку."""
         posts_count = Post.objects.count()

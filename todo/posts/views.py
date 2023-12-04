@@ -240,7 +240,7 @@ class ProfileDetailView(DetailView):
 
     def get_user_posts(self) -> QuerySet(Post):
         groups = self.get_user_groups()
-        moderation = ('PS', 'WT') if self.request.user == self.object else ('PS', 'WT')
+        moderation = ('PS', 'WT') if self.request.user == self.object else ('PS',)
         return (
             self.object.posts
             .filter(Q(group=None) | Q(group__in=groups) | Q(group__link__isnull=False), moderation__in=moderation)
@@ -320,7 +320,11 @@ class PostDetailView(DetailView):
     pk_url_kwarg = 'post_id'
 
     def get_queryset(self) -> QuerySet(Post):
-        return super().get_queryset().select_related('author')
+        queryset = super().get_queryset().select_related('author')
+        user = self.request.user
+        if user.is_anonymous:
+            return queryset.filter(moderation='PS')
+        return queryset.filter(Q(moderation='PS') | Q(author=user))
 
     def get_context_data(self, **kwargs: Any) -> Dict[str, Any]:
         context = super().get_context_data(**kwargs)

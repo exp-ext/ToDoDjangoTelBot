@@ -50,8 +50,6 @@ urlpatterns = [
     path('tasks/', include(('tasks.urls', 'tasks'), namespace='tasks')),
     path('profile/<str:username>/', accounts_profile, name='accounts_profile'),
     path('posts/', include(('posts.urls', 'posts'), namespace='posts')),
-    path('sitemap.xml', sitemap, {'sitemaps': SITEMAPS}, name='django.contrib.sitemaps.views.sitemap'),
-    path('robots.txt', views.robots_txt),
     path('ckeditor5/', include('django_ckeditor_5.urls'), name='ck_editor_5_upload_file'),
     path('health/live', views.health, name='health'),
 ]
@@ -64,6 +62,11 @@ if settings.DEBUG:
     ]
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+else:
+    urlpatterns += [
+        path('sitemap.xml', sitemap, {'sitemaps': SITEMAPS}, name='django.contrib.sitemaps.views.sitemap'),
+        path('robots.txt', views.robots_txt)
+    ]
 
 
 handler403 = 'core.views.permission_denied'

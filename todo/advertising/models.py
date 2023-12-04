@@ -1,6 +1,7 @@
 from core.models import Create
 from django.db import models
 from django.utils.translation import gettext_lazy as _
+from django_ckeditor_5.fields import CKEditor5Field
 from sorl.thumbnail import ImageField
 
 
@@ -17,7 +18,7 @@ class Banner(Create):
 
     image = ImageField(_('картинка'), upload_to='advertising/')
     reference = models.CharField(_('партнерская ссылка'), max_length=200)
-    text = models.TextField(_('слоган банера'))
+    text = CKEditor5Field(_('слоган банера'), config_name='extends')
 
     class Meta:
         ordering = ('-created_at',)
@@ -67,3 +68,31 @@ class TelegramMailing(Banner):
     class Meta:
         verbose_name = _('телеграмм рассылка')
         verbose_name_plural = _('телеграмм рассылки')
+
+
+class AdvertisementWidget(Create):
+    """Модель для скриптов рекламы.
+
+    ### Attributes:
+    - title (`CharField`): Краткое описание скрипта.
+    - script(`TextField`): Скрипт из конструктора виджетов ЯМ.
+    - type(): форма скрипта
+
+    """
+    class Form(models.TextChoices):
+        """Варианты целей рассылки."""
+        LINE = 'l', _('линейная форма')
+        SQUARE = 's', _('квадратная форма')
+
+    title = models.CharField(_('описание'), max_length=100)
+    advertiser = models.CharField(_('рекламодатель'), max_length=100)
+    script = models.TextField(_('скрипт для отображения в станице'))
+    form = models.CharField(_('тип виджета'), max_length=1, choices=Form.choices, default=Form.LINE)
+
+    class Meta:
+        verbose_name = _('скрипт рекламного виджета')
+        verbose_name_plural = _('скрипты рекламных виджетов')
+        ordering = ('-created_at',)
+
+    def __str__(self) -> str:
+        return self.title

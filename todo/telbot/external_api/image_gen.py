@@ -2,11 +2,11 @@ import asyncio
 import os
 from datetime import datetime, timedelta, timezone
 
-import openai
 from asgiref.sync import sync_to_async
 from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
 from dotenv import load_dotenv
+from openai import OpenAI
 from telegram import ChatAction, InputMediaPhoto, ParseMode, Update
 from telegram.ext import CallbackContext, ConversationHandler
 
@@ -17,7 +17,6 @@ from ..models import HistoryDALLE
 load_dotenv()
 
 APY_KEY = os.getenv('CHAT_GP_TOKEN')
-openai.api_key = APY_KEY
 
 ADMIN_ID = os.getenv('ADMIN_ID')
 
@@ -125,7 +124,8 @@ class GetAnswerDallE():
         """
         Делает запрос в OpenAI.
         """
-        response = openai.Image.create(
+        client = OpenAI(api_key=APY_KEY)
+        response = client.images.generate(
             prompt=self.message_text,
             n=5,
             size='1024x1024'

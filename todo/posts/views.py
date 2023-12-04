@@ -1,13 +1,14 @@
 import json
 import re
+from collections import Counter
 from typing import Any, Dict
 
-from advertising.models import PartnerBanner
+from advertising.models import AdvertisementWidget, PartnerBanner
 from core.views import get_status_in_group, linkages_check, paginator_handler
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.db.models import Count, Q
+from django.db.models import Case, Count, IntegerField, Q, When
 from django.db.models.query import QuerySet
 from django.http import (HttpRequest, HttpResponse, HttpResponseRedirect,
                          JsonResponse)
@@ -18,6 +19,7 @@ from django.views.generic import CreateView, ListView, UpdateView
 from django.views.generic.detail import DetailView
 from django.views.generic.edit import FormView
 from django_user_agents.utils import get_user_agent
+from telbot.service_message import send_message_to_chat
 from users.models import Group, GroupMailing
 
 from .forms import CommentForm, GroupMailingForm, PostForm
@@ -26,6 +28,7 @@ from .models import Follow, Post, PostContents
 User = get_user_model()
 redis_client = settings.REDIS_CLIENT
 PAGINATE_BY = 10
+ADMIN_ID = settings.TELEGRAM_ADMIN_ID
 
 
 class SearchListView(ListView):
@@ -42,32 +45,35 @@ class SearchListView(ListView):
         term = request.GET.get('term', '')
         if not self.keyword and not term:
             return redirect('posts:index_posts')
-        if term and ' ' in term:
-            return self.term_queryset_answer(term)
         if term:
             return self.term_answer(term)
         return super().get(request, *args, **kwargs)
 
-    def term_answer(self, term):
-        """Автодополнение."""
-        self.keyword = term
-        qs = self.get_queryset()
-        qs = qs.filter(text__icontains=self.keyword, moderation='PS').values_list('text', flat=True)
-        matching_words = set()
-        for item in qs:
-            words = re.findall(r'\b\w+\b', item)
-            for word in words:
-                if self.keyword in word and word:
-                    matching_words.add(word)
-        return JsonResponse(list(matching_words)[:7], safe=False)
-
-    def term_queryset_answer(self, term):
-        """Возврат фильтрованного о поиску queryset."""
-        self.keyword = term
+    def term_answer(self, term: str) -> JsonResponse:
+        """Автодополнение в поиске."""
+        self.keyword = term.lower()
         queryset = self.get_queryset()
-        queryset = queryset.annotate(match_count=Count('text'))
-        queryset = queryset.order_by('-match_count')
-        results = []
+        queryset = (
+            queryset.filter(text__icontains=self.keyword, moderation='PS')
+            .annotate(
+                title_match=Case(
+                    When(title__icontains=self.keyword, then=1),
+                    default=0,
+                    output_field=IntegerField()
+                ),
+                text_match_count=Count('text')
+            ).order_by('-title_match', '-text_match_count')
+        )
+        qs = queryset.values_list('text', flat=True)
+        word_counts = Counter()
+
+        for item in qs[:5]:
+            words = re.findall(r'\b\w+\b', item.lower())
+            for word in words:
+                if self.keyword in word:
+                    word_counts[word] += 1
+
+        results = sorted(word_counts, key=lambda x: (-word_counts[x], len(x)))[:5]
 
         for item in queryset[:3]:
             results.append({
@@ -183,8 +189,7 @@ class GroupPostsListView(ListView):
         }
         return context
 
-    def post(self, request: HttpRequest, *args: Any, **kwargs: Any
-             ) -> HttpRequest:
+    def post(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpRequest:
         if self.form.is_valid():
             quotes = self.form.cleaned_data.get('forismatic_quotes')
             if quotes:
@@ -235,9 +240,10 @@ class ProfileDetailView(DetailView):
 
     def get_user_posts(self) -> QuerySet(Post):
         groups = self.get_user_groups()
+        moderation = ('PS', 'WT') if self.request.user == self.object else ('PS', 'WT')
         return (
             self.object.posts
-            .filter(Q(group=None) | Q(group__in=groups) | Q(group__link__isnull=False), moderation='PS')
+            .filter(Q(group=None) | Q(group__in=groups) | Q(group__link__isnull=False), moderation__in=moderation)
             .select_related('author', 'group')
         )
 
@@ -271,6 +277,8 @@ class PostCreateView(LoginRequiredMixin, CreateView):
         return super().form_valid(form)
 
     def get_success_url(self) -> Dict[str, Any]:
+        message = f'Создан новый пост с темой "{self.object.title}"'
+        send_message_to_chat(ADMIN_ID, message)
         return reverse_lazy('posts:profile', kwargs={'username': self.request.user.username})
 
 
@@ -319,8 +327,11 @@ class PostDetailView(DetailView):
         post = kwargs.get('object')
         user_agent = get_user_agent(self.request)
         ip = self.get_client_ip()
+
         all_banners = PartnerBanner.objects.all()
         random_banner = all_banners.order_by('?').first()
+        all_widget = AdvertisementWidget.objects.all()
+        random_widget = all_widget.order_by('?').first()
 
         redis_key_post_ips = f'ips_post_{post.id}'
         redis_key_post_counter = f'counter_post_{post.id}'
@@ -366,6 +377,7 @@ class PostDetailView(DetailView):
             'form': CommentForm(self.request.POST or None),
             'is_mobile': user_agent.is_mobile,
             'advertising': random_banner if random_banner else False,
+            'advertisement_widget': random_widget if random_widget else False,
             'counter': counter,
             'contents': contents[0].get('children', None) if contents else None,
         }

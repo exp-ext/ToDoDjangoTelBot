@@ -9,11 +9,11 @@ https://docs.djangoproject.com/en/4.1/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.1/ref/settings/
 """
-
 import os
 import socket
 from pathlib import Path
 
+import boto3
 import redis
 from core.keygen import get_key
 from dotenv import load_dotenv
@@ -28,6 +28,7 @@ YANDEX_GEO_API_TOKEN = os.getenv('YANDEX_GEO_API_TOKEN', default='some_token_to_
 
 CHAT_GPT_TOKEN = os.getenv('CHAT_GPT_TOKEN')
 TELEGRAM_ADMIN_ID = os.getenv('TELEGRAM_ADMIN_ID')
+SOCKS5 = os.getenv('SOCKS5')
 
 # mail service
 EMAIL_USE_TLS = True
@@ -78,6 +79,7 @@ THIRD_PARTY_APPS = [
     'django_user_agents',
     'django_ckeditor_5',
     'treebeard',
+    'storages',
 ]
 
 PROJECT_APPS = [
@@ -192,37 +194,70 @@ LOGIN_REDIRECT_URL = 'index'
 # https://docs.djangoproject.com/en/4.1/topics/i18n/
 
 LANGUAGE_CODE = 'ru-RU'
-
 TIME_ZONE = 'UTC'
-
 USE_I18N = True
-
 USE_TZ = True
-
 # Для корректной работы виджета в форме профиля
 USE_L10N = False
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.1/howto/static-files/
 
-STATIC_URL = '/static/'
-MEDIA_URL = '/media/'
-MEDIA_ROOT = Path(BASE_DIR).joinpath('media').resolve()
+AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID')
+AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY')
+AWS_S3_ENDPOINT_URL = os.getenv('AWS_S3_ENDPOINT_URL')
+AWS_S3_USE_SSL = int(os.getenv('AWS_S3_USE_SSL', default=0))
 
-DBBACKUP_STORAGE = 'django.core.files.storage.FileSystemStorage'
+STATIC_BUCKET_NAME = 'todo-static'
+MEDIA_BUCKET_NAME = 'todo-media'
+DATABASE_BUCKET_NAME = 'todo-database'
 
-DBBACKUP_STORAGE_OPTIONS = {
-    'location': Path(BASE_DIR).joinpath('backup').resolve()
-}
+USE_S3 = int(os.getenv('USE_S3', default=0))
+
+if USE_S3:
+    STATIC_URL = f'{AWS_S3_ENDPOINT_URL}/{STATIC_BUCKET_NAME}/'
+    STATICFILES_STORAGE = 'todo.boto.StaticStorage'
+
+    MEDIA_URL = f'{AWS_S3_ENDPOINT_URL}/{MEDIA_BUCKET_NAME}/'
+    DEFAULT_FILE_STORAGE = 'todo.boto.MediaStorage'
+
+    DBBACKUP_STORAGE = 'todo.boto.DataBaseStorage'
+    DBBACKUP_STORAGE_OPTIONS = {
+        'access_key': AWS_ACCESS_KEY_ID,
+        'secret_key': AWS_SECRET_ACCESS_KEY,
+        'bucket_name': DATABASE_BUCKET_NAME,
+        'default_acl': 'private',
+    }
+else:
+    STATIC_URL = '/static/'
+
+    MEDIA_URL = '/media/'
+    MEDIA_ROOT = Path(BASE_DIR).joinpath('media').resolve()
+
+    DBBACKUP_STORAGE = 'django.core.files.storage.FileSystemStorage'
+    DBBACKUP_STORAGE_OPTIONS = {
+        'location': Path(BASE_DIR).joinpath('backup').resolve()
+    }
 
 if DEBUG:
     STATICFILES_DIRS = (BASE_DIR / 'static',)
 else:
     STATIC_ROOT = Path(BASE_DIR).joinpath('static').resolve()
 
-# Django-ckeditor
-CKEDITOR_5_FILE_STORAGE = 'posts.storage.CkeditorCustomStorage'
+STATICFILES_FINDERS = (
+    'django.contrib.staticfiles.finders.FileSystemFinder',
+    'django.contrib.staticfiles.finders.AppDirectoriesFinder',
+)
 
+S3_CLIENT = boto3.client(
+    's3',
+    use_ssl=AWS_S3_USE_SSL,
+    aws_access_key_id=AWS_ACCESS_KEY_ID,
+    aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
+    endpoint_url=AWS_S3_ENDPOINT_URL
+)
+
+# Django-ckeditor
 CustomColorPalette = [
     {
         'color': 'hsl(4, 90%, 58%)',
@@ -396,49 +431,52 @@ if DEBUG:
     CELERY_TASK_EAGER_PROPAGATES = True
     CELERY_TASK_IGNORE_RESULT = True
 
-# LOGGING = {
-#     'version': 1,
-#     'disable_existing_loggers': False,
-#     'filters': {
-#         'require_debug_false': {
-#             '()': 'django.utils.log.RequireDebugFalse',
-#         }
-#     },
-#     'formatters': {
-#         'console': {
-#             'format': '[%(levelname)s: %(asctime)s] %(name)s.%(funcName)s:%(lineno)s- %(message)s',
-#         },
-#     },
-#     'handlers': {
-#         'console': {
-#             'class': 'logging.StreamHandler',
-#             'formatter': 'console',
-#         },
-#         'django.server': {
-#             'level': 'INFO',
-#             'class': 'logging.StreamHandler',
-#             'formatter': 'console',
-#         },
-#         'django.request': {
-#             'level': 'DEBUG',
-#             'class': 'logging.StreamHandler',
-#             'formatter': 'console',
-#         },
-#         'mail_admins': {
-#             'level': 'ERROR',
-#             'filters': ['require_debug_false'],
-#             'class': 'django.utils.log.AdminEmailHandler',
-#             'formatter': 'console',
-#         },
-#     },
-#     'loggers': {
-#         '': {
-#             'handlers': ['console', 'mail_admins', 'django.request'],
-#             'level': 'DEBUG' if DEBUG else 'INFO',
-#         },
-#         'django.server': {
-#             'handlers': ['django.server'],
-#             'propagate': False,
-#         },
-#     },
-# }
+
+EXTRA_LOGGING = int(os.getenv('EXTRA_LOGGING', default=0))
+if EXTRA_LOGGING:
+    LOGGING = {
+        'version': 1,
+        'disable_existing_loggers': False,
+        'filters': {
+            'require_debug_false': {
+                '()': 'django.utils.log.RequireDebugFalse',
+            }
+        },
+        'formatters': {
+            'console': {
+                'format': '[%(levelname)s: %(asctime)s] %(name)s.%(funcName)s:%(lineno)s- %(message)s',
+            },
+        },
+        'handlers': {
+            'console': {
+                'class': 'logging.StreamHandler',
+                'formatter': 'console',
+            },
+            'django.server': {
+                'level': 'INFO',
+                'class': 'logging.StreamHandler',
+                'formatter': 'console',
+            },
+            'django.request': {
+                'level': 'DEBUG',
+                'class': 'logging.StreamHandler',
+                'formatter': 'console',
+            },
+            'mail_admins': {
+                'level': 'ERROR',
+                'filters': ['require_debug_false'],
+                'class': 'django.utils.log.AdminEmailHandler',
+                'formatter': 'console',
+            },
+        },
+        'loggers': {
+            '': {
+                'handlers': ['console', 'mail_admins', 'django.request'],
+                'level': 'DEBUG' if DEBUG else 'INFO',
+            },
+            'django.server': {
+                'handlers': ['django.server'],
+                'propagate': False,
+            },
+        },
+    }

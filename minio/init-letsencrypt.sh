@@ -2,7 +2,7 @@
 
 source .env
 
-domains=(www.$DOMAIN $DOMAIN)
+domains=(www.$DOMAIN storage.$DOMAIN console.$DOMAIN $DOMAIN)
 email=$EMAIL
 staging=$STAGING
 

@@ -24,6 +24,7 @@ class PartnerBannerAdmin(admin.ModelAdmin):
     list_filter = (
         'post',
         'browser',
+        ('created_at', admin.DateFieldListFilter),
         ('is_bot', admin.BooleanFieldListFilter),
         ('is_mobile', admin.BooleanFieldListFilter),
         ('is_pc', admin.BooleanFieldListFilter),

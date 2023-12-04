@@ -8,3 +8,13 @@
   max-width: none; /* Убедитесь, что таблица может растягиваться за пределы 100% относительно .table-wrap */
   table-layout: fixed; /* Используйте фиксированное табличное размещение для управления переполнением ячеек */
 }
+
+pre {
+  white-space: pre !important;
+  overflow-x: auto !important;
+  word-wrap: normal !important;
+}
+
+*, *::before, *::after {
+    box-sizing: border-box;
+}

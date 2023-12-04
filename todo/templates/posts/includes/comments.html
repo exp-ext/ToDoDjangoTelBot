@@ -1,8 +1,8 @@
 {% load user_filters %}
 
 {% if user.is_authenticated %}
-  <div class="card my-4 rounded shadow">
-    <h5 class="card-header">Добавить комментарий:</h5>
+  <div class="card my-4 rounded shadow bg-light">
+    <h5 class="card-header bg-secondary">Добавить комментарий:</h5>
     <div class="card-body">
       <form method="post" action="{% url 'posts:add_comment' post.id %}">
         {% csrf_token %}      
@@ -17,17 +17,39 @@
   </div>
 {% endif %}
 
-{% for comment in comments %}
-  <div class="media mb-4">
-    <div class="media-body">
-      <h5 class="mt-0">
-        <a href="{% url 'posts:profile' comment.author.username %}">
-          {{ comment.author.get_full_name }}
-        </a>
-      </h5>
-      <p>
-        {{ comment.text }}
-      </p>
+
+<h5 class="mt-3">Комментарии к заметке:</h5>
+<hr>
+{% if user.is_anonymous %}
+  <div  class="mb-3" style="color:#6e6f70; font-size: 0.8em; font-style: italic;">
+    Регистрация доступна через <a href="https://t.me/BorFAsbot"> бота в Телеграмм</a>.</b>
+  </div>  
+{% endif %}
+
+{% if comments %}
+  {% for comment in comments %}
+    <div class="media mb-4">
+      <div class="media-body">
+        <h5 class="mt-0">
+          <a href="{% url 'posts:profile' comment.author.username %}">
+            {{ comment.author.get_full_name }}
+          </a>
+        </h5>
+        <p>
+          {{ comment.text }}
+        </p>
+      </div>
     </div>
+  {% endfor %}
+{% else %}
+    <div class="media mb-4">
+      <div class="media-body">
+        <h5 class="mt-0">
+          <a href="{% url 'posts:profile' 'BorFAsbot' %}">
+            Eva
+          </a>
+        </h5>
+        <p>🌟Будьте первым, кто поделится своими мыслями!🌟</p>        
+      </div>
     </div>
-{% endfor %} 
+{% endif %}

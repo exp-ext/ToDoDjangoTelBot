@@ -32,4 +32,6 @@ def robots_txt(request):
 
 
 def health(request):
-    return JsonResponse({"status": 200})
+    return JsonResponse({
+        "status": 200,
+    })

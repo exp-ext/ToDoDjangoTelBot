@@ -1,86 +1,69 @@
 body {
   margin: 0;
 }
-
 .error-svg {
   display: block;
 }
-
 #window-1 {
   animation: light 15s infinite alternate;
   animation-timing-function: steps(2);
 }
-
 #window-2 {
   animation: light 13s infinite alternate;
   animation-timing-function: steps(2);
 }
-
 #window-3 {
   animation: light 12s infinite alternate;
   animation-timing-function: steps(2);
 }
-
 #window-4 {
   animation: light 16s infinite alternate;
   animation-timing-function: steps(2);
 }
-
 #window-5 {
   animation: light 18s infinite alternate;
   animation-timing-function: steps(2);
 }
-
 #window-6 {
   animation: light 20s infinite alternate;
   animation-timing-function: steps(2);
 }
-
 #window-7 {
   animation: light 15s infinite alternate;
   animation-timing-function: steps(2);
 }
-
 #window-8 {
   animation: light 20s infinite alternate;
   animation-timing-function: steps(2);
 }
-
 #window-9 {
   animation: light 20s infinite alternate;
   animation-timing-function: steps(2);
 }
-
 #window-10 {
   animation: light 16s infinite alternate;
   animation-timing-function: steps(2);
 }
-
 #window-11 {
   animation: light 19s infinite alternate;
   animation-timing-function: steps(2);
 }
-
 #window-12 {
   animation: light 15s infinite alternate;
   animation-timing-function: steps(2);
 }
-
 #window-13 {
   animation: light 12s infinite alternate;
   animation-timing-function: steps(2);
 }
-
 #window-14 {
   animation: light 15s infinite alternate;
   animation-timing-function: steps(2);
 }
-
 #window-15 {
   animation: light 19s infinite alternate;
   animation-timing-function: steps(2);
 }
-
 #window-16 {
   animation: light 19s infinite alternate;
   animation-timing-function: steps(2);
@@ -94,43 +77,33 @@ body {
   transform-origin: center center;
   transform-box: fill-box;
 }
-
 #car-1 {
   animation: car1 30s infinite linear;
 }
-
 #car-2 {
   animation: car2 30s infinite linear;
 }
-
 #car-3 {
   animation: car3 15s infinite linear;
 }
-
 #car-4 {
   animation: car4 15s infinite linear;
 }
-
 #car-5 {
   animation: car5 30s infinite linear;
 }
-
 #car-6 {
   animation: car6 30s infinite linear;
 }
-
 #car-7 {
   animation: car7 15s infinite linear;
 }
-
 #car-8 {
   animation: car8 10s infinite linear;
 }
-
 #car-9 {
   animation: car9 15s infinite linear;
 }
-
 @keyframes car1 {
   0% {
     transform: translate(0, 0);

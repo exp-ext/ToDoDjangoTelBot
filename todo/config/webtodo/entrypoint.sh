@@ -16,6 +16,8 @@
 
 cd /app/
 
+echo "Начало collectstatic..."
+
 until python3 manage.py collectstatic --no-input;
 do
     echo "Ожидание collectstatic..."

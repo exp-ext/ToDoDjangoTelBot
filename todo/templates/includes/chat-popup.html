@@ -1,16 +1,13 @@
 {% load static %}
-
 {% block head %}
   <link rel='stylesheet' href='https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css'>
   <link rel="stylesheet" href="{% static 'css/chat-popup.css' %}">
 {% endblock %}
-
 {% csrf_token %}
-
 
 <div class="floating-chat">
     <div class="eva"><strong>Eva</strong></div>
-  <div class="chat">
+  <div class="chat ck ck-content">
       <div class="header">
         <span class="title eva">
           Eva assistant
@@ -21,12 +18,10 @@
         </button>
       </div>
       <ul class="messages">
-
       </ul>
       <div class="footer">
         <div class="text-box" type="text" id="message-input" contenteditable="true" data-text="поле ввода запроса..."></div>
         <button id="sendMessage">send</button>
       </div>
   </div>
-
 </div>

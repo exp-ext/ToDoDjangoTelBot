@@ -1,7 +1,7 @@
 from bs4 import BeautifulSoup
 from core.models import Create
 from django.contrib.auth import get_user_model
-from django.db import models, transaction
+from django.db import models
 from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
 from django.utils.translation import gettext_lazy as _
@@ -86,11 +86,10 @@ class Post(Create):
         ]
 
     def __str__(self) -> str:
-        return self.title[:20]
+        return self.title
 
 
 @receiver(pre_save, sender=Post)
-@transaction.atomic
 def pre_save_group(sender, instance, *args, **kwargs):
     """Пре-обработка текста поста перед сохранением.
 
@@ -112,7 +111,6 @@ def pre_save_group(sender, instance, *args, **kwargs):
 
 
 @receiver(post_save, sender=Post)
-@transaction.atomic
 def after_product_creation(sender, instance, created, **kwargs):
     """Обработка после сохранения поста.
 
@@ -144,21 +142,18 @@ class PostContents(MP_Node):
 
     ### Attributes:
     - post (Post): Связь с постом, к которому относится оглавление.
-    - title (str): Заголовок оглавления (максимум 250 символов).
     - anchor (str): Якорь оглавления (максимум 250 символов).
-    - node_order_by (list): Порядок сортировки узлов.
     """
     post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='contents', verbose_name=_('пост'))
-    anchor = models.CharField(_('заголовок/глава/раздел'), max_length=80)
-
-    node_order_by = ['anchor',]
+    anchor = models.CharField(_('заголовок/глава/раздел'), max_length=250)
 
     class Meta:
         verbose_name = _('оглавление')
         verbose_name_plural = _('оглавления')
+        ordering = ('id',)
 
     def __str__(self):
-        return f'{self.post.id} - {self.anchor}'
+        return f'{self.post} - {self.anchor}'
 
 
 class Comment(Create):

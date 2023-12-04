@@ -9,9 +9,10 @@
   table-layout: fixed; /* Используйте фиксированное табличное размещение для управления переполнением ячеек */
 }
 
-.pre {
-  max-width: none;
-  overflow-x: auto;
+pre {
+  white-space: pre !important;
+  overflow-x: auto !important;
+  word-wrap: normal !important;
 }
 
 *, *::before, *::after {

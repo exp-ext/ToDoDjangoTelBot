@@ -49,9 +49,9 @@ class SearchListView(ListView):
             return self.term_answer(term)
         return super().get(request, *args, **kwargs)
 
-    def term_answer(self, term):
+    def term_answer(self, term: str) -> JsonResponse:
         """Автодополнение в поиске."""
-        self.keyword = term
+        self.keyword = term.lower()
         queryset = self.get_queryset()
         queryset = (
             queryset.filter(text__icontains=self.keyword, moderation='PS')

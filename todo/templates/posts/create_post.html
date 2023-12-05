@@ -2,7 +2,7 @@
 {% load static %}
 {% load user_filters %}
 {% load thumbnail %}
-{% block head %}  
+{% block head %}
   <link rel="stylesheet" href="{% static 'css/post-create.css' %}">
 {% endblock %}
 {% block title %} Редактор заметок {% endblock %}
@@ -23,7 +23,7 @@
           </div>
           <form class="py-2" method="post" enctype="multipart/form-data"
           action="{% if form.initial.is_edit %}
-                    {% url 'posts:post_edit' post_id=form.instance.id %}
+                    {% url 'posts:post_edit' post_identifier_pk=form.instance.id %}
                   {% else %} 
                     {% url 'posts:post_create' %} 
                   {% endif %}">

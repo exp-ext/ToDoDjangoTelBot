@@ -18,21 +18,21 @@ class PostTags(models.Model):
     """Модель для хранения тегов постов.
 
     ### Attributes:
-    - title (str): Название тега поста (максимум 50 символов).
+    - title (str): Название тега поста (максимум 80 символов).
     - description (str, optional): Краткое описание тега поста.
     - slug (str): Уникальный идентификатор тега, используемый в URL.
 
     """
-    title = models.CharField(_('тэг поста'), max_length=50, unique=True)
+    title = models.CharField(_('тэг поста'), max_length=80, unique=True)
     description = models.TextField(_('краткое описание'), blank=True, null=True)
-    slug = models.SlugField(max_length=50, unique=True, db_index=True)
+    slug = models.SlugField(max_length=80, unique=True, db_index=True)
 
     class Meta:
         verbose_name = _('тэг')
         verbose_name_plural = _('тэги')
 
     def __str__(self):
-        return self.title[50]
+        return self.title
 
 
 @receiver(pre_save, sender=PostTags)
@@ -61,7 +61,8 @@ class Post(Create):
         PASSED = 'PS', _('МОДЕРАЦИЯ ПРОЙДЕНА')
         UNMODERATED = 'NM', _('МОДЕРАЦИЯ НЕ ПРОЙДЕНА')
 
-    title = models.CharField(_('заголовок поста'), max_length=80)
+    slug = models.SlugField(_('slug поста'), max_length=80, unique=True)
+    title = models.CharField(_('заголовок поста'), max_length=80, unique=True)
     text = CKEditor5Field(_('текст поста'), blank=True, config_name='extends')
     author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='posts', verbose_name=_('автор'))
     group = models.ForeignKey(
@@ -81,7 +82,7 @@ class Post(Create):
         verbose_name_plural = _('посты')
         ordering = ('-created_at',)
         indexes = [
-            models.Index(fields=['id']),
+            models.Index(fields=['slug']),
             models.Index(fields=['author_id']),
         ]
 
@@ -108,6 +109,7 @@ def pre_save_group(sender, instance, *args, **kwargs):
         text = text.replace(search_tag, f'<section id="{tag_text}">{str(tag)}</section>')
 
     instance.text = text
+    instance.slug = slugify(instance.title)
 
 
 @receiver(post_save, sender=Post)

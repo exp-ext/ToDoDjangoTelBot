@@ -1,3 +1,4 @@
+from bs4 import BeautifulSoup
 from django import forms
 from django.forms import Textarea
 from users.models import Group
@@ -30,6 +31,24 @@ class PostForm(forms.ModelForm):
         )
         self.fields['group'].required = False
         self.fields['group'].label = 'Группа, к которой будет относиться пост'
+
+    def clean_title(self) -> str:
+        title = self.cleaned_data.get('title')
+        if not title or len(title) >= 80:
+            raise forms.ValidationError('Запрещено создавать пост без заголовка или с его длинной более 80 символов.')
+        this_post_id = self.instance.id if self.instance else None
+        if Post.objects.filter(title=title).exclude(id=this_post_id).exists():
+            raise forms.ValidationError('Найден очень похожий заголовок поста.')
+        return title
+
+    def clean_text(self) -> str:
+        text = self.cleaned_data.get('text')
+        soup = BeautifulSoup(text, features="html.parser")
+
+        for tag in soup.find_all(['h2', 'h4']):
+            if len(tag.string) > 70:
+                raise forms.ValidationError('Теги h2 и h4 не могут быть более 70 символов.')
+        return text
 
 
 class CommentForm(forms.ModelForm):

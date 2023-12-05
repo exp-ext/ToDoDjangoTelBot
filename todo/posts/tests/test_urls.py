@@ -22,6 +22,7 @@ class PostURLTests(TestCase):
             password='54321',
         )
         cls.post = Post.objects.create(
+            title='uniq title',
             author=cls.user,
             text='Тестовый пост' * 3,
             moderation='PS'
@@ -38,7 +39,7 @@ class PostURLTests(TestCase):
         cls.index = '/posts/'
         cls.group_list = f'/posts/group/{cls.group.slug}/'
         cls.profile = f'/posts/profile/{cls.user.username}/'
-        cls.post_detail = f'/posts/{cls.post.id}/'
+        cls.post_detail = f'/posts/{cls.post.slug}/'
         cls.post_edit = f'/posts/{cls.post.id}/edit/'
         cls.post_create = '/posts/create/'
 

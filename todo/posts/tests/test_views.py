@@ -80,6 +80,7 @@ class PostViewsTests(TestCase):
         for count in range(13):
             cls.post = Post.objects.create(
                 author=cls.user_author,
+                title=f'Уникальное название, №{count}',
                 text=f'Тестовый пост с группой, №{count}',
                 group=cls.group if count < 12 else cls.group_not_hit,
                 image=uploaded,
@@ -93,11 +94,11 @@ class PostViewsTests(TestCase):
         )
         cls.post_detail = reverse(
             'posts:post_detail',
-            kwargs={'post_id': cls.post.id}
+            kwargs={'post_identifier_slug': cls.post.slug}
         )
         cls.post_edit = reverse(
             'posts:post_edit',
-            kwargs={'post_id': cls.post.id}
+            kwargs={'post_identifier_pk': cls.post.id}
         )
         cls.post_create = reverse('posts:post_create')
         cls.profile_follow = reverse(
@@ -173,8 +174,7 @@ class PostViewsTests(TestCase):
             with self.subTest(name=name):
                 response = self.authorized_client.get(name)
                 post = response.context['post']
-                self.assertEqual(post.text,
-                                 'Тестовый пост с группой, №12')
+                self.assertEqual(post.text, 'Тестовый пост с группой, №12')
                 authors_posts_count = response.context['authors_posts_count']
                 self.assertEqual(authors_posts_count, 13)
                 self.assertEqual(post.image, self.post.image)
@@ -237,6 +237,7 @@ class PostViewsTests(TestCase):
         # при подписке пост отображаются в index
         text = 'Новая запись пользователя появляется в ленте'
         Post.objects.create(
+            title='unique title',
             author=self.user_author,
             text=text,
             moderation='PS',

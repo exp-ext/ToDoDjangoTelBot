@@ -78,7 +78,7 @@ class SearchListView(ListView):
         for item in queryset[:3]:
             results.append({
                 'label': item.title,
-                'link': f'https://www.{settings.DOMAIN}/posts/{item.id}/',
+                'link': f'https://www.{settings.DOMAIN}/posts/{item.slug}/',
                 'image': item.image.url,
             })
         return JsonResponse(results, safe=False)
@@ -287,7 +287,7 @@ class PostUpdateView(LoginRequiredMixin, UpdateView):
     model = Post
     form_class = PostForm
     template_name = 'posts/create_post.html'
-    pk_url_kwarg = 'post_id'
+    pk_url_kwarg = 'post_identifier_pk'
 
     def get_initial(self) -> Dict[str, Any]:
         initial = super().get_initial()
@@ -299,12 +299,12 @@ class PostUpdateView(LoginRequiredMixin, UpdateView):
         linkages_check(request.user)
         post = self.get_object()
         if post.author != request.user:
-            return redirect('posts:post_detail', post_id=post.pk)
+            return redirect('posts:post_detail', post_identifier_slug=post.slug)
         return super().get(request, *args, **kwargs)
 
     def form_valid(self, form: PostForm) -> HttpResponseRedirect:
         post = form.save()
-        return redirect('posts:post_detail', post_id=post.pk)
+        return redirect('posts:post_detail', post_identifier_slug=post.slug)
 
 
 class PostDetailView(DetailView):
@@ -317,7 +317,8 @@ class PostDetailView(DetailView):
     model = Post
     template_name = 'posts/post_detail.html'
     context_object_name = 'post'
-    pk_url_kwarg = 'post_id'
+    pk_url_kwarg = 'post_identifier_pk'
+    slug_url_kwarg = 'post_identifier_slug'
 
     def get_queryset(self) -> QuerySet(Post):
         queryset = super().get_queryset().select_related('author')
@@ -398,22 +399,22 @@ class PostDetailView(DetailView):
 
 class AddCommentView(LoginRequiredMixin, FormView):
     """
-    Создаёт комментарий к посту по его post_id и
+    Создаёт комментарий к посту по его post_identifier_pk и
     перенаправляет  обратно к посту.
     """
     form_class = CommentForm
     template_name = 'posts/post_detail.html'
 
     def form_valid(self, form: CommentForm) -> HttpResponseRedirect:
-        post = get_object_or_404(Post, pk=self.kwargs['post_id'])
+        post = get_object_or_404(Post, pk=self.kwargs['post_identifier_pk'])
         comment = form.save(commit=False)
         comment.author = self.request.user
         comment.post = post
         comment.save()
-        return redirect('posts:post_detail', post_id=post.pk)
+        return redirect('posts:post_detail', post_identifier_slug=post.slug)
 
     def form_invalid(self, form: CommentForm) -> HttpResponseRedirect:
-        post = get_object_or_404(Post, pk=self.kwargs['post_id'])
+        post = get_object_or_404(Post, pk=self.kwargs['post_identifier_pk'])
         return render(
             self.request,
             self.template_name, {
@@ -470,8 +471,9 @@ class ProfileUnfollowView(LoginRequiredMixin, View):
 
 class PostDeleteView(LoginRequiredMixin, View):
     """Удаление поста."""
-    def post(self, request: HttpRequest, post_id: int) -> HttpResponseRedirect:
-        post = get_object_or_404(Post, pk=post_id)
+
+    def post(self, request: HttpRequest, post_identifier_pk: int) -> HttpResponseRedirect:
+        post = get_object_or_404(Post, pk=post_identifier_pk)
         if post.author == request.user:
             post.delete()
         return redirect('posts:profile', post.author.username)

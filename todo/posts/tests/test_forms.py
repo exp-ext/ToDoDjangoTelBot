@@ -7,6 +7,7 @@ from django.contrib.auth import get_user_model
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import Client, TestCase, override_settings
 from django.urls import reverse
+from pytils.translit import slugify
 from users.models import Group, GroupConnections
 
 from ..models import Comment, Post
@@ -65,16 +66,16 @@ class PostFormTests(TestCase):
         )
         cls.post_edit = reverse(
             'posts:post_edit',
-            kwargs={'post_id': cls.post.id}
+            kwargs={'post_identifier_pk': cls.post.id}
         )
         cls.post_detail = reverse(
             'posts:post_detail',
-            kwargs={'post_id': cls.post.id}
+            kwargs={'post_identifier_slug': cls.post.slug}
         )
         cls.post_create = reverse('posts:post_create')
         cls.add_comment = reverse(
             'posts:add_comment',
-            kwargs={'post_id': cls.post.id}
+            kwargs={'post_identifier_pk': cls.post.id}
         )
 
     @classmethod
@@ -126,9 +127,7 @@ class PostFormTests(TestCase):
     def test_post_edit_form(self):
         """Валидная форма изменяет заметку."""
         posts_count = Post.objects.count()
-        self.assertTrue(
-            Post.objects.filter(text=self.post.text).exists()
-        )
+        self.assertTrue(Post.objects.filter(text=self.post.text).exists())
         form_data = {
             'title': 'Заголовок',
             'text': 'Тестовый пост after the change',
@@ -140,11 +139,11 @@ class PostFormTests(TestCase):
             data=form_data,
             follow=True
         )
-        self.assertRedirects(response, self.post_detail)
+        redirect_url = reverse('posts:post_detail', kwargs={'post_identifier_slug': slugify(form_data.get('title'))})
+        self.assertRedirects(response, redirect_url)
 
         self.assertEqual(
-            Post.objects.get(text='Тестовый пост after the change',
-                             group=self.group.id).text,
+            Post.objects.get(text='Тестовый пост after the change', group=self.group.id).text,
             'Тестовый пост after the change'
         )
         self.assertEqual(Post.objects.count(), posts_count)

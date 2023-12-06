@@ -4,7 +4,7 @@ from django.utils.translation import gettext_lazy as _
 from treebeard.admin import TreeAdmin
 from treebeard.forms import movenodeform_factory
 
-from .models import Post, PostContents, PostTags
+from .models import Comment, Post, PostContents, PostTags
 
 
 class TreePostContentsAdmin(TreeAdmin):
@@ -54,4 +54,9 @@ class PostAdmin(admin.ModelAdmin):
 
 @admin.register(PostTags)
 class PostTagsAdmin(admin.ModelAdmin):
+    pass
+
+
+@admin.register(Comment)
+class CommentAdmin(admin.ModelAdmin):
     pass

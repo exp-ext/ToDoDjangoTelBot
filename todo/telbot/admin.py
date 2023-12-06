@@ -10,7 +10,7 @@ User = get_user_model()
 
 @admin.register(HistoryAI)
 class HistoryAIAdmin(admin.ModelAdmin):
-    list_display = ('user', 'room_group_name', 'created_at')
+    list_display = ('user', 'room_group_name', 'created_at', 'question_tokens', 'answer_tokens')
     fieldsets = (
         ('Основные данные', {'fields': ('user', 'room_group_name', 'question_tokens', 'answer_tokens')}),
         ('Диалог', {'fields': ('question', 'answer')}),

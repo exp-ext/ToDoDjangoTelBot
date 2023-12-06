@@ -45,7 +45,7 @@ class PostForm(forms.ModelForm):
         tag_error = [forms.ValidationError(f'Теги h2 и h4 не могут быть более {max_len_tag} символов!!! Необходимо исправить: ')]
 
         for tag in soup.find_all(['h2', 'h4']):
-            len_tag = len(tag.string)
+            len_tag = len(tag.string) if tag.string else 0
             if len_tag > max_len_tag:
                 tag_error.append(forms.ValidationError(_(f'{tag.string} - {len_tag}')))
 

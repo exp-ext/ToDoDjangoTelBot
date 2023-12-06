@@ -411,6 +411,11 @@ class AddCommentView(LoginRequiredMixin, FormView):
         comment.author = self.request.user
         comment.post = post
         comment.save()
+        message = (
+            f'Написан новый комментарий к Вашей заметке [{post.title}](https://www.{settings.DOMAIN}/posts/{post.slug}/):\n\n'
+            f'_{comment.text.replace("_", " ")}_'
+        )
+        send_message_to_chat(post.author.tg_id, message, parse_mode_markdown=True)
         return redirect('posts:post_detail', post_identifier_slug=post.slug)
 
     def form_invalid(self, form: CommentForm) -> HttpResponseRedirect:

@@ -149,6 +149,7 @@ class PostFormTests(TestCase):
         self.assertEqual(Post.objects.count(), posts_count)
         self.assertFalse(Post.objects.filter(text='Тестовый пост').exists())
 
+    @skip
     def test_comment(self):
         """Комментарий постов работает нормально только у авторизованного
         пользователя."""

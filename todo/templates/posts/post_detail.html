@@ -146,7 +146,7 @@
       </article>
     </div>
 
-    <div class="row {% if advertising and is_mobile %} mb-3 {% else %} mb-4 {% endif %}">
+    <div class="row {% if advertising and is_mobile %} mb-3 {% else %} mb-5 {% endif %}">
       <div class="col-lg-3 col-sm-12">
       </div>
       <div class="col-lg-8 col-sm-12 bg-light rounded shadow p-3">
@@ -162,7 +162,7 @@
 
   <aside class="col-lg-1 col-sm-12 mb-4">
     {% if advertising and is_mobile %}
-      <div class="ck ck-content">
+      <div class="ck ck-content mb-5">
         {% include 'posts/includes/advertising.html' %}
       </div>     
     {% endif %}

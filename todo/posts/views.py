@@ -320,6 +320,30 @@ class PostDetailView(DetailView):
     pk_url_kwarg = 'post_identifier_pk'
     slug_url_kwarg = 'post_identifier_slug'
 
+    def get(self, request, *args, **kwargs):
+
+        if 'post_identifier_pk' in self.kwargs:
+            post_pk = int(self.kwargs.get('post_identifier_pk'))
+            posts_data = redis_client.get('posts')
+            post_slug = None
+
+            def get_slug_by_pk(id_slug_pair):
+                return next((item['slug'] for item in id_slug_pair if item['id'] == post_pk), None)
+
+            if posts_data:
+                id_slug_pair = posts_data.decode('utf-8')
+                data_list = json.loads(id_slug_pair)
+                post_slug = get_slug_by_pk(data_list)
+
+            if not posts_data or not post_slug:
+                id_slug_pair = list(Post.objects.values('id', 'slug'))
+                redis_client.set('posts', json.dumps(id_slug_pair))
+                post_slug = get_slug_by_pk(id_slug_pair)
+
+            return redirect('posts:post_detail', post_identifier_slug=post_slug)
+
+        return super().get(request, *args, **kwargs)
+
     def get_queryset(self) -> QuerySet(Post):
         queryset = super().get_queryset().select_related('author')
         user = self.request.user
@@ -330,13 +354,12 @@ class PostDetailView(DetailView):
     def get_context_data(self, **kwargs: Any) -> Dict[str, Any]:
         context = super().get_context_data(**kwargs)
         post = kwargs.get('object')
+
         user_agent = get_user_agent(self.request)
         ip = self.get_client_ip()
 
-        all_banners = PartnerBanner.objects.all()
-        random_banner = all_banners.order_by('?').first()
-        all_widget = AdvertisementWidget.objects.all()
-        random_widget = all_widget.order_by('?').first()
+        random_banner = PartnerBanner.objects.order_by('?').first()
+        random_widget = AdvertisementWidget.objects.order_by('?').first()
 
         redis_key_post_ips = f'ips_post_{post.id}'
         redis_key_post_counter = f'counter_post_{post.id}'

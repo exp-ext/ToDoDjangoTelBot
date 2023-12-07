@@ -2,6 +2,7 @@ from django.contrib import admin
 from django.contrib.auth import get_user_model
 from django.db.models import Value
 from django.db.models.functions import Concat
+from django.utils.safestring import mark_safe
 
 from .models import HistoryAI, HistoryDALLE, HistoryWhisper
 
@@ -40,12 +41,15 @@ class HistoryDALLEAdmin(admin.ModelAdmin):
     fieldsets = (
         ('Основные данные', {'fields': ('user',)}),
         ('Диалог', {'fields': ('question', 'answer')}),
+        ('Картинка', {'fields': ('preview',)}),
     )
     search_fields = ('answer',)
     list_filter = (
         ('created_at', admin.DateFieldListFilter),
         ('user__first_name', admin.AllValuesFieldListFilter),
     )
+
+    readonly_fields = ('preview',)
 
     def get_queryset(self, request):
         queryset = super().get_queryset(request)
@@ -58,6 +62,11 @@ class HistoryDALLEAdmin(admin.ModelAdmin):
         return obj.user.get_full_name()
 
     full_name.short_description = 'Full Name'
+
+    def preview(self, obj):
+        return mark_safe(
+            f'<img src="{obj.answer.get("media")}" style="max-height: 800px;">'
+        )
 
 
 @admin.register(HistoryWhisper)

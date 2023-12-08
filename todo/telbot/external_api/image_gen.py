@@ -6,7 +6,6 @@ from io import BytesIO
 import httpx
 import requests
 from asgiref.sync import sync_to_async
-from core.serializers import ModelDataSerializer
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
@@ -17,8 +16,6 @@ from requests.adapters import HTTPAdapter
 from telegram import ChatAction, ParseMode, Update
 from telegram.ext import CallbackContext, ConversationHandler
 from urllib3 import Retry
-
-from todo.celery import app
 
 from ..checking import check_registration
 from ..cleaner import remove_keyboard
@@ -50,10 +47,11 @@ class GetAnswerDallE():
         self.context = context
         self.current_time = None
         self.time_start = None
+        self.telegram_file_id = None
+        self.image_url = None
+        self.media_group = {}
         self.chat_id = update.effective_chat.id
         self.message_text = update.effective_message.text
-        self.media_group = {}
-        self.image_url = None
         self.event = asyncio.Event()
         self.set_user()
         self.set_windows_time()
@@ -71,6 +69,7 @@ class GetAnswerDallE():
             await self.request_to_openai()
             await self.reply_to_user_requests()
             self.event.set()
+            await self.save_request()
 
         except Exception as err:
             self.context.bot.send_message(
@@ -81,7 +80,7 @@ class GetAnswerDallE():
             await self.del_mess_in_redis()
 
     async def reply_to_user_httpx(self) -> None:
-        """Отправляет ответ пользователю. Не работает с Minio и OpenAI на текущий момент."""
+        """!!! Отправляет ответ пользователю. Не работает с Minio и OpenAI на текущий момент. !!!"""
         transport = AsyncProxyTransport.from_url(settings.SOCKS5)
         headers = {
             "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
@@ -101,10 +100,7 @@ class GetAnswerDallE():
                         caption=caption,
                         reply_to_message_id=self.update.message.message_id
                     )
-
-                file_id = msg.effective_attachment[4].file_id
-                serializer_user = ModelDataSerializer.serialize(self.user)
-                self.save_request.delay(file_id, caption, serializer_user, self.message_text)
+                self.telegram_file_id = msg.effective_attachment[4].file_id
 
     @sync_to_async
     def reply_to_user_requests(self) -> None:
@@ -119,7 +115,6 @@ class GetAnswerDallE():
         }
         response = session.get(self.media_group['url'], headers=headers, timeout=60 * self.MAX_TYPING_TIME)
         if response.status_code == 200:
-            caption = self.media_group['caption']
             image = Image.open(BytesIO(response.content))
             image = image.convert("RGBA")
             with BytesIO() as bio:
@@ -128,30 +123,33 @@ class GetAnswerDallE():
                 msg = self.context.bot.send_photo(
                     chat_id=self.chat_id,
                     photo=bio,
-                    caption=caption,
+                    caption=self.media_group['caption'],
                     reply_to_message_id=self.update.message.message_id
                 )
 
-            file_id = msg.effective_attachment[4].file_id
-            serializer_user = ModelDataSerializer.serialize(self.user)
-            self.save_request.delay(file_id, caption, serializer_user, self.message_text)
+            self.telegram_file_id = msg.effective_attachment[4].file_id
         session.close()
 
-    @staticmethod
-    @app.task(ignore_result=True)
-    def save_request(file_id: str, caption: str, serializer_user: User, message_text: str):
-        user = ModelDataSerializer.deserialize(serializer_user)
-        with httpx.Client() as client:
-            get_url = f'https://api.telegram.org/bot{settings.TELEGRAM_TOKEN}/getFile?file_id={file_id}'
-            response = client.get(get_url)
-            file_path = json.loads(response.content).get('result')['file_path']
-            image_url = f'https://api.telegram.org/file/bot{settings.TELEGRAM_TOKEN}/{file_path}'
+    async def save_request(self):
+        """Сохраняет запрос в БД."""
+        async with httpx.AsyncClient() as client:
+            get_url = f'https://api.telegram.org/bot{settings.TELEGRAM_TOKEN}/getFile?file_id={self.telegram_file_id}'
+            response = await client.get(get_url)
 
-            HistoryDALLE.objects.create(
-                user=user,
-                question=message_text,
-                answer={'media': image_url, 'caption': caption}
+            if response.is_error:
+                raise Exception(f"Ошибка при получении файла от Телеграмм: {response.text}")
+
+            file_path = response.json().get('result', {}).get('file_path')
+            if not file_path:
+                raise Exception("File path не найден в ответе!")
+
+            image_url = f'https://api.telegram.org/file/bot{settings.TELEGRAM_TOKEN}/{file_path}'
+            instance = HistoryDALLE(
+                user=self.user,
+                question=self.message_text,
+                answer={'media': image_url, 'caption': self.media_group['caption']}
             )
+            await instance.save()
 
     async def send_typing_periodically(self) -> None:
         """"

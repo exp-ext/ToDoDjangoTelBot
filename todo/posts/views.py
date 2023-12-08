@@ -2,7 +2,7 @@ import json
 import re
 from collections import Counter
 from typing import Any, Dict
-
+from django.urls import reverse
 from advertising.models import AdvertisementWidget, PartnerBanner
 from core.views import get_status_in_group, linkages_check, paginator_handler
 from django.conf import settings
@@ -10,7 +10,8 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Case, Count, IntegerField, Q, When
 from django.db.models.query import QuerySet
-from django.http import (HttpRequest, HttpResponse, HttpResponseRedirect,
+from django.http import (HttpRequest, HttpResponse,
+                         HttpResponsePermanentRedirect, HttpResponseRedirect,
                          JsonResponse)
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse_lazy
@@ -340,7 +341,9 @@ class PostDetailView(DetailView):
                 redis_client.set('posts', json.dumps(id_slug_pair))
                 post_slug = get_slug_by_pk(id_slug_pair)
 
-            return redirect('posts:post_detail', post_identifier_slug=post_slug)
+            if post_slug:
+                return HttpResponsePermanentRedirect(reverse('posts:post_detail', args=(post_slug,)))
+            return redirect('posts:index_posts')
 
         return super().get(request, *args, **kwargs)
 

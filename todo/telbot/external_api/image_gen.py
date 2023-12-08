@@ -231,8 +231,7 @@ def first_step_get_image(update: Update, context: CallbackContext):
         chat = update.effective_chat
         message_thread_id = update.effective_message.message_thread_id
         req_text = (
-            f'*{update.effective_user.first_name}*, '
-            'введите текст для генерации картинки на английском языке'
+            f'*{update.effective_user.first_name}*, введите текст для генерации картинки на английском языке'
         )
         message_id = context.bot.send_message(
             chat.id,
@@ -248,8 +247,6 @@ def first_step_get_image(update: Update, context: CallbackContext):
 def get_image_dall_e(update: Update, context: CallbackContext):
     """
     Удаление и проверка сообщения от first_step_get_image.
-    Вход в класс GetAnswerDallE и в случае возврата любого
-    значения кроме с кодом 423, возврат ConversationHandler.
     """
     del_id = context.user_data.pop('image_gen', None)
     if del_id:

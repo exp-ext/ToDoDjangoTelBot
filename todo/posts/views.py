@@ -2,7 +2,7 @@ import json
 import re
 from collections import Counter
 from typing import Any, Dict
-from django.urls import reverse
+
 from advertising.models import AdvertisementWidget, PartnerBanner
 from core.views import get_status_in_group, linkages_check, paginator_handler
 from django.conf import settings
@@ -14,7 +14,7 @@ from django.http import (HttpRequest, HttpResponse,
                          HttpResponsePermanentRedirect, HttpResponseRedirect,
                          JsonResponse)
 from django.shortcuts import get_object_or_404, redirect, render
-from django.urls import reverse_lazy
+from django.urls import reverse, reverse_lazy
 from django.views import View
 from django.views.generic import CreateView, ListView, UpdateView
 from django.views.generic.detail import DetailView

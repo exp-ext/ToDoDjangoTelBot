@@ -21,7 +21,7 @@ from django.views.generic.detail import DetailView
 from django.views.generic.edit import FormView
 from django_user_agents.utils import get_user_agent
 from telbot.service_message import send_message_to_chat
-from users.models import Group, GroupMailing
+from users.models import Group, GroupConnections, GroupMailing
 
 from .forms import CommentForm, GroupMailingForm, PostForm
 from .models import Follow, Post, PostContents
@@ -157,8 +157,7 @@ class GroupPostsListView(ListView):
     template_name = 'posts/group_list.html'
     paginate_by = PAGINATE_BY
 
-    def dispatch(self, request: HttpRequest, *args: Any, **kwargs: Any
-                 ) -> HttpResponse:
+    def dispatch(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpResponse:
         self.group = get_object_or_404(Group, slug=self.kwargs['slug'])
         if not self.group.link:
             return redirect('posts:index_posts')
@@ -321,34 +320,58 @@ class PostDetailView(DetailView):
     pk_url_kwarg = 'post_identifier_pk'
     slug_url_kwarg = 'post_identifier_slug'
 
+    def get_post_slug_from_redis(self, post_pk):
+        posts_data = redis_client.get('posts')
+        if posts_data:
+            data_list = json.loads(posts_data.decode('utf-8'))
+            return self.get_slug_by_pk(data_list, post_pk)
+        return None
+
+    def get_slug_by_pk(self, id_slug_pair, post_pk):
+        return next((item['slug'] for item in id_slug_pair if item['id'] == post_pk), None)
+
+    def handle_group_access(self, group):
+        if not group.link:
+            if self.request.user.is_anonymous:
+                return redirect('posts:index_posts')
+
+            group_id = group.id
+            key_private_groups = 'private_groups'
+            if not redis_client.exists(key_private_groups):
+                private_groups = Group.objects.filter(link__isnull=True).values_list('id', flat=True)
+                redis_client.sadd(key_private_groups, *private_groups)
+
+            if redis_client.sismember(key_private_groups, group_id):
+                if not GroupConnections.objects.filter(user=self.request.user, group__id=group_id).exists():
+                    return redirect('posts:index_posts')
+        return None
+
     def get(self, request, *args, **kwargs):
+        post_pk = int(self.kwargs.get('post_identifier_pk')) if 'post_identifier_pk' in self.kwargs else None
+        if post_pk:
+            post_slug = self.get_post_slug_from_redis(post_pk)
 
-        if 'post_identifier_pk' in self.kwargs:
-            post_pk = int(self.kwargs.get('post_identifier_pk'))
-            posts_data = redis_client.get('posts')
-            post_slug = None
-
-            def get_slug_by_pk(id_slug_pair):
-                return next((item['slug'] for item in id_slug_pair if item['id'] == post_pk), None)
-
-            if posts_data:
-                id_slug_pair = posts_data.decode('utf-8')
-                data_list = json.loads(id_slug_pair)
-                post_slug = get_slug_by_pk(data_list)
-
-            if not posts_data or not post_slug:
+            if not post_slug:
                 id_slug_pair = list(Post.objects.values('id', 'slug'))
                 redis_client.set('posts', json.dumps(id_slug_pair))
-                post_slug = get_slug_by_pk(id_slug_pair)
+                post_slug = self.get_slug_by_pk(id_slug_pair, post_pk)
 
             if post_slug:
                 return HttpResponsePermanentRedirect(reverse('posts:post_detail', args=(post_slug,)))
             return redirect('posts:index_posts')
 
-        return super().get(request, *args, **kwargs)
+        self.object = self.get_object()
+
+        if self.object.group:
+            redirect_response = self.handle_group_access(self.object.group)
+            if redirect_response:
+                return redirect_response
+
+        context = self.get_context_data(object=self.object)
+        return self.render_to_response(context)
 
     def get_queryset(self) -> QuerySet(Post):
-        queryset = super().get_queryset().select_related('author')
+        queryset = super().get_queryset().select_related('author', 'group')
         user = self.request.user
         if user.is_anonymous:
             return queryset.filter(moderation='PS')
@@ -394,7 +417,7 @@ class PostDetailView(DetailView):
             serialized_agent_data = json.dumps(agent_data)
 
             redis_client.sadd(redis_key_post_ips, ip)
-            redis_client.lpush(redis_key_agent_posts, json.dumps(serialized_agent_data))
+            redis_client.lpush(redis_key_agent_posts, serialized_agent_data)
         else:
             counter = redis_client.get(redis_key_post_counter).decode('utf-8')
 

@@ -31,6 +31,9 @@ redis_client = settings.REDIS_CLIENT
 PAGINATE_BY = 10
 ADMIN_ID = settings.TELEGRAM_ADMIN_ID
 
+KEY_PRIVATE_GROUPS = 'private_groups'
+KEY_POSTS = 'posts'
+
 
 class SearchListView(ListView):
     """
@@ -169,9 +172,7 @@ class GroupPostsListView(ListView):
         admin_status = ['creator', 'administrator']
         self.is_admin = status in admin_status
         self.form = GroupMailingForm(request.POST or None)
-        self.forism_check = self.group.group_mailing.filter(
-            mailing_type='forismatic_quotes'
-        ).exists()
+        self.forism_check = self.group.group_mailing.filter(mailing_type='forismatic_quotes').exists()
         return super().dispatch(request, *args, **kwargs)
 
     def get_queryset(self) -> QuerySet(Post):
@@ -199,9 +200,7 @@ class GroupPostsListView(ListView):
                 )
                 self.forism_check = True
             else:
-                self.group.group_mailing.filter(
-                    mailing_type='forismatic_quotes'
-                ).delete()
+                self.group.group_mailing.filter(mailing_type='forismatic_quotes').delete()
                 self.forism_check = False
         return self.get(request, *args, **kwargs)
 
@@ -274,7 +273,11 @@ class PostCreateView(LoginRequiredMixin, CreateView):
 
     def form_valid(self, form: PostForm) -> HttpResponse:
         form.instance.author = self.request.user
-        return super().form_valid(form)
+        self.object = form.save()
+        group = self.object.group
+        if group and not group.link:
+            redis_client.sadd(KEY_PRIVATE_GROUPS, group.id)
+        return HttpResponseRedirect(self.get_success_url())
 
     def get_success_url(self) -> Dict[str, Any]:
         message = f'Создан новый пост с темой "{self.object.title}"'
@@ -304,6 +307,9 @@ class PostUpdateView(LoginRequiredMixin, UpdateView):
 
     def form_valid(self, form: PostForm) -> HttpResponseRedirect:
         post = form.save()
+        group = post.group
+        if group and not group.link:
+            redis_client.sadd(KEY_PRIVATE_GROUPS, group.id)
         return redirect('posts:post_detail', post_identifier_slug=post.slug)
 
 
@@ -320,28 +326,52 @@ class PostDetailView(DetailView):
     pk_url_kwarg = 'post_identifier_pk'
     slug_url_kwarg = 'post_identifier_slug'
 
-    def get_post_slug_from_redis(self, post_pk):
-        posts_data = redis_client.get('posts')
+    def get_post_slug_from_redis(self, post_pk: int) -> str or None:
+        """Получает слаг поста по его идентификатору из Redis.
+
+        ### Parameters:
+        - post_pk (`int`): Идентификатор поста.
+
+        ### Returns:
+        - str or None: Слаг поста или None, если пост не найден.
+        """
+        posts_data = redis_client.get(KEY_POSTS)
         if posts_data:
             data_list = json.loads(posts_data.decode('utf-8'))
             return self.get_slug_by_pk(data_list, post_pk)
         return None
 
-    def get_slug_by_pk(self, id_slug_pair, post_pk):
+    def get_slug_by_pk(self, id_slug_pair: list, post_pk: int) -> str or None:
+        """Получает слаг из пары идентификатора и слага поста.
+
+        ### Parameters:
+        - id_slug_pair (`list`): Список словарей, представляющих пары идентификатора и слага поста.
+        - post_pk (`int`): Идентификатор поста.
+
+        ### Returns:
+        - str or None: Слаг поста или None, если пост не найден.
+        """
         return next((item['slug'] for item in id_slug_pair if item['id'] == post_pk), None)
 
-    def handle_group_access(self, group):
+    def handle_group_access(self, group: Group):
+        """Загружает приватные группы в Редис, если их там нет, и делает проверку на отношение юзера к группе.
+
+        ### Parameters:
+        - group (`Group`): Объект группы.
+
+        ### Returns:
+        - None or HttpResponseRedirect: Если группа приватная и пользователь анонимный, то он перенаправляется.
+        """
         if not group.link:
             if self.request.user.is_anonymous:
                 return redirect('posts:index_posts')
 
             group_id = group.id
-            key_private_groups = 'private_groups'
-            if not redis_client.exists(key_private_groups):
+            if not redis_client.exists(KEY_PRIVATE_GROUPS):
                 private_groups = Group.objects.filter(link__isnull=True).values_list('id', flat=True)
-                redis_client.sadd(key_private_groups, *private_groups)
+                redis_client.sadd(KEY_PRIVATE_GROUPS, *private_groups)
 
-            if redis_client.sismember(key_private_groups, group_id):
+            if redis_client.sismember(KEY_PRIVATE_GROUPS, group_id):
                 if not GroupConnections.objects.filter(user=self.request.user, group__id=group_id).exists():
                     return redirect('posts:index_posts')
         return None
@@ -353,7 +383,7 @@ class PostDetailView(DetailView):
 
             if not post_slug:
                 id_slug_pair = list(Post.objects.values('id', 'slug'))
-                redis_client.set('posts', json.dumps(id_slug_pair))
+                redis_client.set(KEY_POSTS, json.dumps(id_slug_pair))
                 post_slug = self.get_slug_by_pk(id_slug_pair, post_pk)
 
             if post_slug:

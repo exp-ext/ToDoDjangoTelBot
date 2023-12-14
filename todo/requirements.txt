@@ -30,6 +30,7 @@ user-agents~=2.2.0
 gunicorn
 daphne
 whitenoise
+twisted[http2,tls]
 
 # Bot & utils
 beautifulsoup4~=4.12.2

@@ -3,7 +3,7 @@
   opacity: 0;
   transition: all 0.8s ease 0s;
 }
-  
+
 .moving-unit._active {
   transform: translate(0px,0px);
   opacity: 1;
@@ -30,6 +30,18 @@
 
 .arising-unit._active {
   transform: scale(1);
+  opacity: 1;
+  transition: all 0.8s ease 0s;
+}
+
+.bottom-shift {
+  transform: translateY(20px);
+  opacity: 0;
+  transition: all 0.8s ease 0s;
+}
+
+.bottom-shift._active {
+  transform: translateY(0);
   opacity: 1;
   transition: all 0.8s ease 0s;
 }

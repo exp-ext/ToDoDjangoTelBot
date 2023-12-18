@@ -239,10 +239,8 @@ else:
         'location': Path(BASE_DIR).joinpath('backup').resolve()
     }
 
-if DEBUG:
-    STATICFILES_DIRS = (BASE_DIR / 'static',)
-else:
-    STATIC_ROOT = Path(BASE_DIR).joinpath('static').resolve()
+STATICFILES_DIRS = (BASE_DIR / 'static',)
+STATIC_ROOT = Path(BASE_DIR).joinpath('staticfiles').resolve()
 
 STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.FileSystemFinder',

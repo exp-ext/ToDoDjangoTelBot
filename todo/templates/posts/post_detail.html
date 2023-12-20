@@ -91,9 +91,7 @@
         <div class="lobster">
           <h1>{{ post.title }}</h1>
         </div>
-        {% thumbnail post.image "x339" as im %}
-          <img class="card-img my-2" src="{{ im.url }}">
-        {% endthumbnail %}
+            <img class="card-img my-2" src="{{ post.image.url }}" class="d-block w-auto h-100">
         <p>
           <div class="ck ck-content">
             <div class="table-wrap">

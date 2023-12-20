@@ -56,6 +56,7 @@ services:
       "
     volumes:
       - upload_minio_volume:/data
+      - ./:/ro
     env_file:
       - ./.env
     depends_on:
@@ -65,12 +66,10 @@ services:
     image: onerahmet/openai-whisper-asr-webservice:latest
     container_name: main_whisper
     ports:
-      - "10000:9000"
+      - "9009:9000"
     environment:
       - ASR_MODEL=base
       - ASR_ENGINE=openai_whisper
-    depends_on:
-      - nginx
 
 volumes:
   upload_minio_volume:

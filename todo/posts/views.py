@@ -281,7 +281,8 @@ class PostCreateView(LoginRequiredMixin, CreateView):
 
     def get_success_url(self) -> Dict[str, Any]:
         message = f'Создан новый пост с темой "{self.object.title}"'
-        send_message_to_chat.delay(ADMIN_ID, message)
+        if self.object.author.tg_id != 'test_id':
+            send_message_to_chat.delay(ADMIN_ID, message)
         return reverse_lazy('posts:profile', kwargs={'username': self.request.user.username})
 
 
@@ -494,7 +495,8 @@ class AddCommentView(LoginRequiredMixin, FormView):
             f'Написан новый комментарий к Вашей заметке [{post.title}](https://www.{settings.DOMAIN}/posts/{post.slug}/):\n\n'
             f'_{comment.text.replace("_", " ")}_\n'
         )
-        send_message_to_chat.delay(post.author.tg_id, message, parse_mode_markdown=True)
+        if post.author.tg_id != 'test_id':
+            send_message_to_chat.delay(post.author.tg_id, message, parse_mode_markdown=True)
         return redirect('posts:post_detail', post_identifier_slug=post.slug)
 
     def form_invalid(self, form: CommentForm) -> HttpResponseRedirect:

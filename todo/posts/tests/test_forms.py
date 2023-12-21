@@ -1,6 +1,5 @@
 import shutil
 import tempfile
-from unittest import skip
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -31,7 +30,7 @@ class PostFormTests(TestCase):
     def setUpClass(cls):
         super().setUpClass()
         cls.user_author = User.objects.create_user(
-            tg_id=12332196,
+            tg_id='test_id',
             username='author_posts_form',
             password='1234GLKLl5',
         )
@@ -96,7 +95,6 @@ class PostFormTests(TestCase):
             content_type='image/gif'
         )
 
-    @skip
     def test_post_create_forms(self):
         """Форма создает заметку."""
         posts_count = Post.objects.count()
@@ -149,7 +147,6 @@ class PostFormTests(TestCase):
         self.assertEqual(Post.objects.count(), posts_count)
         self.assertFalse(Post.objects.filter(text='Тестовый пост').exists())
 
-    @skip
     def test_comment(self):
         """Комментарий постов работает нормально только у авторизованного
         пользователя."""

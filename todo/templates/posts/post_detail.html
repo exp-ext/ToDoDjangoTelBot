@@ -44,44 +44,48 @@
 
       <aside class="col-lg-3 col-sm-12">
 
-      {% if contents %}  
-        
-        <div class="card p-1 bg-light rounded shadow mb-2">
-          <div class="text-center">
-            <h4><strong>Оглавление</strong></h4>
-          </div>
-          <ul class="list-unstyled">
-            {%for content in contents %}
-              {%include 'posts/includes/tree_template.html' %}
-            {%endfor%}
-          </ul>
-        </div>
+      <div class="scroll">
 
-      {% endif %}
+        {% if contents %}  
+          
+          <div class="card p-1 bg-light rounded shadow mb-2">
+            <div class="text-center">
+              <h4><strong>Оглавление</strong></h4>
+            </div>
+            <ul class="list-unstyled">
+              {%for content in contents %}
+                {%include 'posts/includes/tree_template.html' %}
+              {%endfor%}
+            </ul>
+          </div>
 
-        {% if is_mobile %}
-          <div class="card bg-light rounded shadow group-unit _anim-items _anim-no-hide my-2"> 
-            {% include 'includes/yabodyadvertising.html' %}
-          </div>
-        {% else %}
-          <div class="card p-1 bg-light rounded shadow group-unit _anim-items _anim-no-hide my-2"> 
-            {% include 'includes/yabodyadvertising.html' %}           
-          </div>
         {% endif %}
 
-        {% if not is_mobile %}
-          <div class="group-unit _anim-items _anim-no-hide">
+          {% if is_mobile %}
+            <div class="card bg-light rounded shadow group-unit _anim-items _anim-no-hide my-2"> 
+              {% include 'includes/yabodyadvertising.html' %}
+            </div>
+          {% else %}
+            <div class="card p-1 bg-light rounded shadow group-unit _anim-items _anim-no-hide my-2"> 
+              {% include 'includes/yabodyadvertising.html' %}           
+            </div>
+          {% endif %}
 
-            {% if advertising %}
-              <div class="ck ck-content">
-                {% include 'posts/includes/advertising.html' %}
-              </div>
-            {% endif %}
+          {% if not is_mobile %}
+            <div class="group-unit _anim-items _anim-no-hide">
 
-            {% include 'posts/includes/author_detail.html' %}
+              {% if advertising %}
+                <div class="ck ck-content">
+                  {% include 'posts/includes/advertising.html' %}
+                </div>
+              {% endif %}
+
+              {% include 'posts/includes/author_detail.html' %}
+
+            </div>
+          {% endif %}
 
           </div>
-        {% endif %}
 
       </aside>
 

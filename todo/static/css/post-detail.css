@@ -18,3 +18,8 @@ pre {
 *, *::before, *::after {
     box-sizing: border-box;
 }
+
+.scroll {
+    position: sticky;
+    top: 72px;
+}

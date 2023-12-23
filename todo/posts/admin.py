@@ -54,6 +54,7 @@ class PostAdmin(admin.ModelAdmin):
 
 @admin.register(PostTags)
 class PostTagsAdmin(admin.ModelAdmin):
+    prepopulated_fields = {'slug': ('title',)}
     pass
 
 

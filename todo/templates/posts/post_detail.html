@@ -44,7 +44,7 @@
 
       <aside class="col-lg-3 col-sm-12">
 
-      <div class="scroll">
+      <div class="{% if not is_mobile %}scroll{% endif %}">
 
         {% if contents %}  
           

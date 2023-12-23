@@ -7,7 +7,7 @@
 {% endblock %}
 {% block title %} Редактор заметок {% endblock %}
 {% block content %}
-  <div class="container py-5">     
+  <div class="container py-5">
     <div class="row justify-content-center py-3">
         <div class="card py-2">
           <div class="card-header py-1"> 
@@ -21,7 +21,7 @@
               </h1>
             </div class="lobster">
           </div>
-          <form class="py-2" method="post" enctype="multipart/form-data"
+          <form id="createForm" class="py-2" method="post" enctype="multipart/form-data"
           action="{% if form.initial.is_edit %}
                     {% url 'posts:post_edit' post_identifier_pk=form.instance.id %}
                   {% else %} 
@@ -44,5 +44,10 @@
     </div>
   </div>
 {% endblock %}
+
 {% block javascript %}
+  <script type="text/javascript">
+    var autosaveUrl = "{% url 'posts:autosave' %}";
+  </script>
+  <script src="{% static 'js/autosave.js' %}"></script>
 {% endblock %}

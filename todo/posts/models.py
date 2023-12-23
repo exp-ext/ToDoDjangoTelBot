@@ -26,6 +26,7 @@ class PostTags(models.Model):
     title = models.CharField(_('тэг поста'), max_length=80, unique=True)
     description = models.TextField(_('краткое описание'), blank=True, null=True)
     slug = models.SlugField(max_length=80, unique=True, db_index=True)
+    image = ImageField(_('картинка'), upload_to='tags/', blank=True)
 
     class Meta:
         verbose_name = _('тэг')
@@ -36,7 +37,7 @@ class PostTags(models.Model):
 
 
 @receiver(pre_save, sender=PostTags)
-def pre_save_group(sender, instance, *args, **kwargs):
+def pre_save_post_tags(sender, instance, *args, **kwargs):
     """Генерируем уникальный slug на основе title, если не задан."""
     if not instance.slug:
         instance.slug = slugify(instance.title)

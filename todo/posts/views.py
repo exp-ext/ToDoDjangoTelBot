@@ -8,6 +8,7 @@ from core.views import get_status_in_group, linkages_check, paginator_handler
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.core import serializers
 from django.db.models import Case, Count, IntegerField, Q, When
 from django.db.models.query import QuerySet
 from django.http import (HttpRequest, HttpResponse,
@@ -24,7 +25,7 @@ from telbot.service_message import send_message_to_chat
 from users.models import Group, GroupConnections, GroupMailing
 
 from .forms import CommentForm, GroupMailingForm, PostForm
-from .models import Follow, Post, PostContents
+from .models import Follow, Post, PostContents, PostTags
 
 User = get_user_model()
 redis_client = settings.REDIS_CLIENT
@@ -121,6 +122,7 @@ class IndexPostsListView(ListView):
 
     def get_queryset(self) -> QuerySet(Post):
         user = self.request.user
+        tag = self.request.GET.get('q', '')
         post_list = (
             Post.objects
             .filter(Q(group__isnull=True) | Q(group__link__isnull=False), moderation='PS')
@@ -134,13 +136,18 @@ class IndexPostsListView(ListView):
                     .values_list('group', flat=True)
                 ),
             )
+        if tag and tag != 'vse':
+            post_list = post_list.filter(tags__slug=tag)
         return post_list
 
     def get_context_data(self, **kwargs: Any) -> Dict[str, Any]:
         context = super().get_context_data(**kwargs)
         user_agent = get_user_agent(self.request)
+        queryset = PostTags.objects.all()
         context |= {
             'is_mobile': user_agent.is_mobile,
+            'tags': serializers.serialize('json', queryset),
+            'media_bucket': settings.MEDIA_URL
         }
         return context
 
@@ -253,6 +260,29 @@ class ProfileDetailView(DetailView):
         return Group.objects.none()
 
 
+class AutosaveView(View):
+
+    def post(self, data) -> JsonResponse:
+        """Обработка POST-запроса с данными поста и их автосохранение.
+
+        ## Args:
+            data (`HttpRequest`): Объект запроса с данными поста и информацией о пользователе.
+
+        ## Returns:
+            `JsonResponse`: JSON-ответ с информацией о статусе автосохранения данных.
+        """
+        post_data = data.POST
+        user = data.user
+        save_data = {
+            'title': post_data.get('title'),
+            'group': post_data.get('group'),
+            'text': post_data.get('text'),
+        }
+        serialized_data = json.dumps(save_data)
+        redis_client.setex(f'user_{user.id}_post_autosave', 3600, serialized_data)
+        return JsonResponse({'status': 'Data autosaved'})
+
+
 class PostCreateView(LoginRequiredMixin, CreateView):
     """
     Делает запись в БД и reverse в профиль автора.
@@ -260,15 +290,21 @@ class PostCreateView(LoginRequiredMixin, CreateView):
     model = Post
     form_class = PostForm
     template_name = 'posts/create_post.html'
+    initial_post_data = {}
 
     def get_initial(self) -> Dict[str, Any]:
         initial = super().get_initial()
         initial['user'] = self.request.user
         initial['is_edit'] = False
+        initial.update(self.initial_post_data)
         return initial
 
     def get(self, request: HttpRequest, *args, **kwargs) -> HttpRequest:
-        linkages_check(request.user)
+        user = request.user
+        linkages_check(user)
+        data = redis_client.get(f'user_{user.id}_post_autosave')
+        if data:
+            self.initial_post_data = json.loads(data.decode('utf-8'))
         return super().get(request, *args, **kwargs)
 
     def form_valid(self, form: PostForm) -> HttpResponse:

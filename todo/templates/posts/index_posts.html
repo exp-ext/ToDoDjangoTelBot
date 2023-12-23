@@ -24,14 +24,13 @@
       {% include 'posts/includes/search.html' %}
     </div> 
 
-    {% if not is_mobile %}
-    <div class="row">
-
+    {% if not is_mobile %}   
+    <div class="row">      
       <div class="col-lg-2">
-
-        {% include 'posts/includes/navbar.html' %}
-
-      </div> 
+        <div class="scroll">
+          {% include 'posts/includes/navbar.html' %}
+        </div> 
+      </div>
 
       <div class="col-lg-10">
     {% endif %}
@@ -62,7 +61,6 @@
   <script  src="{% static 'js/search.js' %}"></script>
   <script>
     $(document).ready(function() {
-      // Получите URL из шаблона Django и передайте его в функцию
       var searchUrl = "{% url 'posts:search' %}";
       initAutocomplete(searchUrl);
     });

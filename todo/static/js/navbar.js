@@ -8,21 +8,21 @@
 
             const a = document.createElement('a');
             a.className = 'nav-link';
-            a.href = `?q=${encodeURIComponent(item.fields.slug)}`;
-            a.title = item.fields.description;
+            a.href = `?q=${encodeURIComponent(item.slug)}`;
+            a.title = item.description;
             a.setAttribute('data-bs-toggle', 'tooltip');
             a.setAttribute('data-bs-placement', 'bottom');
 
-            if (item.fields.image) {
+            if (item.image) {
                 const img = document.createElement('img');
-                img.src = media_bucket + item.fields.image;
+                img.src = media_bucket + item.image;
                 img.style.width = '32px';
                 img.style.height = '32px';
                 img.style.marginRight = '10px';
                 a.appendChild(img);
             }
 
-            a.appendChild(document.createTextNode(item.fields.title));
+            a.appendChild(document.createTextNode(item.title));
 
             li.appendChild(a);
             navbarItems.appendChild(li);

@@ -8,8 +8,8 @@ from core.views import get_status_in_group, linkages_check, paginator_handler
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.core import serializers
-from django.db.models import Case, Count, IntegerField, Q, When
+from django.core.serializers.json import DjangoJSONEncoder
+from django.db.models import Case, Count, IntegerField, Q, Value, When
 from django.db.models.query import QuerySet
 from django.http import (HttpRequest, HttpResponse,
                          HttpResponsePermanentRedirect, HttpResponseRedirect,
@@ -143,10 +143,21 @@ class IndexPostsListView(ListView):
     def get_context_data(self, **kwargs: Any) -> Dict[str, Any]:
         context = super().get_context_data(**kwargs)
         user_agent = get_user_agent(self.request)
-        queryset = PostTags.objects.all()
+        custom_order = Case(When(slug='vse', then=Value(0)), default=Value(1), output_field=IntegerField())
+        queryset = PostTags.objects.annotate(custom_sort=custom_order).order_by('custom_sort')
+        data = [
+            {
+                'title': item.title,
+                'description': item.description,
+                'slug': item.slug,
+                'image': item.image.url if item.image else None,
+            }
+            for item in queryset
+        ]
+        json_data = json.dumps(data, cls=DjangoJSONEncoder)
         context |= {
             'is_mobile': user_agent.is_mobile,
-            'tags': serializers.serialize('json', queryset),
+            'tags': json_data,
             'media_bucket': settings.MEDIA_URL
         }
         return context

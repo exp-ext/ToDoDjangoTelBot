@@ -15,7 +15,7 @@
 
             if (item.image) {
                 const img = document.createElement('img');
-                img.src = media_bucket + item.image;
+                img.src = item.image;
                 img.style.width = '32px';
                 img.style.height = '32px';
                 img.style.marginRight = '10px';

@@ -15,16 +15,16 @@
   <meta property="og:site_name" content="Заметка это простой и удобный способ хранить Ваши важные мысли!"/>
   <meta property="og:title" content="{{ post.title }}"/>
   <meta property="og:type" content="article" />
-  <meta property="og:url" content="https://www.yourtodo.ru{% url 'posts:post_detail' post.id %}" />
+  <meta property="og:url" content="https://www.yourtodo.ru{% url 'posts:post_detail' post.slug %}" />
   <meta property="og:description" content="{{ post.text|striptags|truncatechars_html:200 }}"/>
   {% thumbnail post.image "x630" as im %}
-    <meta property="og:image" content="https://www.yourtodo.ru{{ im.url }}">
+    <meta property="og:image" content="{{ post.image.url }}">
   {% endthumbnail %}
   <meta property="og:image:alt" content="{{ post.title }}" />
 
   {% if post.image %} 
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:image" content="https://www.yourtodo.ru{{ post.image.url }}">
+    <meta name="twitter:image" content="{{ post.image.url }}">
   {% endif %}
 
   <link rel="stylesheet" href="{% static 'css/hover-effects.css' %}">

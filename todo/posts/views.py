@@ -140,6 +140,11 @@ class IndexPostsListView(ListView):
             post_list = post_list.filter(tags__slug=tag)
         return post_list
 
+    def get_pagination_querystring(self):
+        query_params = self.request.GET.copy()
+        query_params.pop('page', None)
+        return query_params.urlencode()
+
     def get_context_data(self, **kwargs: Any) -> Dict[str, Any]:
         context = super().get_context_data(**kwargs)
         user_agent = get_user_agent(self.request)
@@ -158,7 +163,8 @@ class IndexPostsListView(ListView):
         context |= {
             'is_mobile': user_agent.is_mobile,
             'tags': json_data,
-            'media_bucket': settings.MEDIA_URL
+            'media_bucket': settings.MEDIA_URL,
+            'pagination_querystring': self.get_pagination_querystring(),
         }
         return context
 

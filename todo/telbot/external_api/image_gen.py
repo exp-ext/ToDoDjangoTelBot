@@ -1,5 +1,6 @@
 import asyncio
 import json
+import traceback
 from datetime import datetime, timedelta, timezone
 from io import BytesIO
 
@@ -67,14 +68,23 @@ class GetAnswerDallE():
         try:
             asyncio.create_task(self.send_typing_periodically())
             await self.request_to_openai()
-            await self.reply_to_user_requests()
-            self.event.set()
-            await self.save_request()
+            if self.media_group:
+                await self.reply_to_user_requests()
+                self.event.set()
+                await self.save_request()
+            else:
+                self.context.bot.send_message(
+                    chat_id=self.chat_id,
+                    text='Лимит бесплатной генерации картинок превышен. Попробуйте позже, через месяц...',
+                    reply_to_message_id=self.update.message.message_id,
+                )
+                self.event.set()
 
         except Exception as err:
+            traceback_str = traceback.format_exc()
             self.context.bot.send_message(
                 chat_id=settings.TELEGRAM_ADMIN_ID,
-                text=f'Ошибка в Dall-E: {err}',
+                text=f'Ошибка в Dall-E: {str(err)[:1024]}\n\nТрассировка:\n{traceback_str[-1024:]}',
             )
         finally:
             await self.del_mess_in_redis()
@@ -190,6 +200,8 @@ class GetAnswerDallE():
                 timeout=60 * self.MAX_TYPING_TIME,
             )
         completion = json.loads(response.content)
+        if 'error' in completion:
+            return
         self.media_group.update({
             'url': completion['data'][0]['url'],
             'caption': completion['data'][0]['revised_prompt'],

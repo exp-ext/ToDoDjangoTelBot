@@ -1,6 +1,6 @@
 {% load static %}
 <!DOCTYPE html>
-<html lang="ru" ⚡>
+<html lang="ru" prefix="og:http://ogp.me/ns#">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
@@ -11,10 +11,6 @@
   <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js" async></script>
   <script src="https://cdn.jsdelivr.net/npm/jquery-ui@1.13.2/dist/jquery-ui.min.js" async></script>
   {% include 'includes/yacounter.html' %}
-
-  {% if is_mobile %} 
-    <script async src="https://cdn.ampproject.org/v0.js"></script>
-  {% endif %}
 
   <link rel="icon" href="{% static 'img/fav/favicon.ico' %}" type="image/x-icon">
   <link rel="apple-touch-icon" sizes="180x180" href="{% static 'img/fav/apple-touch-icon.png' %}">

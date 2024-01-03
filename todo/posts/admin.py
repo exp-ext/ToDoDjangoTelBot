@@ -40,6 +40,7 @@ class PostAdmin(admin.ModelAdmin):
     inlines = (PostTargetInline, PostContentsAdminInline)
     fieldsets = (
         ('Главное', {'fields': ('title', 'author', 'group')}),
+        ('Краткое описание', {'fields': ('short_description',)}),
         ('Текст', {'fields': ('text',)}),
         ('Модерация', {'fields': ('moderation',)}),
         ('Картинка', {'fields': ('image', 'preview')}),

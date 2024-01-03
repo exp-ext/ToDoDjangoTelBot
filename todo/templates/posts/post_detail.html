@@ -8,23 +8,22 @@
     {{ advertisement_widget.script|safe }}
   {% endif %}
 
-  <meta name="description" content="Заметка это простой и удобный способ хранить Ваши важные мысли!"/>
-  <meta name="keywords" content="Telegram, заметки, организация заметок, Telegram инструмент, автор, Python, программирование, ИИ">
+  <meta name="description" content="{{ post.short_description }}"/>
+  <meta name="keywords" content="{{ tags }}">
+  <meta name="robots" content="index, follow">
 
-  <html prefix="og:http://ogp.me/ns#">    
   <meta property="og:site_name" content="Заметка это простой и удобный способ хранить Ваши важные мысли!"/>
   <meta property="og:title" content="{{ post.title }}"/>
-  <meta property="og:type" content="article" />
-  <meta property="og:url" content="https://www.yourtodo.ru{% url 'posts:post_detail' post.slug %}" />
-  <meta property="og:description" content="{{ post.text|striptags|truncatechars_html:200 }}"/>
-  {% thumbnail post.image "x630" as im %}
-    <meta property="og:image" content="{{ post.image.url }}">
-  {% endthumbnail %}
-  <meta property="og:image:alt" content="{{ post.title }}" />
+  <meta property="og:type" content="article"/>
+  <meta property="og:url" content="https://www.yourtodo.ru{% url 'posts:post_detail' post.slug %}"/>
+  <meta property="og:description" content="{{ post.short_description }}"/>
+  <meta property="og:image" content="{{ post.image.url }}"/>
+  <meta property="og:image:alt" content="{{ post.title }}"/>
 
   {% if post.image %} 
-    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:card" content="summary_large_image"/>
     <meta name="twitter:image" content="{{ post.image.url }}">
+    <meta name="twitter:image:alt" content="{{ post.title }}"/>
   {% endif %}
 
   <link rel="stylesheet" href="{% static 'css/hover-effects.css' %}">

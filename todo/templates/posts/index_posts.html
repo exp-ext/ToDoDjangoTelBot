@@ -2,14 +2,35 @@
 {% load static %}
 
 {% block head %}
-  <meta name="description" content="Организуйте свои заметки с помощью простого и эффектовного инструмента - YourToDo!"/>
-  <meta name="keywords" content="заметки, сделать личный блог, телеграмм, лучшие телеграмм каналы, канал продвижение">
-  <meta name="robots" content="index, follow">
-  <meta name="author" content="Your To-Do">
+  <meta name="description" content="Исследуйте разнообразие тем и статей по программированию, включая Python, Django, Data Science и многое другое на YourToDo!"/>
+  <meta name="keywords" content="Python, Django, Data Science, Архитектура, Git, VBA, Docker, Очереди, Фронтенд, Серверы, Строки, JavaScript, программирование, разработка">
+  <meta name="robots" content="index, follow">  
+
   <link rel="stylesheet" href="{% static 'css/moving_units.css' %}">
   <link rel="stylesheet" href="{% static 'css/hover-effects.css' %}">
   <link rel="stylesheet" href="{% static 'css/search.css' %}">
   <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.1/themes/base/jquery-ui.css">
+
+  <meta property="og:site_name" content="YourToDo - Ваш центр знаний в мире программирования!"/>
+  <meta property="og:title" content="Статьи по программированию"/>
+  <meta property="og:type" content="article"/>
+  <meta property="og:url" content="https://www.yourtodo.ru/posts/"/>
+  <meta property="og:description" content="Подробные статьи и руководства по программированию и связанным технологиям. Узнайте больше о последних тенденциях и лучших практиках."/>
+
+  {% if page_obj %}
+    {% with first_item=page_obj|first %}
+      {% if first_item.image %}
+        <meta property="og:image" content="{{ first_item.image.url }}"/>
+        <meta property="og:image:alt" content="{{ first_item.title }}"/>
+
+        <meta name="twitter:card" content="summary_large_image"/>
+        <meta name="twitter:image" content="{{ first_item.image.url }}"/>
+        <meta name="twitter:image:alt" content="{{ first_item.title }}"/>
+
+      {% endif %}
+    {% endwith %}
+  {% endif %}
+
 {% endblock %}
 
 {% block title %}Публикации{% endblock %}

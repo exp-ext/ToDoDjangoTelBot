@@ -1,5 +1,5 @@
 from bs4 import BeautifulSoup
-from core.models import Create
+from core.models import Create, CreateUpdater
 from django.contrib.auth import get_user_model
 from django.db import models
 from django.db.models.signals import post_save, pre_save
@@ -43,7 +43,7 @@ def pre_save_post_tags(sender, instance, *args, **kwargs):
         instance.slug = slugify(instance.title)
 
 
-class Post(Create):
+class Post(CreateUpdater):
     """Модель для хранения постов.
 
     ### Class:
@@ -77,6 +77,7 @@ class Post(Create):
     image = ImageField(_('картинка'), upload_to='posts/', blank=True)
     tags = models.ManyToManyField(to=PostTags, related_name='posts')
     moderation = models.CharField(_('модерация заметки'), max_length=2, choices=Moderation.choices, default=Moderation.WAITING)
+    short_description = models.CharField(_('короткое описание'), max_length=160, null=True, blank=True)
 
     class Meta:
         verbose_name = _('пост')

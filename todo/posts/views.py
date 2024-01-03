@@ -2,6 +2,7 @@ import json
 import re
 from collections import Counter
 from typing import Any, Dict
+from urllib.parse import quote
 
 from advertising.models import AdvertisementWidget, PartnerBanner
 from core.views import get_status_in_group, linkages_check, paginator_handler
@@ -467,6 +468,7 @@ class PostDetailView(DetailView):
 
         user_agent = get_user_agent(self.request)
         ip = self.get_client_ip()
+        ref_url = self.get_ref_url()
 
         random_banner = PartnerBanner.objects.order_by('?').first()
         random_widget = AdvertisementWidget.objects.order_by('?').first()
@@ -479,7 +481,7 @@ class PostDetailView(DetailView):
             check_ip = redis_client.sismember(redis_key_post_ips, ip)
         except Exception:
             check_ip = False
-            ip = '127.0.0.1'
+            ip = ip or '127.0.0.1'
 
         if not check_ip:
             if redis_client.get(redis_key_post_counter):
@@ -497,6 +499,8 @@ class PostDetailView(DetailView):
                 'is_pc': user_agent.is_pc,
                 'is_tablet': user_agent.is_tablet,
                 'is_touch_capable': user_agent.is_touch_capable,
+                'ip': ip,
+                'ref_url': ref_url
             }
             serialized_agent_data = json.dumps(agent_data)
 
@@ -518,16 +522,16 @@ class PostDetailView(DetailView):
             'advertisement_widget': random_widget if random_widget else False,
             'counter': counter,
             'contents': contents[0].get('children', None) if contents else None,
+            'tags': ', '.join(post.tags.values_list('title', flat=True))
         }
         return context
 
     def get_client_ip(self):
         x_forwarded_for = self.request.META.get('HTTP_X_FORWARDED_FOR')
-        if x_forwarded_for:
-            ip = x_forwarded_for.split(',')[0]
-        else:
-            ip = self.request.META.get('REMOTE_ADDR')
-        return ip
+        return x_forwarded_for.split(',')[0] if x_forwarded_for else self.request.META.get('REMOTE_ADDR')
+
+    def get_ref_url(self):
+        return quote(self.request.META.get('HTTP_REFERER', '')) if self.request.META.get('HTTP_REFERER') else None
 
 
 class AddCommentView(LoginRequiredMixin, FormView):

@@ -77,7 +77,7 @@ class Post(CreateUpdater):
     image = ImageField(_('картинка'), upload_to='posts/', blank=True)
     tags = models.ManyToManyField(to=PostTags, related_name='posts')
     moderation = models.CharField(_('модерация заметки'), max_length=2, choices=Moderation.choices, default=Moderation.WAITING)
-    short_description = models.CharField(_('короткое описание'), max_length=160, null=True, blank=True)
+    short_description = models.CharField(_('короткое описание поста'), max_length=160, null=True, blank=True)
 
     class Meta:
         verbose_name = _('пост')

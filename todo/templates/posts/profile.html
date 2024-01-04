@@ -5,7 +5,10 @@
 {% block head %}
   <meta name="description" content="Власть над заметками с Автором."/>
   <meta name="keywords" content="Автор, заметки, Telegram инструмент, посты">
-  <meta name="robots" content="noindex, nofollow">
+
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://www.yourtodo.ru/posts/profile/{{ author.username }}/" />
+
   <link rel="stylesheet" href="{% static 'css/moving_units.css' %}">
 {% endblock %}
 

@@ -5,7 +5,10 @@
 {% block head %}
   <meta name="description" content="Ваша группа, Ваши Заметки - Организуйте общие мысли с Your ToDo!"/>
   <meta name="keywords" content="Telegram, заметки, организация заметок, Telegram инструмент, группа">
+
   <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://www.yourtodo.ru/posts/group/{{ group.slug }}/" />
+
   <link rel="stylesheet" href="{% static 'css/moving_units.css' %}">
 {% endblock %}
 

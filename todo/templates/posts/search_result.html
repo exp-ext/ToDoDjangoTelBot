@@ -2,9 +2,10 @@
 
 {% block head %}
 
-  <meta name="description" content="Все что можно найти, найдётся тут!"/>
-  <meta name="keywords" content="поиск">
-  <meta name="robots" content="noindex, nofollow">
+  <meta name="description" content="Результат поиска для - {{ keyword }}"/>
+  <meta name="keywords" content="{{ keyword }}">
+
+  <meta name="robots" content="index, follow">
 
 {% endblock %}
 

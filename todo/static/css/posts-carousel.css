@@ -1,0 +1,39 @@
+.carousel .carousel-item .row {
+  display: flex;
+}
+
+.carousel .carousel-item .col-md-4 {
+  flex: 0 0 33.333333%;
+  max-width: 33.333333%;
+}
+
+.carousel .card-img-top {
+  width: 100%;
+  height: auto;
+}
+
+.carousel .card-body {
+  padding: 10px;
+}
+
+.carousel .card-text {
+  position: relative;
+  height: 4.5em; /* Высота для 3 строк текста */
+  overflow: hidden;
+}
+
+.carousel .card-text:after {
+  content: '...';
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  padding: 0 20px 1px 40px;
+  background: linear-gradient(to right, rgba(255, 255, 255, 0), rgba(255, 255, 255, 1) 50%);
+}
+
+@media (max-width: 768px) {
+  .carousel .carousel-item .col-md-4 {
+    flex: 0 0 100%;
+    max-width: 100%;
+  }
+}

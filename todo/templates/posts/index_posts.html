@@ -82,16 +82,8 @@
 
 {% block javascript %}
   <script  src="{% static 'js/script.js' %}"></script>
+  <script  src="{% static 'js/load_img.js' %}"></script>
   <script>
-    window.addEventListener('load', function() {
-      var scrollDiv = document.querySelector('.scroll');
-      var images = scrollDiv.querySelectorAll('img');
-      var allImagesLoaded = Array.from(images).every(function(img) {
-        return img.complete && img.naturalHeight !== 0;
-      });
-      if (allImagesLoaded) {
-        scrollDiv.style.display = 'block';
-      }
-    });
+    needDiv = '.scroll';
   </script>
 {% endblock %}

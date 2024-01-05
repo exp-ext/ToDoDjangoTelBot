@@ -107,8 +107,14 @@
               {{ post.text|safe }}
             </div>
           </div>
-        </p>
+        </p>     
+      
+      {% if not is_mobile %}
+        {% include 'posts/includes/other_posts.html' %}
+      {% endif %}
+
       </article>
+
     </div>
 
     <div class="row {% if advertising and is_mobile %} mb-3 {% else %} mb-5 {% endif %}">
@@ -116,9 +122,9 @@
       </div>
       <div class="col-lg-8 col-sm-12 bg-light rounded shadow p-3">
 
-        {% if advertising and not is_mobile %}
+        {% comment %} {% if advertising and not is_mobile %}
           <div id="marketWidget" class="rounded"></div>  
-        {% endif %}
+        {% endif %} {% endcomment %}
 
         {% if is_mobile %}
           <div class="bottom-shift _anim-items _anim-no-hide">
@@ -126,7 +132,7 @@
           </div>
         {% endif %}
 
-          {% include 'posts/includes/comments.html' %}
+          {% include 'posts/includes/comments.html' %}          
 
       </div>
     </div>

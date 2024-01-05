@@ -22,6 +22,7 @@ from django.views.generic import CreateView, ListView, UpdateView
 from django.views.generic.detail import DetailView
 from django.views.generic.edit import FormView
 from django_user_agents.utils import get_user_agent
+from sorl.thumbnail import get_thumbnail
 from telbot.service_message import send_message_to_chat
 from users.models import Group, GroupConnections, GroupMailing
 
@@ -384,6 +385,7 @@ class PostDetailView(DetailView):
     context_object_name = 'post'
     pk_url_kwarg = 'post_identifier_pk'
     slug_url_kwarg = 'post_identifier_slug'
+    tag_queryset = None
 
     def get_post_slug_from_redis(self, post_pk: int) -> str or None:
         """Получает слаг поста по его идентификатору из Redis.
@@ -460,11 +462,14 @@ class PostDetailView(DetailView):
         return self.render_to_response(context)
 
     def get_queryset(self) -> QuerySet(Post):
-        queryset = super().get_queryset().select_related('author', 'group')
+        queryset = super().get_queryset().select_related('author', 'group').prefetch_related('tags')
         user = self.request.user
         if user.is_anonymous:
-            return queryset.filter(moderation='PS')
-        return queryset.filter(Q(moderation='PS') | Q(author=user))
+            queryset = queryset.filter(moderation='PS')
+        else:
+            queryset = queryset.filter(Q(moderation='PS') | Q(author=user))
+        self.tag_queryset = queryset
+        return queryset
 
     def get_context_data(self, **kwargs: Any) -> Dict[str, Any]:
         context = super().get_context_data(**kwargs)
@@ -517,6 +522,8 @@ class PostDetailView(DetailView):
 
         contents = PostContents.dump_bulk(root_contents) if root_contents else None
 
+        tags, tag_posts_chunked = self.get_tags_and_posts()
+
         context |= {
             'authors_posts_count': post.author.posts.count(),
             'comments': post.comments.all(),
@@ -526,9 +533,28 @@ class PostDetailView(DetailView):
             'advertisement_widget': random_widget if random_widget else False,
             'counter': counter,
             'contents': contents[0].get('children', None) if contents else None,
-            'tags': ', '.join(post.tags.values_list('title', flat=True))
+            'tags': tags,
+            'tag_posts_chunked': tag_posts_chunked
         }
         return context
+
+    def get_tags_and_posts(self):
+        tags = self.object.tags.values_list('title', flat=True)
+        posts = self.tag_queryset.filter(tags__title__in=tags)
+        posts_processed = []
+
+        for post in posts:
+            thumbnail = get_thumbnail(post.image, '960x339', crop='center', upscale=True)
+            posts_processed.append({
+                'image_url': thumbnail.url,
+                'slug': post.slug,
+                'short_description': post.short_description
+            })
+        return ', '.join(tags), self.chunker(posts_processed, 3)
+
+    @staticmethod
+    def chunker(seq, size):
+        return (seq[pos:pos + size] for pos in range(0, len(seq), size))
 
     def get_client_ip(self):
         x_forwarded_for = self.request.META.get('HTTP_X_FORWARDED_FOR')

@@ -15,12 +15,17 @@
         {% if group.grouper %}
           {{ group.grouper|center:"15" }}        
         {% else %}
-          ~
+          {% if group.list %}
+            {% with first_item=group.list|first %}
+              {% if first_item.author %}
+                {{ first_item.author.get_full_name|center:"15" }}
+              {% endif %}
+            {% endwith %}
+          {% endif %}
         {% endif %}
 
-        <ul>
           {% for post in group.list %}
-            <li class="my-3">
+            <div class="card my-1 resultCard">
                 <div class="result_line group-unit _anim-items _anim-no-hide">
                   {% if not is_mobile %}
                     {% thumbnail post.image "960x339" crop="center" upscale=True as im %}
@@ -29,13 +34,12 @@
                       </a>
                     {% endthumbnail %}
                   {% endif %}
-                    <a href="{% url 'posts:post_detail' post.pk %}" style="flex: 1;">
+                    <a href="{% url 'posts:post_detail' post.slug %}" style="flex: 1;">
                         <strong>{{ post.title }}:</strong> {{ post.text|striptags|slice:":200" }} ...
                     </a>
                 </div>
-            </li>
+            </div>
           {% endfor %}
-        </ul>
 
       </li>
   {% endfor %}

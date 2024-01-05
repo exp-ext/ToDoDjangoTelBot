@@ -539,8 +539,14 @@ class PostDetailView(DetailView):
         return context
 
     def get_tags_and_posts(self):
+        """Получает теги и соответствующие им посты.
+
+        ### Returns:
+        `tuple`: Кортеж, содержащий строку с перечисленными тегами и генератор словарей постов по этим тегам.
+
+        """
         tags = self.object.tags.values_list('title', flat=True)
-        posts = self.tag_queryset.filter(tags__title__in=tags)
+        posts = self.tag_queryset.filter(tags__title__in=tags).distinct()
         posts_processed = []
 
         for post in posts:
@@ -554,13 +560,42 @@ class PostDetailView(DetailView):
 
     @staticmethod
     def chunker(seq, size):
+        """Разбивает последовательность на части заданного размера.
+
+        ### Args:
+        - seq (`iterable`): Итерируемая последовательность.
+        - size (`int`): Размер частей.
+
+        ### Returns:
+        - `generator`: Генератор частей последовательности.
+
+        ### Example:
+        ```python
+        # Разбиение списка на части по 3 элемента
+        data = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+        chunks = list(self.chunker(data, 3))
+        # chunks = [[1, 2, 3], [4, 5, 6], [7, 8, 9]]
+        ```
+        """
         return (seq[pos:pos + size] for pos in range(0, len(seq), size))
 
     def get_client_ip(self):
+        """Получает IP-адрес клиента.
+
+        ### Returns:
+        - `str`: IP-адрес клиента.
+
+        """
         x_forwarded_for = self.request.META.get('HTTP_X_FORWARDED_FOR')
         return x_forwarded_for.split(',')[0] if x_forwarded_for else self.request.META.get('REMOTE_ADDR')
 
     def get_ref_url(self):
+        """Получает URL-ссылку клиента.
+
+        ### Returns:
+        - `str` or `None`: URL-ссылка клиента или None, если отсутствует.
+
+        """
         return quote(self.request.META.get('HTTP_REFERER', '')) if self.request.META.get('HTTP_REFERER') else None
 
 

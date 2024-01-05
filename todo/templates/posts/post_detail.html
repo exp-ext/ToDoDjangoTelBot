@@ -10,7 +10,9 @@
 
   <meta name="description" content="{{ post.short_description }}"/>
   <meta name="keywords" content="{{ tags }}">
+
   <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://www.yourtodo.ru{% url 'posts:post_detail' post.slug %}" />
 
   <meta property="og:site_name" content="Заметка это простой и удобный способ хранить Ваши важные мысли!"/>
   <meta property="og:title" content="{{ post.title }}"/>
@@ -140,11 +142,11 @@
     {% endif %}
   </aside>
 
-  {% if is_mobile %}
+  {% comment %} {% if is_mobile %}
     {% include 'includes/yamobileflooradvertising.html' %}
   {% else %}
     {% include 'includes/yapcflooradvertising.html' %}
-  {% endif %}
+  {% endif %} {% endcomment %}
 
 {% endblock %}
 

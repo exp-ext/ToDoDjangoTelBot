@@ -8,7 +8,6 @@
 
   <link rel="stylesheet" href="{% static 'css/moving_units.css' %}">
   <link rel="stylesheet" href="{% static 'css/hover-effects.css' %}">
-  <link rel="stylesheet" href="{% static 'css/search.css' %}">
   <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.1/themes/base/jquery-ui.css">
 
   <link rel="canonical" href="https://www.yourtodo.ru/posts/" />
@@ -51,7 +50,9 @@
     <div class="row">      
       <div class="col-lg-2">
         <div class="scroll">
-          {% include 'posts/includes/navbar.html' %}
+          <div class="moving-unit _anim-items _anim-no-hide">
+            {% include 'posts/includes/navbar.html' %}
+          </div> 
         </div> 
       </div>
 
@@ -71,21 +72,26 @@
     {% endif %}
   </div> 
 
-  {% if is_mobile %}
+  {% comment %} {% if is_mobile %}
     {% include 'includes/yamobileflooradvertising.html' %}
   {% else %}
       {% include 'includes/yapcflooradvertising.html' %}
-  {% endif %}
+  {% endif %} {% endcomment %}
 
 {% endblock %}
 
 {% block javascript %}
   <script  src="{% static 'js/script.js' %}"></script>
-  <script  src="{% static 'js/search.js' %}"></script>
   <script>
-    $(document).ready(function() {
-      var searchUrl = "{% url 'posts:search' %}";
-      initAutocomplete(searchUrl);
+    window.addEventListener('load', function() {
+      var scrollDiv = document.querySelector('.scroll');
+      var images = scrollDiv.querySelectorAll('img');
+      var allImagesLoaded = Array.from(images).every(function(img) {
+        return img.complete && img.naturalHeight !== 0;
+      });
+      if (allImagesLoaded) {
+        scrollDiv.style.display = 'block';
+      }
     });
   </script>
 {% endblock %}

@@ -91,7 +91,11 @@ class SearchListView(ListView):
 
     def get_context_data(self, **kwargs) -> Dict[str, Any]:
         context = super().get_context_data(**kwargs)
-        context['keyword'] = self.keyword
+        user_agent = get_user_agent(self.request)
+        context |= {
+            'is_mobile': user_agent.is_mobile,
+            'keyword': self.keyword,
+        }
         return context
 
     def get_queryset(self) -> QuerySet(Post):

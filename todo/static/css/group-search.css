@@ -3,12 +3,25 @@ ul {
 }
 
 ul li a {
-  text-decoration: none; /* Убираем подчеркивание */
-  font-weight: normal; /* Устанавливаем нормальный шрифт по умолчанию */
+  text-decoration: none;
+  font-weight: normal;
   color: black;
 }
 
 ul li a:hover {
-  font-weight: bold; /* Делаем текст жирным при наведении */
+  font-weight: bold;
   color: black;
+}
+
+.result_line {
+  display: flex;
+  align-items: center;
+}
+.result_line img {
+  flex: 1;
+  margin-right: 10px;
+  max-height: 100px;
+}
+.result_line a {
+  margin-right: 10px;
 }

@@ -15,7 +15,7 @@ services:
       - type: tmpfs
         target: /var/cache/nginx/minio_cache
         tmpfs:
-          size: 100000000
+          size: 500000000
     ports:
       - '80:80'
       - '443:443'

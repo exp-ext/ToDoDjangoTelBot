@@ -10,8 +10,7 @@ User = get_user_model()
 
 class AsyncManager(BaseManager.from_queryset(models.QuerySet)):
     """
-    Менеджер модели, который добавляет поддержку асинхронных
-    операций с базой данных.
+    Менеджер модели, который добавляет поддержку асинхронных операций с базой данных.
     """
 
 
@@ -45,8 +44,7 @@ class HistoryAI(Create):
     @sync_to_async
     def save(self, *args, **kwargs):
         """
-        Переопределение метода save() для поддержки асинхронного
-        сохранения объекта в базе данных.
+        Переопределение метода save() для поддержки асинхронного сохранения объекта в базе данных.
         """
         return super().save(*args, **kwargs)
 
@@ -72,6 +70,13 @@ class HistoryDALLE(Create):
 
     def __str__(self):
         return f'User: {self.user}, Question: {self.question}'
+
+    @sync_to_async
+    def save(self, *args, **kwargs):
+        """
+        Переопределение метода save() для поддержки асинхронного сохранения объекта в базе данных.
+        """
+        return super().save(*args, **kwargs)
 
 
 class HistoryWhisper(Create):

@@ -28,9 +28,24 @@ class PostURLTests(TestCase):
             moderation='PS'
         )
         cls.group = Group.objects.create(
+            chat_id=1213453132131,
             title='Тестовая группа',
             slug='test-slug',
-            description='Тестовое описание'
+            description='Тестовое описание',
+            link='not private'
+        )
+        cls.group_private = Group.objects.create(
+            chat_id=5567451332131,
+            title='Тестовая private группа',
+            slug='slug-private',
+            description='Тестовое описание private',
+        )
+        cls.post_private = Post.objects.create(
+            title='uniq title private',
+            author=cls.user,
+            text='Тестовый пост 2' * 3,
+            moderation='PS',
+            group=cls.group_private
         )
         GroupConnections.objects.create(
             user=cls.user,
@@ -38,8 +53,10 @@ class PostURLTests(TestCase):
         )
         cls.index = '/posts/'
         cls.group_list = f'/posts/group/{cls.group.slug}/'
+        cls.group_list_private = f'/posts/group/{cls.group_private.slug}/'
         cls.profile = f'/posts/profile/{cls.user.username}/'
         cls.post_detail = f'/posts/{cls.post.slug}/'
+        cls.post_detail_post_private = f'/posts/{cls.post_private.slug}/'
         cls.post_edit = f'/posts/{cls.post.id}/edit/'
         cls.post_create = '/posts/create/'
 
@@ -59,10 +76,12 @@ class PostURLTests(TestCase):
             [self.guest_client, self.index, code_ok],
             [self.guest_client, self.post_create, code_found],
             [self.guest_client, self.post_edit, code_found],
-            [self.guest_client, self.group_list, code_found],
+            [self.guest_client, self.group_list, code_ok],
+            [self.guest_client, self.group_list_private, code_found],
             [self.authorized_client, self.profile, code_ok],
             [self.guest_client, self.profile, code_ok],
             [self.guest_client, self.post_detail, code_ok],
+            [self.guest_client, self.post_detail_post_private, code_found],
             [self.guest_client, '/unexisting_page/', code_not_found]
         ]
         for client, address, code in url_names:

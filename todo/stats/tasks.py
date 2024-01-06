@@ -17,7 +17,7 @@ def load_to_database():
     if not byte_agent_posts:
         return 'There are no new statistics to process.'
 
-    decoded_agent_posts = [json.loads(json.loads(byte_str.decode('utf-8'))) for byte_str in byte_agent_posts]
+    decoded_agent_posts = [json.loads(byte_str.decode('utf-8')) for byte_str in byte_agent_posts]
     objs = [PostsCounter(**data) for data in decoded_agent_posts]
     PostsCounter.objects.bulk_create(objs)
 

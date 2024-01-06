@@ -1,3 +1,9 @@
+{% load static %}
+
+{% block head %}  
+  <link rel="stylesheet" href="{% static 'css/search.css' %}">
+{% endblock %}
+
 <div class="hover-effects">
   <div class="card shadow mb-3 bg-secondary">
     <div class="card-body">
@@ -15,3 +21,13 @@
     </div>
   </div>
 </div>
+
+{% block javascript %}
+    <script  src="{% static 'js/search.js' %}"></script>
+  <script>
+    $(document).ready(function() {
+      var searchUrl = "{% url 'posts:search' %}";
+      initAutocomplete(searchUrl);
+    });
+  </script>
+{% endblock %}

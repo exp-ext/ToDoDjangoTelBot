@@ -207,6 +207,9 @@ AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID')
 AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY')
 AWS_S3_ENDPOINT_URL = os.getenv('AWS_S3_ENDPOINT_URL')
 AWS_S3_USE_SSL = int(os.getenv('AWS_S3_USE_SSL', default=0))
+AWS_S3_OBJECT_PARAMETERS = {
+    'CacheControl': 'max-age=86400',
+}
 
 STATIC_BUCKET_NAME = 'todo-static'
 MEDIA_BUCKET_NAME = 'todo-media'
@@ -239,10 +242,8 @@ else:
         'location': Path(BASE_DIR).joinpath('backup').resolve()
     }
 
-if DEBUG:
-    STATICFILES_DIRS = (BASE_DIR / 'static',)
-else:
-    STATIC_ROOT = Path(BASE_DIR).joinpath('static').resolve()
+STATICFILES_DIRS = (BASE_DIR / 'static',)
+STATIC_ROOT = Path(BASE_DIR).joinpath('staticfiles').resolve()
 
 STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.FileSystemFinder',
@@ -362,14 +363,14 @@ REDIS_PASSWORD = os.getenv('REDIS_PASSWORD')
 IS_TEST = int(os.getenv('IS_TEST', default=0))
 
 if IS_TEST:
-    REDIS_URL = f'redis://{REDIS_HOST}:{REDIS_PORT}'
+    REDIS_URL = f'redis://{REDIS_HOST}:{REDIS_PORT}/0'
     REDIS_CLIENT_DATA = {
         'host': REDIS_HOST,
         'port': REDIS_PORT,
         'db': 0,
     }
 else:
-    REDIS_URL = f'redis://:{REDIS_PASSWORD}@{REDIS_HOST}:{REDIS_PORT}'
+    REDIS_URL = f'redis://:{REDIS_PASSWORD}@{REDIS_HOST}:{REDIS_PORT}/0'
     REDIS_CLIENT_DATA = {
         'host': REDIS_HOST,
         'port': REDIS_PORT,
@@ -388,7 +389,7 @@ CHANNEL_LAYERS = {
     },
 }
 
-CELERY_BROKER_URL = f"{REDIS_URL}/0"
+CELERY_BROKER_URL = REDIS_URL
 CELERY_RESULT_BACKEND = CELERY_BROKER_URL
 CELERY_ACCEPT_CONTENT = ['application/json']
 CELERY_TASK_SERIALIZER = 'json'
@@ -403,7 +404,7 @@ CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
 CACHES = {
     'default': {
         'BACKEND': 'django_redis.cache.RedisCache',
-        'LOCATION': f'{REDIS_URL}',
+        'LOCATION': REDIS_URL,
         'OPTIONS': {
             'CLIENT_CLASS': 'django_redis.client.DefaultClient',
         }

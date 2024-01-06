@@ -1,25 +1,25 @@
 .moving-unit {
-  transform: translate(0px,-120%);
+  transform: translate(0px, -24px);
   opacity: 0;
-  transition: all 0.8s ease 0s;
+  transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
 }
-  
+
 .moving-unit._active {
   transform: translate(0px,0px);
   opacity: 1;
-  transition: all 0.8s ease 0s;
+  transition: all 0.8s ease-in-out;
 }
 
 .group-unit {
-  transform: translate(-120%,0px);
+  transform: translate(-24px,0px);
   opacity: 0;
-  transition: all 0.8s ease 0s;
+  transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .group-unit._active {
   transform: translate(0px,0px);
   opacity: 1;
-  transition: all 0.8s ease 0s;
+  transition: all 0.8s ease-in-out;
 }
 
 .arising-unit {
@@ -31,5 +31,17 @@
 .arising-unit._active {
   transform: scale(1);
   opacity: 1;
-  transition: all 0.8s ease 0s;
+  transition: all 0.8s ease-in-out;
+}
+
+.bottom-shift {
+  transform: translateY(24px);
+  opacity: 0;
+  transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.bottom-shift._active {
+  transform: translateY(0);
+  opacity: 1;
+  transition: all 0.8s ease-in-out;
 }

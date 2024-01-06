@@ -102,6 +102,8 @@ class User(AbstractUser):
     tg_id = models.CharField(_('Telegram ID'), unique=True)
     username_validator = UnicodeUsernameValidator()
     username = models.CharField(_('Имя пользователя'), unique=True, max_length=150)
+    first_name = models.CharField(_("first name"), max_length=150, blank=True)
+    last_name = models.CharField(_("last name"), max_length=150, null=True, blank=True)
     phone_number = PhoneNumberField(_('номер телефона'), null=True, blank=True)
     email = models.EmailField(_('email'), null=True, blank=True)
 

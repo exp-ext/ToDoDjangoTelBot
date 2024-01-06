@@ -8,23 +8,25 @@
     {{ advertisement_widget.script|safe }}
   {% endif %}
 
-  <meta name="description" content="Заметка это простой и удобный способ хранить Ваши важные мысли!"/>
-  <meta name="keywords" content="Telegram, заметки, организация заметок, Telegram инструмент, автор, Python, программирование, ИИ">
+  <meta name="description" content="{{ post.short_description }}"/>
+  <meta name="keywords" content="{{ tags }}">
 
-  <html prefix="og: http://ogp.me/ns#">    
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://www.yourtodo.ru{% url 'posts:post_detail' post.slug %}" />
+
   <meta property="og:site_name" content="Заметка это простой и удобный способ хранить Ваши важные мысли!"/>
   <meta property="og:title" content="{{ post.title }}"/>
-  <meta property="og:type" content="article" />
-  <meta property="og:url" content="https://www.yourtodo.ru{% url 'posts:post_detail' post.id %}" />
-  <meta property="og:description" content="{{ post.text|striptags|truncatechars_html:200 }}"/>
-  {% thumbnail post.image "x630" as im %}
-    <meta property="og:image" content="https://www.yourtodo.ru{{ im.url }}">
-  {% endthumbnail %}
-  <meta property="og:image:alt" content="{{ post.title }}" />
+  <meta property="og:type" content="article"/>
+  <meta property="og:url" content="https://www.yourtodo.ru{% url 'posts:post_detail' post.slug %}"/>
+  <meta property="og:description" content="{{ post.short_description }}"/>
 
-  {% if post.image %} 
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:image" content="https://www.yourtodo.ru{{ post.image.url }}">
+  {% if post.image %}
+    <meta property="og:image" content="{{ post.image.url }}"/>
+    <meta property="og:image:alt" content="{{ post.title }}"/>
+
+    <meta name="twitter:card" content="summary_large_image"/>
+    <meta name="twitter:image" content="{{ post.image.url }}">
+    <meta name="twitter:image:alt" content="{{ post.title }}"/>
   {% endif %}
 
   <link rel="stylesheet" href="{% static 'css/hover-effects.css' %}">
@@ -44,141 +46,119 @@
 
       <aside class="col-lg-3 col-sm-12">
 
-      {% if contents %}  
-        
-        <div class="card p-1 bg-light rounded shadow mb-2">
-          <div class="text-center">
-            <h4><strong>Оглавление</strong></h4>
-          </div>
-          <ul class="list-unstyled">
-            {%for content in contents %}
-              {%include 'posts/includes/tree_template.html' %}
-            {%endfor%}
-          </ul>
-        </div>
+      <div class="{% if not is_mobile %}scroll{% endif %}">
 
-      {% endif %}
-
-        {% if is_mobile %}
-          <div class="card bg-light rounded shadow group-unit _anim-items _anim-no-hide my-2"> 
-            {% include 'includes/yabodyadvertising.html' %}
-          </div>
-        {% else %}
-          <div class="card p-1 bg-light rounded shadow group-unit _anim-items _anim-no-hide my-2"> 
-            {% include 'includes/yabodyadvertising.html' %}           
-          </div>
-        {% endif %}
-
-        {% if advertising and not is_mobile %}
-          <div class="ck ck-content">
-            {% include 'posts/includes/advertising.html' %}
-          </div>
-        {% endif %}
-
-        <div class="hover-effects">
-          <ul class="list-group shadow group-unit _anim-items _anim-no-hide my-2">
-            <li class="list-group-item bg-secondary">
-              <p>Дата публикации: {{ post.created_at|date:"d E Y" }}</p>
-
-              <div class="wow fadeInUp animated" data-wow-duration="1200ms" style="visibility: visible; animation-duration: 1200ms; animation-name: fadeInUp;">
-                <p>
-                  <span class="counter-title">Просмотров</span>
-                  <i class="fa fa-user medium-icon"></i>
-                  <span class="timer counter alt-font appear" data-to="600" data-speed="7000">{{ counter }}</span>
-                </p>
+        {% if contents %}  
+          
+          <div class="card p-1 bg-light rounded shadow mb-2">
+            <div class="text-center">
+              <h4><strong>Оглавление</strong></h4>
             </div>
-            </li>
+            <ul class="list-unstyled">
+              {%for content in contents %}
+                {%include 'posts/includes/tree_template.html' %}
+              {%endfor%}
+            </ul>
+          </div>
 
-            {% if post.group and post.group.link %}
-                <li class="list-group-item  bg-secondary">
-                  <p>Группа: {{ post.group }}</p>
-                  <a type="button" class="button fast white" href="{% url 'posts:group_list' post.group.slug%}">все &#160 записи &#160 группы</a>
-                </li>
-            {% endif %} 
+        {% endif %}
 
-            <li class="list-group-item  bg-secondary">
-              <p>Автор: {{ post.author.get_full_name }}</p>
-              <p>Всего постов автора:  <span> {{ authors_posts_count }} </span></p>              
-              <a type="button" class="btn button fast white" href="{% url 'posts:profile' post.author %}">все &#160 посты &#160 пользователя</a>
-            </li>
+          {% if is_mobile %}
+            <div class="card bg-light rounded shadow group-unit _anim-items _anim-no-hide my-2"> 
+              {% include 'includes/yabodyadvertising.html' %}
+            </div>
+          {% else %}
+            <div class="card p-1 bg-light rounded shadow group-unit _anim-items _anim-no-hide my-2"> 
+              {% include 'includes/yabodyadvertising.html' %}           
+            </div>
+          {% endif %}
 
-              {% if post.author == user %}
+          {% if not is_mobile %}
+            <div class="group-unit _anim-items _anim-no-hide">
 
-                <li class="list-group-item bg-secondary">  
-                  <form method="patch" action="{% url 'posts:post_edit' post.pk %}">
-                    {% csrf_token %}
-                      <button type="submit" class="button w-100">изменить&#160пост</button>
-                  </form>
-                </li>
-
-                <li class="list-group-item bg-secondary">
-                  <form method="post" action="{% url 'posts:post_delete' post.pk %}">
-                    {% csrf_token %}
-                      <button type="submit" class="button reverse dark w-100">удалить&#160пост</button>
-                  </form>
-                </li>
-
+              {% if advertising %}
+                <div class="ck ck-content">
+                  {% include 'posts/includes/advertising.html' %}
+                </div>
               {% endif %}
 
-          </ul>
-        </div>
+              {% include 'posts/includes/author_detail.html' %}
+
+            </div>
+          {% endif %}
+
+          </div>
 
       </aside>
 
       {% comment %} вторая колонка {% endcomment %}
 
       <article class="col-lg-8 col-sm-12 bg-light rounded shadow">
-        
-        <div class="lobster"> 
+        <div class="lobster">
           <h1>{{ post.title }}</h1>
-        </div>      
-        {% thumbnail post.image "x339" as im %}
-          <img class="card-img my-2" src="{{ im.url }}">
-        {% endthumbnail %}
+        </div>
+
+        {% if post.image %}
+          <img class="card-img my-2" src="{{ post.image.url }}" class="d-block w-auto h-100">
+        {% endif %}
         <p>
           <div class="ck ck-content">
             <div class="table-wrap">
               {{ post.text|safe }}
-            </div> 
-          </div> 
-        </p>  
+            </div>
+          </div>
+        </p>     
+      
+      {% if tag_posts_present and not is_mobile %}
+        {% include 'posts/includes/other_posts.html' %}
+      {% endif %}
 
       </article>
+
     </div>
 
-    <div class="row {% if advertising and is_mobile %} mb-3 {% else %} mb-4 {% endif %}">
+    <div class="row {% if advertising and is_mobile %} mb-3 {% else %} mb-5 {% endif %}">
       <div class="col-lg-3 col-sm-12">
       </div>
       <div class="col-lg-8 col-sm-12 bg-light rounded shadow p-3">
 
-        {% if advertising and not is_mobile %}
+        {% comment %} {% if advertising and not is_mobile %}
           <div id="marketWidget" class="rounded"></div>  
-        {% endif %}       
+        {% endif %} {% endcomment %}
 
-        {% include 'posts/includes/comments.html' %}
+        {% if is_mobile %}
+          <div class="bottom-shift _anim-items _anim-no-hide">
+            {% include 'posts/includes/author_detail.html' %}
+          </div>
+        {% endif %}
+
+          {% include 'posts/includes/comments.html' %}          
+
       </div>
     </div>
   </div>
 
   <aside class="col-lg-1 col-sm-12 mb-4">
     {% if advertising and is_mobile %}
-      <div class="ck ck-content">
-        {% include 'posts/includes/advertising.html' %}
-      </div>     
+      <div class="bottom-shift _anim-items _anim-no-hide">
+        <div class="ck ck-content mb-5">
+          {% include 'posts/includes/advertising.html' %}
+        </div>
+      </div>
     {% endif %}
   </aside>
 
-  {% if is_mobile %}
+  {% comment %} {% if is_mobile %}
     {% include 'includes/yamobileflooradvertising.html' %}
   {% else %}
     {% include 'includes/yapcflooradvertising.html' %}
-  {% endif %}
+  {% endif %} {% endcomment %}
 
 {% endblock %}
 
 {% block javascript %}
 
-  <script async charset="utf-8" src="//cdn.embedly.com/widgets/platform.js"></script>
+  <script async charset='utf-8' src='//cdn.embedly.com/widgets/platform.js'></script>
   <script async src="{% static 'js/script.js' %}"></script>
   <script async src="{% static 'js/counter.js' %}"></script>
 
@@ -191,7 +171,7 @@
     });
     function scrollDown(event) {
       event.preventDefault();  
-      var targetId = event.target.getAttribute("href").substring(1);
+      var targetId = event.target.getAttribute('href').substring(1);
       var targetElement = document.getElementById(targetId);  
       if (targetElement) {
           var offset = 64;
@@ -199,18 +179,18 @@
   
           window.scrollTo({
               top: targetPosition,
-              behavior: "smooth"
+              behavior: 'smooth'
           });
       }
     }
     function toggleList(event, toggleIcon) {
         const ul = toggleIcon.parentElement.querySelector('ul');        
         if (ul) {
-            if (ul.style.display === "none" || ul.style.display === "") {
-                ul.style.display = "block";
+            if (ul.style.display === 'none' || ul.style.display === '') {
+                ul.style.display = 'block';
                 toggleIcon.innerHTML = '<i class="bi bi-circle">';
             } else {
-                ul.style.display = "none";
+                ul.style.display = 'none';
                 toggleIcon.innerHTML = '<i class="bi bi-plus-circle"></i>';
             }
         }

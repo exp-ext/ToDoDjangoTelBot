@@ -1,5 +1,6 @@
 import asyncio
 import json
+import traceback
 from datetime import datetime, timedelta, timezone
 
 import httpx
@@ -101,9 +102,10 @@ class GetAnswerGPT():
             await self.httpx_request_to_openai()
 
         except Exception as err:
+            traceback_str = traceback.format_exc()
             self.context.bot.send_message(
                 chat_id=ADMIN_ID,
-                text=f'Ошибка в получении ответа от ChatGPT: {str(err)[:1024]}',
+                text=f'Ошибка в получении ответа от ChatGPT to Telegram: {str(err)[:1024]}\n\nТрассировка:\n{traceback_str[-1024:]}',
             )
         finally:
             asyncio.create_task(self.create_history_ai())
@@ -198,7 +200,7 @@ class GetAnswerGPT():
         )
         max_tokens = self.message_tokens + 120
         for item in history:
-            max_tokens += item['question_tokens'] + item['answer_tokens']
+            max_tokens += sum(item.get(key, 0) for key in ('question_tokens', 'answer_tokens') if item.get(key) is not None)
             if max_tokens >= GetAnswerGPT.MAX_LONG_REQUEST:
                 break
             self.prompt.extend([

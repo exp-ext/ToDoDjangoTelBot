@@ -4,29 +4,36 @@
 
 {% block head %}  
   <link rel="stylesheet" href="{% static 'css/hover-effects.css' %}">
-  <link rel="stylesheet" href="{% static 'css/group-search.css' %}"> 
+  <link rel="stylesheet" href="{% static 'css/group-search.css' %}">
+  <link rel="stylesheet" href="{% static 'css/moving_units.css' %}">
 {% endblock %}
-
 
 <ul>
   {% for group in group_list %}
 
       <li>
-        {{ group.grouper|center:"15" }}
+        {% if group.grouper %}
+          {{ group.grouper|center:"15" }}        
+        {% else %}
+          Публикации без групп
+        {% endif %}
 
-        {% thumbnail group.grouper.image "960x150" crop="center" upscale=True as im %}
-          <img class="card-img my-2" src="{{ im.url }}">
-        {% endthumbnail %}
-
-        <ul>
           {% for post in group.list %}
-            <li class="my-3">
-              <a href="{% url 'posts:post_detail' post.pk %}">
-                <strong>{{ post.title }}:</strong> {{ post.text|striptags|slice:":200" }} ...
-              </a>
-            </li>
+            <div class="card my-1 resultCard">
+                <div class="result_line group-unit _anim-items _anim-no-hide">
+                  {% if not is_mobile %}
+                    {% thumbnail post.image "960x339" crop="center" upscale=True as im %}
+                      <a href="{% url 'posts:post_detail' post.slug %}">
+                        <img class="card-img my-2" src="{{ im.url }}" height="80" >
+                      </a>
+                    {% endthumbnail %}
+                  {% endif %}
+                    <a href="{% url 'posts:post_detail' post.slug %}" style="flex: 1;">
+                        <strong>{{ post.title }}:</strong> {{ post.filter_text }}
+                    </a>
+                </div>
+            </div>
           {% endfor %}
-        </ul>
 
       </li>
   {% endfor %}

@@ -1,10 +1,20 @@
 {% extends "base.html" %}
 
-{% block title %} Результаты поиска {% endblock %}
+{% block head %}
+
+  <meta name="description" content="Результат поиска по сайту для запроса: {{ keyword }}"/>
+  <meta name="keywords" content="{{ keyword }}">
+
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://www.yourtodo.ru/posts/s?q={{ keyword }}" />
+
+{% endblock %}
+
+{% block title %} Результат поиска по запросу: {{ keyword }} {% endblock %}
 
 {% block content %}
   <div class="container py-5">
-    <div class="py-5">
+    <div class="py-3">
       <div class="ck ck-content">
   
         {% include 'posts/includes/search.html' %} 

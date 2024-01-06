@@ -73,16 +73,14 @@ class Authentication:
         try:
             validation_key = self.get_password(length=28)
             user, _ = User.objects.get_or_create(tg_id=self.tg_user.id)
-            user.username = self.tg_user.username if self.tg_user.username else 'n-' + str(1010101 + user.id)[::-1]
-            user.first_name = self.tg_user.first_name
+            user.username = self.tg_user.username or f'n-{str(1010101 + user.id)[::-1]}'
+            user.first_name = self.tg_user.first_name or self.tg_user.username
             user.last_name = self.tg_user.last_name
             user.validation_key = validation_key
             user.validation_key_time = timezone.now().astimezone(timezone.utc)
 
             if not user.image:
-                self.add_profile_picture.apply_async(
-                    args=(self.tg_user.id, ModelDataSerializer.serialize(user),)
-                )
+                self.add_profile_picture.apply_async(args=(self.tg_user.id, ModelDataSerializer.serialize(user),))
             password = self.get_password(length=15)
             user.set_password(password)
             reply_text = [
@@ -98,7 +96,9 @@ class Authentication:
             user.validation_message_id = message_id
             user.save()
         except Exception as err:
-            error_message = f'Ошибка регистрации:\n{err}'
+            user_error_message = 'Произошла непредвиденная ошибка. Разработчики уже занимаются её устранением 💡. Попробуйте позже.'
+            self.context.bot.send_message(self.tg_user.id, user_error_message)
+            error_message = f'Ошибка при регистрации пользователя c id-{self.tg_user.id} и username-{self.tg_user.username}:\n{err}'
             self.context.bot.send_message(ADMIN_ID, error_message)
 
         if not user.locations.exists():
@@ -127,9 +127,7 @@ class Authentication:
         ).first()
 
         if not user.image:
-            self.add_profile_picture.apply_async(
-                args=(self.tg_user.id, ModelDataSerializer.serialize(user),)
-            )
+            self.add_profile_picture.apply_async(args=(self.tg_user.id, ModelDataSerializer.serialize(user),))
 
         user.first_name = self.tg_user.first_name
         user.last_name = self.tg_user.last_name
@@ -160,7 +158,7 @@ class Authentication:
             )
             reply_text = 'Произошла непредвиденная ошибка. Разработчики уже занимаются её устранением 💡.'
             self.context.bot.send_message(self.chat.id, reply_text)
-            error_message = f'Ошибка авторизации:\n{err}'
+            error_message = f'Ошибка при авторизации пользователя c id-{self.tg_user.id} и username-{self.tg_user.username}:\n{err}'
             self.context.bot.send_message(ADMIN_ID, error_message)
 
         return JsonResponse({"ok": "Link sent."})
@@ -177,14 +175,9 @@ class Authentication:
         """
         for text in reply_text:
             try:
-                message_id = self.update.message.reply_text(
-                    text=text,
-                    parse_mode='Markdown'
-                ).message_id
+                message_id = self.update.message.reply_text(text=text, parse_mode='Markdown').message_id
             except Exception:
-                message_id = self.update.message.reply_text(
-                    text=text,
-                ).message_id
+                message_id = self.update.message.reply_text(text=text).message_id
 
         lifetime = 60 * self.valid_time
         delete_messages_by_time.apply_async(
@@ -206,10 +199,7 @@ class Authentication:
                 f'{self.tg_user.first_name}, '
                 'эта функция доступна только в "private"'
             ).message_id
-            delete_messages_by_time.apply_async(
-                args=[self.chat.id, message_id],
-                countdown=20
-            )
+            delete_messages_by_time.apply_async(args=[self.chat.id, message_id], countdown=20)
             return True
         return False
 

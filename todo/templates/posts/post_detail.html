@@ -109,7 +109,7 @@
           </div>
         </p>     
       
-      {% if not is_mobile %}
+      {% if tag_posts_present and not is_mobile %}
         {% include 'posts/includes/other_posts.html' %}
       {% endif %}
 

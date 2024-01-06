@@ -5,6 +5,7 @@ from typing import Any, Dict
 from urllib.parse import quote
 
 from advertising.models import AdvertisementWidget, PartnerBanner
+from bs4 import BeautifulSoup
 from core.views import get_status_in_group, linkages_check, paginator_handler
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -49,16 +50,16 @@ class SearchListView(ListView):
 
     def get(self, request, *args, **kwargs):
         self.keyword = request.GET.get('q', '')
-        term = request.GET.get('term', '')
-        if not self.keyword and not term:
+        self.term = request.GET.get('term', '')
+        if not self.keyword and not self.term:
             return redirect('posts:index_posts')
-        if term:
-            return self.term_answer(term)
+        if self.term:
+            return self.term_answer()
         return super().get(request, *args, **kwargs)
 
-    def term_answer(self, term: str) -> JsonResponse:
+    def term_answer(self) -> JsonResponse:
         """Автодополнение в поиске."""
-        self.keyword = term.lower()
+        self.keyword = self.term.lower()
         queryset = self.get_queryset()
         queryset = (
             queryset.filter(text__icontains=self.keyword, moderation='PS')
@@ -93,13 +94,13 @@ class SearchListView(ListView):
     def get_context_data(self, **kwargs) -> Dict[str, Any]:
         context = super().get_context_data(**kwargs)
         user_agent = get_user_agent(self.request)
-        context |= {
+        context.update({
             'is_mobile': user_agent.is_mobile,
             'keyword': self.keyword,
-        }
+        })
         return context
 
-    def get_queryset(self) -> QuerySet(Post):
+    def get_queryset(self) -> QuerySet[Post]:
         user = self.request.user
         post_list = (
             Post.objects
@@ -108,15 +109,32 @@ class SearchListView(ListView):
             .order_by('group')
         )
         if user.is_authenticated:
-            post_list |= Post.objects.filter(
-                group__in=(
-                    user
-                    .groups_connections
-                    .values_list('group', flat=True)
-                ),
-                text__icontains=self.keyword,
+            user_groups = user.groups_connections.values_list('group', flat=True)
+            post_list = (
+                Post.objects
+                .select_related('author', 'group')
+                .filter(Q(group__isnull=True) | Q(group__link__isnull=False) | Q(group__in=user_groups), text__icontains=self.keyword, moderation='PS')
+                .order_by('group')
             )
+        if not self.term:
+            for post in post_list:
+                post.filter_text = self.annotate_paragraphs(post)
         return post_list
+
+    def annotate_paragraphs(self, post):
+        soup = BeautifulSoup(post.text, 'html.parser')
+        paragraphs = soup.find_all('p')
+        search_word = self.keyword.lower()
+        first_text = None
+        max_length = 253
+
+        for item in paragraphs:
+            search_text = item.get_text()
+            if first_text is None:
+                first_text = search_text
+            if re.search(re.escape(search_word), search_text.lower()):
+                return search_text if len(search_text) < max_length else search_text[:max_length] + '...'
+        return first_text if len(first_text) < max_length else first_text[:max_length] + '...'
 
 
 class IndexPostsListView(ListView):
@@ -127,20 +145,19 @@ class IndexPostsListView(ListView):
     paginate_by = PAGINATE_BY
 
     def get_queryset(self) -> QuerySet(Post):
-        user = self.request.user
         tag = self.request.GET.get('q', '')
+        user = self.request.user
         post_list = (
             Post.objects
             .filter(Q(group__isnull=True) | Q(group__link__isnull=False), moderation='PS')
             .select_related('author', 'group')
         )
         if user.is_authenticated:
-            post_list |= Post.objects.filter(
-                group__in=(
-                    user
-                    .groups_connections
-                    .values_list('group', flat=True)
-                ),
+            user_groups = user.groups_connections.values_list('group', flat=True)
+            post_list = (
+                Post.objects
+                .filter(Q(group__isnull=True) | Q(group__link__isnull=False) | Q(group__in=user_groups), moderation='PS')
+                .select_related('author', 'group')
             )
         if tag and tag != 'vse':
             post_list = post_list.filter(tags__slug=tag)
@@ -166,12 +183,12 @@ class IndexPostsListView(ListView):
             for item in queryset
         ]
         json_data = json.dumps(data, cls=DjangoJSONEncoder)
-        context |= {
+        context.update({
             'is_mobile': user_agent.is_mobile,
             'tags': json_data,
             'media_bucket': settings.MEDIA_URL,
             'pagination_querystring': self.get_pagination_querystring(),
-        }
+        })
         return context
 
 
@@ -211,13 +228,13 @@ class GroupPostsListView(ListView):
     def get_context_data(self, **kwargs: Any) -> Dict[str, Any]:
         context = super().get_context_data(**kwargs)
         user_agent = get_user_agent(self.request)
-        context |= {
+        context.update({
             'group': self.group,
             'is_admin': self.is_admin,
             'form': self.form,
             'forism_check': self.forism_check,
             'is_mobile': user_agent.is_mobile,
-        }
+        })
         return context
 
     def post(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpRequest:
@@ -259,12 +276,12 @@ class ProfileDetailView(DetailView):
         page_obj = paginator_handler(self.request, post_list, PAGINATE_BY)
         user_agent = get_user_agent(self.request)
         user = self.request.user
-        context |= {
+        context.update({
             'page_obj': page_obj,
             'posts_count': page_obj.paginator.count,
             'following': False if user.is_anonymous else user.follower.filter(author=self.object).exists(),
             'is_mobile': user_agent.is_mobile,
-        }
+        })
         return context
 
     def get_user_posts(self) -> QuerySet(Post):
@@ -522,9 +539,9 @@ class PostDetailView(DetailView):
 
         contents = PostContents.dump_bulk(root_contents) if root_contents else None
 
-        tags, tag_posts_chunked = self.get_tags_and_posts()
+        tags, tag_posts_present, tag_posts_chunked = self.get_tags_and_posts()
 
-        context |= {
+        context.update({
             'authors_posts_count': post.author.posts.count(),
             'comments': post.comments.all(),
             'form': CommentForm(self.request.POST or None),
@@ -534,8 +551,9 @@ class PostDetailView(DetailView):
             'counter': counter,
             'contents': contents[0].get('children', None) if contents else None,
             'tags': tags,
+            'tag_posts_present': tag_posts_present,
             'tag_posts_chunked': tag_posts_chunked
-        }
+        })
         return context
 
     def get_tags_and_posts(self):
@@ -545,18 +563,30 @@ class PostDetailView(DetailView):
         `tuple`: Кортеж, содержащий строку с перечисленными тегами и генератор словарей постов по этим тегам.
 
         """
+        user = self.request.user
         tags = self.object.tags.values_list('title', flat=True)
-        posts = self.tag_queryset.filter(tags__title__in=tags).distinct()
-        posts_processed = []
 
-        for post in posts:
+        query = self.tag_queryset.filter(
+            Q(group__isnull=True) | Q(group__link__isnull=False),
+            tags__title__in=tags
+        ).distinct().exclude(id=self.object.id)
+
+        if user.is_authenticated:
+            user_groups = user.groups_connections.values_list('group', flat=True)
+            query = self.tag_queryset.filter(
+                Q(group__isnull=True) | Q(group__link__isnull=False) | Q(group__in=user_groups),
+                tags__title__in=tags
+            ).distinct().exclude(id=self.object.id)
+
+        posts_processed = []
+        for post in query:
             thumbnail = get_thumbnail(post.image, '960x339', crop='center', upscale=True)
             posts_processed.append({
                 'image_url': thumbnail.url,
                 'slug': post.slug,
                 'short_description': post.short_description
             })
-        return ', '.join(tags), self.chunker(posts_processed, 3)
+        return ', '.join(tags), query.count() > 0, self.chunker(posts_processed, 3)
 
     @staticmethod
     def chunker(seq, size):

@@ -15,13 +15,7 @@
         {% if group.grouper %}
           {{ group.grouper|center:"15" }}        
         {% else %}
-          {% if group.list %}
-            {% with first_item=group.list|first %}
-              {% if first_item.author %}
-                {{ first_item.author.get_full_name|center:"15" }}
-              {% endif %}
-            {% endwith %}
-          {% endif %}
+          Публикации без групп
         {% endif %}
 
           {% for post in group.list %}
@@ -35,7 +29,7 @@
                     {% endthumbnail %}
                   {% endif %}
                     <a href="{% url 'posts:post_detail' post.slug %}" style="flex: 1;">
-                        <strong>{{ post.title }}:</strong> {{ post.text|striptags|slice:":200" }} ...
+                        <strong>{{ post.title }}:</strong> {{ post.filter_text }}
                     </a>
                 </div>
             </div>

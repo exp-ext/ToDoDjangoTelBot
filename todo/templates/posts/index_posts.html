@@ -4,12 +4,8 @@
 {% block head %}
   <meta name="description" content="Исследуйте разнообразие тем и статей по программированию, включая Python, Django, Data Science и многое другое на YourToDo!"/>
   <meta name="keywords" content="Python, Django, Data Science, Архитектура, Git, VBA, Docker, Очереди, Фронтенд, Серверы, Строки, JavaScript, программирование, разработка">
-  <meta name="robots" content="index, follow">  
-
-  <link rel="stylesheet" href="{% static 'css/moving_units.css' %}">
-  <link rel="stylesheet" href="{% static 'css/hover-effects.css' %}">
-  <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.1/themes/base/jquery-ui.css">
-
+  
+  <meta name="robots" content="index, follow">
   <link rel="canonical" href="https://www.yourtodo.ru/posts/" />
 
   <meta property="og:site_name" content="YourToDo - Ваш центр знаний в мире программирования!"/>
@@ -31,6 +27,10 @@
       {% endif %}
     {% endwith %}
   {% endif %}
+
+  <link rel="stylesheet" href="{% static 'css/moving_units.css' %}">
+  <link rel="stylesheet" href="{% static 'css/hover-effects.css' %}">
+  <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.1/themes/base/jquery-ui.css">
 
 {% endblock %}
 

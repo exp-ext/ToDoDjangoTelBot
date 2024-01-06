@@ -3,6 +3,8 @@ from django.conf import settings
 from telegram import ParseMode, Update
 from telegram.ext import CallbackContext, ConversationHandler
 
+from todo.celery import app
+
 from .cleaner import delete_messages_by_time
 from .loader import bot
 
@@ -38,6 +40,7 @@ def cancel(update: Update, _: CallbackContext):
     return ConversationHandler.END
 
 
+@app.task(ignore_result=True)
 def send_message_to_chat(tg_id: int, message: str, reply_to_message_id: int = None, parse_mode_markdown: bool = False) -> None:
     """Отправляет сообщение через Telegram бота.
 

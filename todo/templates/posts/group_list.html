@@ -5,7 +5,10 @@
 {% block head %}
   <meta name="description" content="Ваша группа, Ваши Заметки - Организуйте общие мысли с Your ToDo!"/>
   <meta name="keywords" content="Telegram, заметки, организация заметок, Telegram инструмент, группа">
+
   <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://www.yourtodo.ru/posts/group/{{ group.slug }}/" />
+
   <link rel="stylesheet" href="{% static 'css/moving_units.css' %}">
 {% endblock %}
 
@@ -13,7 +16,7 @@
 
 {% block headline %} 
 
-  <div class="container py-5">
+  <div class="container pt-5 mb-1">
       <div class="card shadow rounded text-center bg-secondary {% if is_mobile %} group-unit mt-3 {% else %} moving-unit mt-4 {% endif %} _anim-items _anim-no-hide">
 
         <div class="card-body">

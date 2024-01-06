@@ -22,7 +22,7 @@ class DynamicViewSitemap(Sitemap):
         return Post.objects.all()
 
     def location(self, item):
-        return reverse('posts:post_detail', args=[item.pk])
+        return reverse('posts:post_detail', args=[item.slug])
 
     def lastmod(self, item):
-        return item.created_at
+        return item.updated_at

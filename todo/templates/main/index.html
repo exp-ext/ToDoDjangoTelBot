@@ -12,10 +12,10 @@
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://www.yourtodo.ru" />
   <meta property="og:description" content="YourToDo - это возможность не забыть о чем-то по истине важном!"/>
-  <meta property="og:image" content="https://www.yourtodo.ru/static/git/background.jpg">
+  <meta property="og:image" content="{% static 'git/background.jpg' %}">
   <meta property="og:image:alt" content="city" />
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:image" content="https://www.yourtodo.ru/static/git/background.jpg">
+  <meta name="twitter:image" content="{% static 'git/background.jpg' %}">
   <link rel="stylesheet" href="{% static 'css/carousel.css' %}">
 {% endblock %}
 {% block content %}

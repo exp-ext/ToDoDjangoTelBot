@@ -2,33 +2,41 @@ import json
 import re
 from collections import Counter
 from typing import Any, Dict
+from urllib.parse import quote
 
 from advertising.models import AdvertisementWidget, PartnerBanner
+from bs4 import BeautifulSoup
 from core.views import get_status_in_group, linkages_check, paginator_handler
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.db.models import Case, Count, IntegerField, Q, When
+from django.core.serializers.json import DjangoJSONEncoder
+from django.db.models import Case, Count, IntegerField, Q, Value, When
 from django.db.models.query import QuerySet
-from django.http import (HttpRequest, HttpResponse, HttpResponseRedirect,
+from django.http import (HttpRequest, HttpResponse,
+                         HttpResponsePermanentRedirect, HttpResponseRedirect,
                          JsonResponse)
 from django.shortcuts import get_object_or_404, redirect, render
-from django.urls import reverse_lazy
+from django.urls import reverse, reverse_lazy
 from django.views import View
 from django.views.generic import CreateView, ListView, UpdateView
 from django.views.generic.detail import DetailView
 from django.views.generic.edit import FormView
 from django_user_agents.utils import get_user_agent
+from sorl.thumbnail import get_thumbnail
 from telbot.service_message import send_message_to_chat
-from users.models import Group, GroupMailing
+from users.models import Group, GroupConnections, GroupMailing
 
 from .forms import CommentForm, GroupMailingForm, PostForm
-from .models import Follow, Post, PostContents
+from .models import Follow, Post, PostContents, PostTags
 
 User = get_user_model()
 redis_client = settings.REDIS_CLIENT
 PAGINATE_BY = 10
 ADMIN_ID = settings.TELEGRAM_ADMIN_ID
+
+KEY_PRIVATE_GROUPS = 'private_groups'
+KEY_POSTS = 'posts'
 
 
 class SearchListView(ListView):
@@ -42,16 +50,16 @@ class SearchListView(ListView):
 
     def get(self, request, *args, **kwargs):
         self.keyword = request.GET.get('q', '')
-        term = request.GET.get('term', '')
-        if not self.keyword and not term:
+        self.term = request.GET.get('term', '')
+        if not self.keyword and not self.term:
             return redirect('posts:index_posts')
-        if term:
-            return self.term_answer(term)
+        if self.term:
+            return self.term_answer()
         return super().get(request, *args, **kwargs)
 
-    def term_answer(self, term: str) -> JsonResponse:
+    def term_answer(self) -> JsonResponse:
         """Автодополнение в поиске."""
-        self.keyword = term.lower()
+        self.keyword = self.term.lower()
         queryset = self.get_queryset()
         queryset = (
             queryset.filter(text__icontains=self.keyword, moderation='PS')
@@ -85,10 +93,14 @@ class SearchListView(ListView):
 
     def get_context_data(self, **kwargs) -> Dict[str, Any]:
         context = super().get_context_data(**kwargs)
-        context['keyword'] = self.keyword
+        user_agent = get_user_agent(self.request)
+        context.update({
+            'is_mobile': user_agent.is_mobile,
+            'keyword': self.keyword,
+        })
         return context
 
-    def get_queryset(self) -> QuerySet(Post):
+    def get_queryset(self) -> QuerySet[Post]:
         user = self.request.user
         post_list = (
             Post.objects
@@ -97,15 +109,32 @@ class SearchListView(ListView):
             .order_by('group')
         )
         if user.is_authenticated:
-            post_list |= Post.objects.filter(
-                group__in=(
-                    user
-                    .groups_connections
-                    .values_list('group', flat=True)
-                ),
-                text__icontains=self.keyword,
+            user_groups = user.groups_connections.values_list('group', flat=True)
+            post_list = (
+                Post.objects
+                .select_related('author', 'group')
+                .filter(Q(group__isnull=True) | Q(group__link__isnull=False) | Q(group__in=user_groups), text__icontains=self.keyword, moderation='PS')
+                .order_by('group')
             )
+        if not self.term:
+            for post in post_list:
+                post.filter_text = self.annotate_paragraphs(post)
         return post_list
+
+    def annotate_paragraphs(self, post):
+        soup = BeautifulSoup(post.text, 'html.parser')
+        paragraphs = soup.find_all('p')
+        search_word = self.keyword.lower()
+        first_text = None
+        max_length = 253
+
+        for item in paragraphs:
+            search_text = item.get_text()
+            if first_text is None:
+                first_text = search_text
+            if re.search(re.escape(search_word), search_text.lower()):
+                return search_text if len(search_text) < max_length else search_text[:max_length] + '...'
+        return first_text if len(first_text) < max_length else first_text[:max_length] + '...'
 
 
 class IndexPostsListView(ListView):
@@ -116,6 +145,7 @@ class IndexPostsListView(ListView):
     paginate_by = PAGINATE_BY
 
     def get_queryset(self) -> QuerySet(Post):
+        tag = self.request.GET.get('q', '')
         user = self.request.user
         post_list = (
             Post.objects
@@ -123,21 +153,42 @@ class IndexPostsListView(ListView):
             .select_related('author', 'group')
         )
         if user.is_authenticated:
-            post_list |= Post.objects.filter(
-                group__in=(
-                    user
-                    .groups_connections
-                    .values_list('group', flat=True)
-                ),
+            user_groups = user.groups_connections.values_list('group', flat=True)
+            post_list = (
+                Post.objects
+                .filter(Q(group__isnull=True) | Q(group__link__isnull=False) | Q(group__in=user_groups), moderation='PS')
+                .select_related('author', 'group')
             )
+        if tag and tag != 'vse':
+            post_list = post_list.filter(tags__slug=tag)
         return post_list
+
+    def get_pagination_querystring(self):
+        query_params = self.request.GET.copy()
+        query_params.pop('page', None)
+        return query_params.urlencode()
 
     def get_context_data(self, **kwargs: Any) -> Dict[str, Any]:
         context = super().get_context_data(**kwargs)
         user_agent = get_user_agent(self.request)
-        context |= {
+        custom_order = Case(When(slug='vse', then=Value(0)), default=Value(1), output_field=IntegerField())
+        queryset = PostTags.objects.annotate(custom_sort=custom_order).order_by('custom_sort')
+        data = [
+            {
+                'title': item.title,
+                'description': item.description,
+                'slug': item.slug,
+                'image': item.image.url if item.image else None,
+            }
+            for item in queryset
+        ]
+        json_data = json.dumps(data, cls=DjangoJSONEncoder)
+        context.update({
             'is_mobile': user_agent.is_mobile,
-        }
+            'tags': json_data,
+            'media_bucket': settings.MEDIA_URL,
+            'pagination_querystring': self.get_pagination_querystring(),
+        })
         return context
 
 
@@ -156,8 +207,7 @@ class GroupPostsListView(ListView):
     template_name = 'posts/group_list.html'
     paginate_by = PAGINATE_BY
 
-    def dispatch(self, request: HttpRequest, *args: Any, **kwargs: Any
-                 ) -> HttpResponse:
+    def dispatch(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpResponse:
         self.group = get_object_or_404(Group, slug=self.kwargs['slug'])
         if not self.group.link:
             return redirect('posts:index_posts')
@@ -169,9 +219,7 @@ class GroupPostsListView(ListView):
         admin_status = ['creator', 'administrator']
         self.is_admin = status in admin_status
         self.form = GroupMailingForm(request.POST or None)
-        self.forism_check = self.group.group_mailing.filter(
-            mailing_type='forismatic_quotes'
-        ).exists()
+        self.forism_check = self.group.group_mailing.filter(mailing_type='forismatic_quotes').exists()
         return super().dispatch(request, *args, **kwargs)
 
     def get_queryset(self) -> QuerySet(Post):
@@ -180,13 +228,13 @@ class GroupPostsListView(ListView):
     def get_context_data(self, **kwargs: Any) -> Dict[str, Any]:
         context = super().get_context_data(**kwargs)
         user_agent = get_user_agent(self.request)
-        context |= {
+        context.update({
             'group': self.group,
             'is_admin': self.is_admin,
             'form': self.form,
             'forism_check': self.forism_check,
             'is_mobile': user_agent.is_mobile,
-        }
+        })
         return context
 
     def post(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpRequest:
@@ -199,9 +247,7 @@ class GroupPostsListView(ListView):
                 )
                 self.forism_check = True
             else:
-                self.group.group_mailing.filter(
-                    mailing_type='forismatic_quotes'
-                ).delete()
+                self.group.group_mailing.filter(mailing_type='forismatic_quotes').delete()
                 self.forism_check = False
         return self.get(request, *args, **kwargs)
 
@@ -230,12 +276,12 @@ class ProfileDetailView(DetailView):
         page_obj = paginator_handler(self.request, post_list, PAGINATE_BY)
         user_agent = get_user_agent(self.request)
         user = self.request.user
-        context |= {
+        context.update({
             'page_obj': page_obj,
             'posts_count': page_obj.paginator.count,
             'following': False if user.is_anonymous else user.follower.filter(author=self.object).exists(),
             'is_mobile': user_agent.is_mobile,
-        }
+        })
         return context
 
     def get_user_posts(self) -> QuerySet(Post):
@@ -254,6 +300,29 @@ class ProfileDetailView(DetailView):
         return Group.objects.none()
 
 
+class AutosaveView(View):
+
+    def post(self, data) -> JsonResponse:
+        """Обработка POST-запроса с данными поста и их автосохранение.
+
+        ## Args:
+            data (`HttpRequest`): Объект запроса с данными поста и информацией о пользователе.
+
+        ## Returns:
+            `JsonResponse`: JSON-ответ с информацией о статусе автосохранения данных.
+        """
+        post_data = data.POST
+        user = data.user
+        save_data = {
+            'title': post_data.get('title'),
+            'group': post_data.get('group'),
+            'text': post_data.get('text'),
+        }
+        serialized_data = json.dumps(save_data)
+        redis_client.setex(f'user_{user.id}_post_autosave', 3600, serialized_data)
+        return JsonResponse({'status': 'Data autosaved'})
+
+
 class PostCreateView(LoginRequiredMixin, CreateView):
     """
     Делает запись в БД и reverse в профиль автора.
@@ -261,24 +330,35 @@ class PostCreateView(LoginRequiredMixin, CreateView):
     model = Post
     form_class = PostForm
     template_name = 'posts/create_post.html'
+    initial_post_data = {}
 
     def get_initial(self) -> Dict[str, Any]:
         initial = super().get_initial()
         initial['user'] = self.request.user
         initial['is_edit'] = False
+        initial.update(self.initial_post_data)
         return initial
 
     def get(self, request: HttpRequest, *args, **kwargs) -> HttpRequest:
-        linkages_check(request.user)
+        user = request.user
+        linkages_check(user)
+        data = redis_client.get(f'user_{user.id}_post_autosave')
+        if data:
+            self.initial_post_data = json.loads(data.decode('utf-8'))
         return super().get(request, *args, **kwargs)
 
     def form_valid(self, form: PostForm) -> HttpResponse:
         form.instance.author = self.request.user
-        return super().form_valid(form)
+        self.object = form.save()
+        group = self.object.group
+        if group and not group.link:
+            redis_client.sadd(KEY_PRIVATE_GROUPS, group.id)
+        return HttpResponseRedirect(self.get_success_url())
 
     def get_success_url(self) -> Dict[str, Any]:
         message = f'Создан новый пост с темой "{self.object.title}"'
-        send_message_to_chat(ADMIN_ID, message)
+        if self.object.author.tg_id != 'test_id':
+            send_message_to_chat.delay(ADMIN_ID, message)
         return reverse_lazy('posts:profile', kwargs={'username': self.request.user.username})
 
 
@@ -304,6 +384,9 @@ class PostUpdateView(LoginRequiredMixin, UpdateView):
 
     def form_valid(self, form: PostForm) -> HttpResponseRedirect:
         post = form.save()
+        group = post.group
+        if group and not group.link:
+            redis_client.sadd(KEY_PRIVATE_GROUPS, group.id)
         return redirect('posts:post_detail', post_identifier_slug=post.slug)
 
 
@@ -319,24 +402,102 @@ class PostDetailView(DetailView):
     context_object_name = 'post'
     pk_url_kwarg = 'post_identifier_pk'
     slug_url_kwarg = 'post_identifier_slug'
+    tag_queryset = None
+
+    def get_post_slug_from_redis(self, post_pk: int) -> str or None:
+        """Получает слаг поста по его идентификатору из Redis.
+
+        ### Parameters:
+        - post_pk (`int`): Идентификатор поста.
+
+        ### Returns:
+        - str or None: Слаг поста или None, если пост не найден.
+        """
+        posts_data = redis_client.get(KEY_POSTS)
+        if posts_data:
+            data_list = json.loads(posts_data.decode('utf-8'))
+            return self.get_slug_by_pk(data_list, post_pk)
+        return None
+
+    def get_slug_by_pk(self, id_slug_pair: list, post_pk: int) -> str or None:
+        """Получает слаг из пары идентификатора и слага поста.
+
+        ### Parameters:
+        - id_slug_pair (`list`): Список словарей, представляющих пары идентификатора и слага поста.
+        - post_pk (`int`): Идентификатор поста.
+
+        ### Returns:
+        - str or None: Слаг поста или None, если пост не найден.
+        """
+        return next((item['slug'] for item in id_slug_pair if item['id'] == post_pk), None)
+
+    def handle_group_access(self, group: Group):
+        """Загружает приватные группы в Редис, если их там нет, и делает проверку на отношение юзера к группе.
+
+        ### Parameters:
+        - group (`Group`): Объект группы.
+
+        ### Returns:
+        - None or HttpResponseRedirect: Если группа приватная и пользователь анонимный, то он перенаправляется.
+        """
+        if not group.link:
+            if self.request.user.is_anonymous:
+                return redirect('posts:index_posts')
+
+            group_id = group.id
+            if not redis_client.exists(KEY_PRIVATE_GROUPS):
+                private_groups = Group.objects.filter(link__isnull=True).values_list('id', flat=True)
+                redis_client.sadd(KEY_PRIVATE_GROUPS, *private_groups)
+
+            if redis_client.sismember(KEY_PRIVATE_GROUPS, group_id):
+                if not GroupConnections.objects.filter(user=self.request.user, group__id=group_id).exists():
+                    return redirect('posts:index_posts')
+        return None
+
+    def get(self, request, *args, **kwargs):
+        post_pk = int(self.kwargs.get('post_identifier_pk')) if 'post_identifier_pk' in self.kwargs else None
+        if post_pk:
+            post_slug = self.get_post_slug_from_redis(post_pk)
+
+            if not post_slug:
+                id_slug_pair = list(Post.objects.values('id', 'slug'))
+                redis_client.set(KEY_POSTS, json.dumps(id_slug_pair))
+                post_slug = self.get_slug_by_pk(id_slug_pair, post_pk)
+
+            if post_slug:
+                return HttpResponsePermanentRedirect(reverse('posts:post_detail', args=(post_slug,)))
+            return redirect('posts:index_posts')
+
+        self.object = self.get_object()
+
+        if self.object.group:
+            redirect_response = self.handle_group_access(self.object.group)
+            if redirect_response:
+                return redirect_response
+
+        context = self.get_context_data(object=self.object)
+        return self.render_to_response(context)
 
     def get_queryset(self) -> QuerySet(Post):
-        queryset = super().get_queryset().select_related('author')
+        queryset = super().get_queryset().select_related('author', 'group').prefetch_related('tags')
         user = self.request.user
         if user.is_anonymous:
-            return queryset.filter(moderation='PS')
-        return queryset.filter(Q(moderation='PS') | Q(author=user))
+            queryset = queryset.filter(moderation='PS')
+        else:
+            queryset = queryset.filter(Q(moderation='PS') | Q(author=user))
+        self.tag_queryset = queryset
+        return queryset
 
     def get_context_data(self, **kwargs: Any) -> Dict[str, Any]:
         context = super().get_context_data(**kwargs)
         post = kwargs.get('object')
+
         user_agent = get_user_agent(self.request)
         ip = self.get_client_ip()
+        ref_url = self.get_ref_url()
 
-        all_banners = PartnerBanner.objects.all()
-        random_banner = all_banners.order_by('?').first()
-        all_widget = AdvertisementWidget.objects.all()
-        random_widget = all_widget.order_by('?').first()
+        random_banner = PartnerBanner.objects.order_by('?').first()
+        random_widget = AdvertisementWidget.objects.order_by('?').first()
 
         redis_key_post_ips = f'ips_post_{post.id}'
         redis_key_post_counter = f'counter_post_{post.id}'
@@ -346,7 +507,7 @@ class PostDetailView(DetailView):
             check_ip = redis_client.sismember(redis_key_post_ips, ip)
         except Exception:
             check_ip = False
-            ip = '127.0.0.1'
+            ip = ip or '127.0.0.1'
 
         if not check_ip:
             if redis_client.get(redis_key_post_counter):
@@ -364,11 +525,13 @@ class PostDetailView(DetailView):
                 'is_pc': user_agent.is_pc,
                 'is_tablet': user_agent.is_tablet,
                 'is_touch_capable': user_agent.is_touch_capable,
+                'ip': ip,
+                'ref_url': ref_url
             }
             serialized_agent_data = json.dumps(agent_data)
 
             redis_client.sadd(redis_key_post_ips, ip)
-            redis_client.lpush(redis_key_agent_posts, json.dumps(serialized_agent_data))
+            redis_client.lpush(redis_key_agent_posts, serialized_agent_data)
         else:
             counter = redis_client.get(redis_key_post_counter).decode('utf-8')
 
@@ -376,7 +539,9 @@ class PostDetailView(DetailView):
 
         contents = PostContents.dump_bulk(root_contents) if root_contents else None
 
-        context |= {
+        tags, tag_posts_present, tag_posts_chunked = self.get_tags_and_posts()
+
+        context.update({
             'authors_posts_count': post.author.posts.count(),
             'comments': post.comments.all(),
             'form': CommentForm(self.request.POST or None),
@@ -385,16 +550,83 @@ class PostDetailView(DetailView):
             'advertisement_widget': random_widget if random_widget else False,
             'counter': counter,
             'contents': contents[0].get('children', None) if contents else None,
-        }
+            'tags': tags,
+            'tag_posts_present': tag_posts_present,
+            'tag_posts_chunked': tag_posts_chunked
+        })
         return context
 
+    def get_tags_and_posts(self):
+        """Получает теги и соответствующие им посты.
+
+        ### Returns:
+        `tuple`: Кортеж, содержащий строку с перечисленными тегами и генератор словарей постов по этим тегам.
+
+        """
+        user = self.request.user
+        tags = self.object.tags.values_list('title', flat=True)
+
+        query = self.tag_queryset.filter(
+            Q(group__isnull=True) | Q(group__link__isnull=False),
+            tags__title__in=tags
+        ).distinct().exclude(id=self.object.id)
+
+        if user.is_authenticated:
+            user_groups = user.groups_connections.values_list('group', flat=True)
+            query = self.tag_queryset.filter(
+                Q(group__isnull=True) | Q(group__link__isnull=False) | Q(group__in=user_groups),
+                tags__title__in=tags
+            ).distinct().exclude(id=self.object.id)
+
+        posts_processed = []
+        for post in query:
+            thumbnail = get_thumbnail(post.image, '960x339', crop='center', upscale=True)
+            posts_processed.append({
+                'image_url': thumbnail.url,
+                'slug': post.slug,
+                'short_description': post.short_description
+            })
+        return ', '.join(tags), query.count() > 0, self.chunker(posts_processed, 3)
+
+    @staticmethod
+    def chunker(seq, size):
+        """Разбивает последовательность на части заданного размера.
+
+        ### Args:
+        - seq (`iterable`): Итерируемая последовательность.
+        - size (`int`): Размер частей.
+
+        ### Returns:
+        - `generator`: Генератор частей последовательности.
+
+        ### Example:
+        ```python
+        # Разбиение списка на части по 3 элемента
+        data = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+        chunks = list(self.chunker(data, 3))
+        # chunks = [[1, 2, 3], [4, 5, 6], [7, 8, 9]]
+        ```
+        """
+        return (seq[pos:pos + size] for pos in range(0, len(seq), size))
+
     def get_client_ip(self):
+        """Получает IP-адрес клиента.
+
+        ### Returns:
+        - `str`: IP-адрес клиента.
+
+        """
         x_forwarded_for = self.request.META.get('HTTP_X_FORWARDED_FOR')
-        if x_forwarded_for:
-            ip = x_forwarded_for.split(',')[0]
-        else:
-            ip = self.request.META.get('REMOTE_ADDR')
-        return ip
+        return x_forwarded_for.split(',')[0] if x_forwarded_for else self.request.META.get('REMOTE_ADDR')
+
+    def get_ref_url(self):
+        """Получает URL-ссылку клиента.
+
+        ### Returns:
+        - `str` or `None`: URL-ссылка клиента или None, если отсутствует.
+
+        """
+        return quote(self.request.META.get('HTTP_REFERER', '')) if self.request.META.get('HTTP_REFERER') else None
 
 
 class AddCommentView(LoginRequiredMixin, FormView):
@@ -411,6 +643,12 @@ class AddCommentView(LoginRequiredMixin, FormView):
         comment.author = self.request.user
         comment.post = post
         comment.save()
+        message = (
+            f'Написан новый комментарий к Вашей заметке [{post.title}](https://www.{settings.DOMAIN}/posts/{post.slug}/):\n\n'
+            f'_{comment.text.replace("_", " ")}_\n'
+        )
+        if post.author.tg_id != 'test_id':
+            send_message_to_chat.delay(post.author.tg_id, message, parse_mode_markdown=True)
         return redirect('posts:post_detail', post_identifier_slug=post.slug)
 
     def form_invalid(self, form: CommentForm) -> HttpResponseRedirect:

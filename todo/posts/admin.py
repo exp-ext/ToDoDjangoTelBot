@@ -4,7 +4,7 @@ from django.utils.translation import gettext_lazy as _
 from treebeard.admin import TreeAdmin
 from treebeard.forms import movenodeform_factory
 
-from .models import Post, PostContents, PostTags
+from .models import Comment, Post, PostContents, PostTags
 
 
 class TreePostContentsAdmin(TreeAdmin):
@@ -40,6 +40,7 @@ class PostAdmin(admin.ModelAdmin):
     inlines = (PostTargetInline, PostContentsAdminInline)
     fieldsets = (
         ('Главное', {'fields': ('title', 'author', 'group')}),
+        ('Краткое описание', {'fields': ('short_description',)}),
         ('Текст', {'fields': ('text',)}),
         ('Модерация', {'fields': ('moderation',)}),
         ('Картинка', {'fields': ('image', 'preview')}),
@@ -54,4 +55,10 @@ class PostAdmin(admin.ModelAdmin):
 
 @admin.register(PostTags)
 class PostTagsAdmin(admin.ModelAdmin):
+    prepopulated_fields = {'slug': ('title',)}
+    pass
+
+
+@admin.register(Comment)
+class CommentAdmin(admin.ModelAdmin):
     pass

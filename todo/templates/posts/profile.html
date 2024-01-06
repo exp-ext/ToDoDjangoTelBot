@@ -5,13 +5,17 @@
 {% block head %}
   <meta name="description" content="Власть над заметками с Автором."/>
   <meta name="keywords" content="Автор, заметки, Telegram инструмент, посты">
+
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://www.yourtodo.ru/posts/profile/{{ author.username }}/" />
+
   <link rel="stylesheet" href="{% static 'css/moving_units.css' %}">
 {% endblock %}
 
 {% block title %} Профайл пользователя {{ author.get_full_name  }} {% endblock %}
 
 {% block headline %}
-  <div class="container py-5">
+  <div class="container pt-5 mb-1">
 
       <div class="card shadow bg-secondary rounded {% if is_mobile %} group-unit mt-3 {% else %} moving-unit mt-4 {% endif %} _anim-items _anim-no-hide">
         <div class="card-body">

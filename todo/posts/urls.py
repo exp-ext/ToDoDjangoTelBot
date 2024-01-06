@@ -1,14 +1,16 @@
 from django.urls import include, path, re_path
 
-from .views import (AddCommentView, FollowIndexListView, GroupPostsListView,
-                    IndexPostsListView, PostCreateView, PostDeleteView,
-                    PostDetailView, PostUpdateView, ProfileDetailView,
-                    ProfileFollowView, ProfileUnfollowView, SearchListView)
+from .views import (AddCommentView, AutosaveView, FollowIndexListView,
+                    GroupPostsListView, IndexPostsListView, PostCreateView,
+                    PostDeleteView, PostDetailView, PostUpdateView,
+                    ProfileDetailView, ProfileFollowView, ProfileUnfollowView,
+                    SearchListView)
 
 urlpatterns = [
     path('', IndexPostsListView.as_view(), name='index_posts'),
     path('term', SearchListView.as_view(), name='search'),
     path('s', SearchListView.as_view(), name='search'),
+    path('autosave', AutosaveView.as_view(), name='autosave'),
     path('group/<slug:slug>/', GroupPostsListView.as_view(), name='group_list'),
     path('create/', PostCreateView.as_view(), name='post_create'),
     path('follow/', FollowIndexListView.as_view(), name='follow_index'),

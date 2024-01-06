@@ -1,5 +1,5 @@
 from bs4 import BeautifulSoup
-from core.models import Create
+from core.models import Create, CreateUpdater
 from django.contrib.auth import get_user_model
 from django.db import models
 from django.db.models.signals import post_save, pre_save
@@ -26,6 +26,7 @@ class PostTags(models.Model):
     title = models.CharField(_('тэг поста'), max_length=80, unique=True)
     description = models.TextField(_('краткое описание'), blank=True, null=True)
     slug = models.SlugField(max_length=80, unique=True, db_index=True)
+    image = ImageField(_('картинка'), upload_to='tags/', blank=True)
 
     class Meta:
         verbose_name = _('тэг')
@@ -36,13 +37,13 @@ class PostTags(models.Model):
 
 
 @receiver(pre_save, sender=PostTags)
-def pre_save_group(sender, instance, *args, **kwargs):
+def pre_save_post_tags(sender, instance, *args, **kwargs):
     """Генерируем уникальный slug на основе title, если не задан."""
     if not instance.slug:
         instance.slug = slugify(instance.title)
 
 
-class Post(Create):
+class Post(CreateUpdater):
     """Модель для хранения постов.
 
     ### Class:
@@ -76,6 +77,7 @@ class Post(Create):
     image = ImageField(_('картинка'), upload_to='posts/', blank=True)
     tags = models.ManyToManyField(to=PostTags, related_name='posts')
     moderation = models.CharField(_('модерация заметки'), max_length=2, choices=Moderation.choices, default=Moderation.WAITING)
+    short_description = models.CharField(_('короткое описание поста'), max_length=160, null=True, blank=True)
 
     class Meta:
         verbose_name = _('пост')

@@ -1,5 +1,6 @@
 import asyncio
 import json
+import traceback
 from datetime import datetime, timedelta, timezone
 
 import httpx
@@ -28,7 +29,7 @@ class AudioTranscription():
     ERROR_TEXT = 'Что-то пошло не так 🤷🏼'
     STORY_WINDOWS_TIME = 11
     MAX_TYPING_TIME = 10
-    url = 'http://127.0.0.1:10000/asr/' if settings.USE_S3 or settings.DEBUG else 'http://todo_whisper:10000/asr/'
+    url = 'http://192.168.0.101:9009/asr'
     params = {
         'task': 'transcribe',
         'language': 'ru',
@@ -59,9 +60,10 @@ class AudioTranscription():
             asyncio.create_task(self.create_history_whisper())
 
         except Exception as err:
+            traceback_str = traceback.format_exc()
             self.context.bot.send_message(
                 chat_id=ADMIN_ID,
-                text=f'Ошибка в Whisper: {str(err)[:1024]}',
+                text=f'Ошибка в Whisper: {str(err)[:1024]}\n\nТрассировка:\n{traceback_str[-1024:]}',
             )
             self.transcription_text = AudioTranscription.ERROR_TEXT
         finally:

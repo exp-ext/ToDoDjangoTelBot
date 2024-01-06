@@ -32,7 +32,7 @@ services:
     restart: always
     command: ./config/webtodo/entrypoint.sh
     volumes:
-      - static_volume:/app/static/:rw
+      - static_volume:/app/staticfiles/:rw
       - media_volume:/app/media/:rw
       - backup_volume:/app/backup/:rw
       - cache_pip_volume:/root/.cache/pip/:rw
@@ -55,12 +55,8 @@ services:
     restart: always
     command: >
       /bin/sh -c "daphne todo.asgi:application -b 0.0.0.0 -p 8080"
-    volumes:
-      - static_volume:/app/static/:rw
-      - media_volume:/app/media/:rw
-      - backup_volume:/app/backup/:rw
-      - cache_pip_volume:/root/.cache/pip/:rw
-      - cache_apt_volume:/var/cache/apt/archives/:rw
+    volumes_from:
+      - web:ro
     ports:
       - "8080:8080"
     env_file:
@@ -76,12 +72,8 @@ services:
     container_name: todo_celery
     restart: always
     command: ./config/webtodo/celery-entrypoint.sh
-    volumes:
-      - static_volume:/app/static/:rw
-      - media_volume:/app/media/:rw
-      - backup_volume:/app/backup/:rw
-      - cache_pip_volume:/root/.cache/pip/:rw
-      - cache_apt_volume:/var/cache/apt/archives/:rw
+    volumes_from:
+      - web:ro
     env_file:
       - ./.env
     depends_on:
@@ -95,12 +87,8 @@ services:
     container_name: todo_beat
     restart: always
     command: ./config/webtodo/beat-entrypoint.sh
-    volumes:
-      - static_volume:/app/static/:rw
-      - media_volume:/app/media/:rw
-      - backup_volume:/app/backup/:rw
-      - cache_pip_volume:/root/.cache/pip/:rw
-      - cache_apt_volume:/var/cache/apt/archives/:rw
+    volumes_from:
+      - web:ro
     env_file:
       - ./.env
     depends_on:

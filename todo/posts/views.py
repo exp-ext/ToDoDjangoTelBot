@@ -421,8 +421,7 @@ class PostDetailView(DetailView):
     tag_queryset = None
 
     def get_template_names(self):
-        user_agent = get_user_agent(self.request)
-        if user_agent.is_mobile:
+        if self.user_agent.is_mobile:
             return ['mobile/posts/post_detail.html']
         return [self.template_name]
 
@@ -607,7 +606,7 @@ class PostDetailView(DetailView):
                 'slug': post.slug,
                 'short_description': post.short_description
             })
-            line_size = 1 if self.user_agent.is_mobile else 3
+        line_size = 1 if self.user_agent.is_mobile else 3
         return ', '.join(tags), query.count() > 0, self.chunker(posts_processed, line_size)
 
     @staticmethod

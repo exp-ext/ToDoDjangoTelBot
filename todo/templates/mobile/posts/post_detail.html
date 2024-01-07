@@ -33,7 +33,7 @@
 
 {% endblock %}
 
-{% block title %} Публикация: {{ post }} {% endblock %}
+{% block title %} Публикация: {{ post.title }} {% endblock %}
 
 {% block content %}
 
@@ -54,7 +54,7 @@
         {% endif %}
       </aside>
 
-      <aside class="bg-light rounded shadow mb-2"> 
+      <aside class="bg-light rounded shadow mb-2 py-2"> 
         {% include 'includes/yabodyadvertising.html' %}
       </aside>
 

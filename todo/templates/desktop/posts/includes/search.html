@@ -22,12 +22,23 @@
 </div>
 
 {% block javascript %}
-  <script async src="{% static 'js/search.js' %}"></script>
-  <script async src="{% static 'js/hover-effects.js' %}"></script>
+  <script src="{% static 'js/search-navbar.js' %}"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const items = JSON.parse('{{ tags | safe }}');
+        const media_bucket = '{{ media_bucket | safe }}'
+        addItemsToNavbar(items, media_bucket);
+    });
+  </script>
   <script>
     $(document).ready(function() {
       var searchUrl = "{% url 'posts:search' %}";
       initAutocomplete(searchUrl);
     });
   </script>
+  <script async src="{% static 'js/hover-effects.js' %}"></script>
+  {% comment %} <script src="{% static 'js/load-img.js' %}"></script>
+  <script>
+    needDiv = '.scroll';
+  </script> {% endcomment %}
 {% endblock %}

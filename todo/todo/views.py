@@ -8,12 +8,13 @@ from django_user_agents.utils import get_user_agent
 def index(request: HttpRequest) -> HttpResponse:
     """Главная страница сайта."""
     is_main = True
-    user_agent = get_user_agent(request)
     context = {
         'is_main': is_main,
-        'is_mobile': user_agent.is_mobile,
     }
+    user_agent = get_user_agent(request)
     template = 'desktop/main/index.html'
+    if user_agent.is_mobile:
+        template = 'mobile/main/index.html'
     return render(request, template, context)
 
 

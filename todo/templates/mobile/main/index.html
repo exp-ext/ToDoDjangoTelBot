@@ -28,11 +28,7 @@
       <div class="carousel-inner">
         {% if request.user.is_anonymous %}
           <div class="carousel-item active" data-bs-interval="5000">
-            {% if is_mobile %}
-              <img src="{% static 'img/index/1_reg_ban_mob.webp' %}" class="d-block w-100" alt="mob-registration-banner">
-            {% else %}
-              <img src="{% static 'img/index/1_reg_ban.webp' %}" class="d-block w-100 h-auto" alt="registration-banner">
-            {% endif %}
+            <img src="{% static 'img/index/1_reg_ban_mob.webp' %}" class="d-block w-100" alt="mob-registration-banner">
             <div class="container">
               <div class="carousel-caption">
                 <div class="lobster">
@@ -47,11 +43,7 @@
           </div>
         {% endif %}
         <div class="carousel-item {% if request.user.is_authenticated %} active {% endif %}" data-bs-interval="5000">
-          {% if is_mobile %}
-            <img src="{% static 'img/index/2_func_ban_mob.webp' %}" class="d-block w-100" alt="mob-functions-banner">
-          {% else %}
-            <img src="{% static 'img/index/2_func_ban.webp' %}" class="d-block w-100 h-auto" alt="functions-banner">
-          {% endif %}
+          <img src="{% static 'img/index/2_func_ban_mob.webp' %}" class="d-block w-100" alt="mob-functions-banner">
           <div class="container">
             <div class="carousel-caption">
               <div class="lobster">
@@ -65,11 +57,7 @@
           </div>
         </div>
         <div class="carousel-item">
-          {% if is_mobile %}
-            <img src="{% static 'img/index/3_services_ban_mob.webp' %}" class="d-block w-100" alt="mob-services-banner">
-          {% else %}
-            <img src="{% static 'img/index/3_services_ban.webp' %}" class="d-block w-100 h-auto" alt="services-banner">
-          {% endif %}
+          <img src="{% static 'img/index/3_services_ban_mob.webp' %}" class="d-block w-100" alt="mob-services-banner">
           <div class="container">
             <div class="carousel-caption">
               <div class="lobster">
@@ -94,36 +82,12 @@
     </div>
     <p>&nbsp;</p>
     <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
     <!-- Marketing messaging and featurettes
     ================================================== -->
     <!-- Wrap the rest of the page in another container to center all the content. -->
     <div class="container marketing">
-      <!-- Three columns of text below the carousel -->
-      <div class="row">
-        <div class="col-lg-4">          
-          <img class="img-fluid rounded-circle shadow tenses_image _anim-items _anim-no-hide" width="140" height="140" src="{% static 'img/index/4_past.png' %}" alt="line-past"></img>
-          <div class="tenses _anim-items _anim-no-hide">
-            <h2>Прошлое</h2>
-            <p>Часто возникала необходимость напоминания большому количеству людей о начале какого-либо мероприятия. Оттуда и родилась идея создать Telegram ToDo manager.</p>
-          </div>
-        </div><!-- /.col-lg-4 -->
-        <div class="col-lg-4">          
-          <img class="img-fluid rounded-circle shadow tenses_image _anim-items _anim-no-hide" width="140" height="140" src="{% static 'img/index/4_present.png' %}" alt="line-present"></img>
-          <div class="tenses _anim-items _anim-no-hide">
-            <h2>Настоящее</h2>
-            <p>На данном этапе своей жизни система находится в разработке. Но уже сейчас есть множество функций, которые ждут своего пользователя.</p>
-          </div>
-        </div><!-- /.col-lg-4 -->
-        <div class="col-lg-4">
-          <img class="img-fluid rounded-circle shadow tenses_image _anim-items _anim-no-hide" width="140" height="140" src="{% static 'img/index/4_future.png' %}" alt="line-future"></img>
-          <div class="tenses _anim-items _anim-no-hide">
-            <h2>Будущее</h2>
-            <p>В дальнейшем все обязательно должно перерасти во что-то более технологичное. Возможно будет соцсеть, а возможно что-то новое. Это пока останется секретом.</p>
-          </div>
-        </div><!-- /.col-lg-4 -->
-      </div><!-- /.row -->
-      <p>&nbsp;</p>
-      <p>&nbsp;</p>
       <!-- START THE FEATURETTES -->
       {% if request.user.is_anonymous %}
         <section id="registration">
@@ -131,7 +95,7 @@
           <div class="row featurette">
             <div class="col-md-7 d-flex align-items-center">
               <div class="text-blog _anim-items _anim-no-hide">
-                <h2 class="featurette-Заголовок">Регистр<span class="text-muted">ация...</span></h2>
+                <h1 class="featurette-heading mb-4">Регистр<span class="text-muted">ация...</span></h1>
                 <p class="lead">
                   - перейдите в <span class="eva">Telegram чат c <a href="https://t.me/BorFAsbot">искусственным интеллектом Eva</span></a>
                   <br>
@@ -160,7 +124,7 @@
         <div class="row featurette">
           <div class="col-md-7 order-md-2 d-flex align-items-center">
             <div class="text-blog _anim-items _anim-no-hide">
-              <h2 class="featurette-Заголовок">Основные <span class="text-muted">функции.</span></h2>
+              <h1 class="featurette-heading mb-4">Основные <span class="text-muted">функции.</span></h1>
               <div class="lead">
                 <p>📅 Telegram ToDo management</p>
                 <p>🎭 анекдоты</p>
@@ -175,7 +139,7 @@
             </div>
           </div>
           <div class="col-md-5 order-md-1">
-            <div class="{% if is_mobile %} right-image-blog {% else %} image-blog {% endif %} _anim-items _anim-no-hide">
+            <div class="right-image-blog _anim-items _anim-no-hide">
               <img class="bd-placeholder-img bd-placeholder-img-lg featurette-image img-fluid mx-auto shadow" width="500" height="500"
                 src="{% static 'img/index/menu.webp' %}" alt="block-menu">
               </img>
@@ -188,8 +152,8 @@
         <div class="row featurette">
           <div class="col-md-7 d-flex align-items-center">
             <div class="text-blog _anim-items _anim-no-hide">
-              <h2 class="featurette-Заголовок">Описание работы  <span class="text-muted">основного модуля.</span></h2>
-              <h4 style="color: #080144;">- Кнопки меню:</h4>
+              <h1 class="featurette-heading mb-4">Описание работы  <span class="text-muted">основного модуля.</span></h1>
+              <h5>- Кнопки меню:</h5>
               <ol style="list-style: none;">
                 <li>
                   <p>
@@ -218,7 +182,7 @@
                   <p><strong>📝 все планы</strong>(вывод всех найденных записей в базе)</p>
                 </li>
               </ol>
-              <h4 style="color: #080144;">- Работа в чатах:</h4>
+              <h5>- Работа в чатах:</h5>
               <div class="lead">
                 <p>Напоминание созданное в личном чате с ботом, будет оповещать только пользователя в личном чате.</p>
                 <p>Напоминание созданное в группе, будет оповещать только в группе.</p>
@@ -238,14 +202,14 @@
       <div class="row featurette">
         <div class="col-md-7 order-md-2 d-flex align-items-center">
           <div class="text-blog _anim-items _anim-no-hide">
-            <h2 class="featurette-Заголовок">Управление <span class="text-muted">с сайта.</span></h2>
+            <h1 class="featurette-heading mb-4">Управление <span class="text-muted">с сайта.</span></h1>
             <p class="lead">
               После регистрации и аутентификации на сайте, Вы сможете использовать веб-функции управления напоминаниями.
             </p>
           </div>
         </div>
         <div class="col-md-5 order-md-1">
-          <div class="{% if is_mobile %} right-image-blog {% else %} image-blog {% endif %} _anim-items _anim-no-hide">
+          <div class="right-image-blog _anim-items _anim-no-hide">
             <img class="bd-placeholder-img bd-placeholder-img-lg featurette-image img-fluid mx-auto shadow" width="500" height="500"
               src="{% static 'img/index/site_menu.webp' %}" alt="block-site_menu">
             </img>
@@ -256,7 +220,7 @@
         <div class="row featurette">
           <div class="col-md-7 d-flex align-items-center">
             <div class="text-blog _anim-items _anim-no-hide">
-              <h2 class="featurette-Заголовок">Заметки  <span class="text-muted"></span></h2>
+              <h1 class="featurette-heading mb-4">Заметки  <span class="text-muted"></span></h1>
               <p class="lead">
                 Telegram-чаты являются источником вдохновения для создания Заметок. Поэтому в Your Todo мы обеспечили возможность их хранения. И сделали это по тому же принципу:<br><br> 
                 Опубликованные Заметки в публичных группах доступны всем пользователям. Однако, если группа является частной, то доступ к заметкам будет ограничен только для участников этой группы. Для просмотра заметок частных групп, вы должны быть её участником, а также быть авторизованным.

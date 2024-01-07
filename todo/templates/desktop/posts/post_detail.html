@@ -14,7 +14,7 @@
   <meta name="robots" content="index, follow">
   <link rel="canonical" href="https://www.yourtodo.ru{% url 'posts:post_detail' post.slug %}" />
 
-  <meta property="og:site_name" content="Заметка это простой и удобный способ хранить Ваши важные мысли!"/>
+  <meta property="og:site_name" content="YourToDo.ru"/>
   <meta property="og:title" content="{{ post.title }}"/>
   <meta property="og:type" content="article"/>
   <meta property="og:url" content="https://www.yourtodo.ru{% url 'posts:post_detail' post.slug %}"/>
@@ -29,130 +29,95 @@
     <meta name="twitter:image:alt" content="{{ post.title }}"/>
   {% endif %}
 
-  <link rel="stylesheet" href="{% static 'css/hover-effects.css' %}">
   <link rel="stylesheet" href="{% static 'css/moving_units.css' %}">
   <link rel="stylesheet" href="{% static 'css/post-detail.css' %}">
 
 {% endblock %}
 
-{% block title %} Запись: {{ post }} {% endblock %}
+{% block title %} Публикация: {{ post }} {% endblock %}
 
 {% block content %}
 
   <div class="container-fluid pt-5">
-    <div class="row py-3">
+    <div class="row mt-3">
 
-    {% comment %} первая колонка {% endcomment %}
-
+      {% comment %} первая колонка {% endcomment %}
       <aside class="col-lg-3 col-sm-12">
+        <div class="scroll">
 
-      <div class="{% if not is_mobile %}scroll{% endif %}">
-
-        {% if contents %}  
-          
-          <div class="card p-1 bg-light rounded shadow mb-2">
-            <div class="text-center">
-              <h4><strong>Оглавление</strong></h4>
-            </div>
-            <ul class="list-unstyled">
-              {%for content in contents %}
-                {%include 'desktop/posts/includes/tree_template.html' %}
-              {%endfor%}
-            </ul>
-          </div>
-
-        {% endif %}
-
-          {% if is_mobile %}
-            <div class="card bg-light rounded shadow group-unit _anim-items _anim-no-hide my-2"> 
-              {% include 'includes/yabodyadvertising.html' %}
-            </div>
-          {% else %}
-            <div class="card p-1 bg-light rounded shadow group-unit _anim-items _anim-no-hide my-2"> 
-              {% include 'includes/yabodyadvertising.html' %}           
+          {% if contents %}          
+            <div class="card p-1 bg-light rounded shadow mb-2">
+              <div class="text-center">
+                <h4><strong>Оглавление</strong></h4>
+              </div>
+              <ul class="list-unstyled">
+                {%for content in contents %}
+                  {%include 'desktop/posts/includes/tree_template.html' %}
+                {%endfor%}
+              </ul>
             </div>
           {% endif %}
 
-          {% if not is_mobile %}
-            <div class="group-unit _anim-items _anim-no-hide">
-
-              {% if advertising %}
-                <div class="ck ck-content">
-                  {% include 'desktop/posts/includes/advertising.html' %}
-                </div>
-              {% endif %}
-
-              {% include 'desktop/posts/includes/author_detail.html' %}
-
-            </div>
-          {% endif %}
-
+          <div class="card p-1 bg-light rounded shadow group-unit _anim-items _anim-no-hide my-2"> 
+            {% include 'includes/yabodyadvertising.html' %}           
           </div>
 
+          <div class="group-unit _anim-items _anim-no-hide">
+            {% if advertising %}
+              <div class="ck ck-content">
+                {% include 'desktop/posts/includes/advertising.html' %}
+              </div>
+            {% endif %}
+            {% include 'desktop/posts/includes/author_detail.html' %}
+          </div>
+
+        </div>
       </aside>
 
       {% comment %} вторая колонка {% endcomment %}
-
       <article class="col-lg-8 col-sm-12 bg-light rounded shadow">
         <div class="lobster">
           <h1>{{ post.title }}</h1>
         </div>
 
         {% if post.image %}
-          <img class="card-img my-2" src="{{ post.image.url }}" class="d-block w-auto h-100" alt="main-{{ post.slug }}" />
+          <img class="card-img my-2" src="{{ post.image.url }}" class="d-block w-auto h-100" alt="Картинка к публикации: {{ post.title }}" />
         {% endif %}
+
         <p>
           <div class="ck ck-content">
             <div class="table-wrap">
               {{ post.text|safe }}
             </div>
           </div>
-        </p>     
+        </p>
       
-      {% if tag_posts_present and not is_mobile %}
-        {% include 'desktop/posts/includes/other_posts.html' %}
-      {% endif %}
-
+        {% if tag_posts_present %}
+          {% include 'desktop/posts/includes/other_posts.html' %}
+        {% endif %}
       </article>
 
     </div>
 
-    <div class="row {% if advertising and is_mobile %} mb-3 {% else %} mb-5 {% endif %}">
-      <div class="col-lg-3 col-sm-12">
-      </div>
+    <aside class="row mb-5  mt-3">
+      <div class="col-lg-3 col-sm-12"></div>
+
       <div class="col-lg-8 col-sm-12 bg-light rounded shadow p-3">
 
-        {% comment %} {% if advertising and not is_mobile %}
+        {% comment %}
           <div id="marketWidget" class="rounded"></div>  
-        {% endif %} {% endcomment %}
+        {% endcomment %}
 
-        {% if is_mobile %}
-          <div class="bottom-shift _anim-items _anim-no-hide">
-            {% include 'desktop/posts/includes/author_detail.html' %}
-          </div>
-        {% endif %}
-
-          {% include 'desktop/posts/includes/comments.html' %}          
+        {% include 'desktop/posts/includes/comments.html' %}          
 
       </div>
-    </div>
+    </aside>
+
   </div>
 
-  <aside class="col-lg-1 col-sm-12 mb-4">
-    {% if advertising and is_mobile %}
-      <div class="bottom-shift _anim-items _anim-no-hide">
-        <div class="ck ck-content mb-5">
-          {% include 'desktop/posts/includes/advertising.html' %}
-        </div>
-      </div>
-    {% endif %}
-  </aside>
-
-  {% comment %} {% if is_mobile %}
-    {% include 'includes/yamobileflooradvertising.html' %}
-  {% else %}
+  {% comment %}
     {% include 'includes/yapcflooradvertising.html' %}
-  {% endif %} {% endcomment %}
+  {% endcomment %}
 
 {% endblock %}
 

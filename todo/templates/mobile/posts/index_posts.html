@@ -6,23 +6,23 @@
   <meta name="keywords" content="Python, Django, Data Science, Архитектура, Git, VBA, Docker, Очереди, Фронтенд, Серверы, Строки, JavaScript, программирование, разработка">
   
   <meta name="robots" content="index, follow">
-  <link rel="canonical" href="https://www.yourtodo.ru/posts/" />
+  <link rel="canonical" href="https://www.yourtodo.ru{% url 'posts:index_posts' %}" />
 
-  <meta property="og:site_name" content="YourToDo - Ваш центр знаний в мире программирования!"/>
+  <meta property="og:site_name" content="YourToDo.ru"/>
   <meta property="og:title" content="Статьи по программированию"/>
   <meta property="og:type" content="website"/>
-  <meta property="og:url" content="https://www.yourtodo.ru/posts/"/>
+  <meta property="og:url" content="https://www.yourtodo.ru{% url 'posts:index_posts' %}"/>
   <meta property="og:description" content="Подробные статьи и руководства по программированию и связанным технологиям. Узнайте больше о последних тенденциях и лучших практиках."/>
 
   {% if page_obj %}
     {% with first_item=page_obj|first %}
       {% if first_item.image %}
         <meta property="og:image" content="{{ first_item.image.url }}"/>
-        <meta property="og:image:alt" content="{{ first_item.title }}"/>
+        <meta property="og:image:alt" content="{{ first_item.slug }}"/>
 
         <meta name="twitter:card" content="summary_large_image"/>
         <meta name="twitter:image" content="{{ first_item.image.url }}"/>
-        <meta name="twitter:image:alt" content="{{ first_item.title }}"/>
+        <meta name="twitter:image:alt" content="{{ first_item.slug }}"/>
 
       {% endif %}
     {% endwith %}
@@ -39,36 +39,16 @@
 
   <div class="container py-5">
 
-    {% include 'mobile/posts/includes/switcher.html' %}
-
-    <div class="moving-unit _anim-items _anim-no-hide">
+    <div class="mt-3 moving-unit _anim-items _anim-no-hide">
       {% include 'mobile/posts/includes/search.html' %}
-    </div> 
-
-    {% if not is_mobile %}   
-    <div class="row">      
-      <div class="col-lg-2">
-        <div class="scroll">
-          <div class="moving-unit _anim-items _anim-no-hide">
-            {% include 'mobile/posts/includes/navbar.html' %}
-          </div> 
-        </div> 
-      </div>
-
-      <div class="col-lg-10">
-    {% endif %}
-        <div class="ck ck-content">
-          {% for post in page_obj %} 
-            {% include 'mobile/posts/includes/post_list.html' %}        
-          {% endfor %} 
-        </div> 
-
-        {% include 'mobile/posts/includes/paginator.html' %}
-
-      </div> 
-    {% if not is_mobile %}
     </div>
-    {% endif %}
+
+    {% for post in page_obj %} 
+      {% include 'mobile/posts/includes/post_list.html' %}        
+    {% endfor %}
+
+    {% include 'mobile/posts/includes/paginator.html' %}
+
   </div> 
 
   {% comment %} {% if is_mobile %}
@@ -77,11 +57,4 @@
       {% include 'includes/yapcflooradvertising.html' %}
   {% endif %} {% endcomment %}
 
-{% endblock %}
-
-{% block javascript %}
-  <script src="{% static 'js/load_img.js' %}"></script>
-  <script>
-    needDiv = '.scroll';
-  </script>
 {% endblock %}

@@ -148,6 +148,12 @@ class IndexPostsListView(ListView):
     template_name = 'desktop/posts/index_posts.html'
     paginate_by = PAGINATE_BY
 
+    def get_template_names(self):
+        user_agent = get_user_agent(self.request)
+        if user_agent.is_mobile:
+            return ['mobile/posts/index_posts.html']
+        return [self.template_name]
+
     def get_queryset(self) -> QuerySet(Post):
         tag = self.request.GET.get('q', '')
         user = self.request.user
@@ -174,7 +180,6 @@ class IndexPostsListView(ListView):
 
     def get_context_data(self, **kwargs: Any) -> Dict[str, Any]:
         context = super().get_context_data(**kwargs)
-        user_agent = get_user_agent(self.request)
         custom_order = Case(When(slug='vse', then=Value(0)), default=Value(1), output_field=IntegerField())
         queryset = PostTags.objects.annotate(custom_sort=custom_order).order_by('custom_sort')
         data = [
@@ -188,7 +193,6 @@ class IndexPostsListView(ListView):
         ]
         json_data = json.dumps(data, cls=DjangoJSONEncoder)
         context.update({
-            'is_mobile': user_agent.is_mobile,
             'tags': json_data,
             'media_bucket': settings.MEDIA_URL,
             'pagination_querystring': self.get_pagination_querystring(),
@@ -211,6 +215,12 @@ class GroupPostsListView(ListView):
     template_name = 'desktop/posts/group_list.html'
     paginate_by = PAGINATE_BY
 
+    def get_template_names(self):
+        user_agent = get_user_agent(self.request)
+        if user_agent.is_mobile:
+            return ['mobile/posts/group_list.html']
+        return [self.template_name]
+
     def dispatch(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpResponse:
         self.group = get_object_or_404(Group, slug=self.kwargs['slug'])
         if not self.group.link:
@@ -231,13 +241,11 @@ class GroupPostsListView(ListView):
 
     def get_context_data(self, **kwargs: Any) -> Dict[str, Any]:
         context = super().get_context_data(**kwargs)
-        user_agent = get_user_agent(self.request)
         context.update({
             'group': self.group,
             'is_admin': self.is_admin,
             'form': self.form,
             'forism_check': self.forism_check,
-            'is_mobile': user_agent.is_mobile,
         })
         return context
 
@@ -267,6 +275,12 @@ class ProfileDetailView(DetailView):
     template_name = 'desktop/posts/profile.html'
     context_object_name = 'author'
 
+    def get_template_names(self):
+        user_agent = get_user_agent(self.request)
+        if user_agent.is_mobile:
+            return ['mobile/posts/profile.html']
+        return [self.template_name]
+
     def get_object(self, queryset: QuerySet = None) -> QuerySet(User):
         queryset = (
             super().get_queryset()
@@ -278,13 +292,11 @@ class ProfileDetailView(DetailView):
         context = super().get_context_data(**kwargs)
         post_list = self.get_user_posts().select_related('author', 'group')
         page_obj = paginator_handler(self.request, post_list, PAGINATE_BY)
-        user_agent = get_user_agent(self.request)
         user = self.request.user
         context.update({
             'page_obj': page_obj,
             'posts_count': page_obj.paginator.count,
             'following': False if user.is_anonymous else user.follower.filter(author=self.object).exists(),
-            'is_mobile': user_agent.is_mobile,
         })
         return context
 
@@ -408,6 +420,12 @@ class PostDetailView(DetailView):
     slug_url_kwarg = 'post_identifier_slug'
     tag_queryset = None
 
+    def get_template_names(self):
+        user_agent = get_user_agent(self.request)
+        if user_agent.is_mobile:
+            return ['mobile/posts/post_detail.html']
+        return [self.template_name]
+
     def get_post_slug_from_redis(self, post_pk: int) -> str or None:
         """Получает слаг поста по его идентификатору из Redis.
 
@@ -496,7 +514,7 @@ class PostDetailView(DetailView):
         context = super().get_context_data(**kwargs)
         post = kwargs.get('object')
 
-        user_agent = get_user_agent(self.request)
+        self.user_agent = get_user_agent(self.request)
         ip = self.get_client_ip()
         ref_url = self.get_ref_url()
 
@@ -522,13 +540,13 @@ class PostDetailView(DetailView):
 
             agent_data = {
                 'post_id': post.id,
-                'browser': user_agent.browser.family,
-                'os': user_agent.os.family,
-                'is_bot': user_agent.is_bot,
-                'is_mobile': user_agent.is_mobile,
-                'is_pc': user_agent.is_pc,
-                'is_tablet': user_agent.is_tablet,
-                'is_touch_capable': user_agent.is_touch_capable,
+                'browser': self.user_agent.browser.family,
+                'os': self.user_agent.os.family,
+                'is_bot': self.user_agent.is_bot,
+                'is_mobile': self.user_agent.is_mobile,
+                'is_pc': self.user_agent.is_pc,
+                'is_tablet': self.user_agent.is_tablet,
+                'is_touch_capable': self.user_agent.is_touch_capable,
                 'ip': ip,
                 'ref_url': ref_url
             }
@@ -549,7 +567,6 @@ class PostDetailView(DetailView):
             'authors_posts_count': post.author.posts.count(),
             'comments': post.comments.all(),
             'form': CommentForm(self.request.POST or None),
-            'is_mobile': user_agent.is_mobile,
             'advertising': random_banner if random_banner else False,
             'advertisement_widget': random_widget if random_widget else False,
             'counter': counter,
@@ -590,7 +607,8 @@ class PostDetailView(DetailView):
                 'slug': post.slug,
                 'short_description': post.short_description
             })
-        return ', '.join(tags), query.count() > 0, self.chunker(posts_processed, 3)
+            line_size = 1 if self.user_agent.is_mobile else 3
+        return ', '.join(tags), query.count() > 0, self.chunker(posts_processed, line_size)
 
     @staticmethod
     def chunker(seq, size):

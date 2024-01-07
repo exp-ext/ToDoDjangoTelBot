@@ -1,0 +1,284 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Ваш персональный менеджер задач{% endblock %}
+{% block head %}
+  <meta name="description" content="YourToDo - простой и удобный инструмент для управления вашими задачами."/>
+  <meta name="keywords" content="менеджер задач, задачи, планирование, cписок дел, управление временем, напоминания, список дел, календарь событий, ежедневник, телеграмм бот">
+  <meta name="robots" content="index, follow">
+  <meta name="author" content="Your To-Do">
+  <html prefix="og: http://ogp.me/ns#">    
+  <meta property="og:site_name" content="YourToDo - это решение для управления вашими напоминаниями и заметками."/>
+  <meta property="og:title" content="Простой и удобный интерфейс, позволяющий вам легко управлять вашими напоминаниями и заметками."/>
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://www.yourtodo.ru" />
+  <meta property="og:description" content="YourToDo - это возможность не забыть о чем-то по истине важном!"/>
+  <meta property="og:image" content="{% static 'git/background.jpg' %}">
+  <meta property="og:image:alt" content="city" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:image" content="{% static 'git/background.jpg' %}">
+  <link rel="stylesheet" href="{% static 'css/carousel.css' %}">
+{% endblock %}
+{% block content %}
+    <div id="myCarousel" class="carousel slide" data-bs-ride="carousel" data-bs-interval="5000">
+      <ol class="carousel-indicators">
+        <li data-bs-target="#myCarousel" data-bs-slide-to="0" class="active"></li>
+        <li data-bs-target="#myCarousel" data-bs-slide-to="1"></li>
+        <li data-bs-target="#myCarousel" data-bs-slide-to="2"></li>
+      </ol>
+      <div class="carousel-inner">
+        {% if request.user.is_anonymous %}
+          <div class="carousel-item active" data-bs-interval="5000">
+            {% if is_mobile %}
+              <img src="{% static 'img/index/1_reg_ban_mob.webp' %}" class="d-block w-100" alt="mob-registration-banner">
+            {% else %}
+              <img src="{% static 'img/index/1_reg_ban.webp' %}" class="d-block w-100 h-auto" alt="registration-banner">
+            {% endif %}
+            <div class="container">
+              <div class="carousel-caption">
+                <div class="lobster">
+                  <h1>Регистрация</h1>
+                  <p>&nbsp;</p>
+                  <p>Она необходима, без неё бот не сможет разобратся где чьё напоминание. И кто в какой части мира живёт.</p>
+                  <p>&nbsp;</p>
+                  <p><a class="btn btn-lg btn-secondary shadow" href="#registration" role="button">Зарегистрироваться</a></p>
+                </div>
+              </div>
+            </div>
+          </div>
+        {% endif %}
+        <div class="carousel-item {% if request.user.is_authenticated %} active {% endif %}" data-bs-interval="5000">
+          {% if is_mobile %}
+            <img src="{% static 'img/index/2_func_ban_mob.webp' %}" class="d-block w-100" alt="mob-functions-banner">
+          {% else %}
+            <img src="{% static 'img/index/2_func_ban.webp' %}" class="d-block w-100 h-auto" alt="functions-banner">
+          {% endif %}
+          <div class="container">
+            <div class="carousel-caption">
+              <div class="lobster">
+                <h1>Основные функции</h1>
+                <p>&nbsp;</p>
+                <p>Есть некоторые приятные фишки о которых тебе нужно знать.</p>
+                <p>&nbsp;</p>
+                <p><a class="btn btn-lg btn-secondary shadow" href="#main-functions" role="button">Подробнее</a></p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="carousel-item">
+          {% if is_mobile %}
+            <img src="{% static 'img/index/3_services_ban_mob.webp' %}" class="d-block w-100" alt="mob-services-banner">
+          {% else %}
+            <img src="{% static 'img/index/3_services_ban.webp' %}" class="d-block w-100 h-auto" alt="services-banner">
+          {% endif %}
+          <div class="container">
+            <div class="carousel-caption">
+              <div class="lobster">
+                <h1>Напоминания</h1>
+                <p>&nbsp;</p>
+                <p>В основном меня создали для того чтобы Ты ничего в своей жизни не пропустил, но есть и ещё кое-что ♨️</p>
+                <p>&nbsp;</p>
+                <p><a class="btn btn-lg btn-secondary shadow" href="#reminders" role="button">Подробнее</a></p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <button class="carousel-control-prev" type="button" data-bs-target="#myCarousel" data-bs-slide="prev">
+        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+        <span class="visually-hidden">Previous</span>
+      </button>
+      <button class="carousel-control-next" type="button" data-bs-target="#myCarousel" data-bs-slide="next">
+        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+        <span class="visually-hidden">Next</span>
+      </button>
+    </div>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <!-- Marketing messaging and featurettes
+    ================================================== -->
+    <!-- Wrap the rest of the page in another container to center all the content. -->
+    <div class="container marketing">
+      <!-- Three columns of text below the carousel -->
+      <div class="row">
+        <div class="col-lg-4">          
+          <img class="img-fluid rounded-circle shadow tenses_image _anim-items _anim-no-hide" width="140" height="140" src="{% static 'img/index/4_past.png' %}" alt="line-past"></img>
+          <div class="tenses _anim-items _anim-no-hide">
+            <h2>Прошлое</h2>
+            <p>Часто возникала необходимость напоминания большому количеству людей о начале какого-либо мероприятия. Оттуда и родилась идея создать Telegram ToDo manager.</p>
+          </div>
+        </div><!-- /.col-lg-4 -->
+        <div class="col-lg-4">          
+          <img class="img-fluid rounded-circle shadow tenses_image _anim-items _anim-no-hide" width="140" height="140" src="{% static 'img/index/4_present.png' %}" alt="line-present"></img>
+          <div class="tenses _anim-items _anim-no-hide">
+            <h2>Настоящее</h2>
+            <p>На данном этапе своей жизни система находится в разработке. Но уже сейчас есть множество функций, которые ждут своего пользователя.</p>
+          </div>
+        </div><!-- /.col-lg-4 -->
+        <div class="col-lg-4">
+          <img class="img-fluid rounded-circle shadow tenses_image _anim-items _anim-no-hide" width="140" height="140" src="{% static 'img/index/4_future.png' %}" alt="line-future"></img>
+          <div class="tenses _anim-items _anim-no-hide">
+            <h2>Будущее</h2>
+            <p>В дальнейшем все обязательно должно перерасти во что-то более технологичное. Возможно будет соцсеть, а возможно что-то новое. Это пока останется секретом.</p>
+          </div>
+        </div><!-- /.col-lg-4 -->
+      </div><!-- /.row -->
+      <p>&nbsp;</p>
+      <p>&nbsp;</p>
+      <!-- START THE FEATURETTES -->
+      {% if request.user.is_anonymous %}
+        <section id="registration">
+          <hr class="featurette-divider">
+          <div class="row featurette">
+            <div class="col-md-7 d-flex align-items-center">
+              <div class="text-blog _anim-items _anim-no-hide">
+                <h2 class="featurette-Заголовок">Регистр<span class="text-muted">ация...</span></h2>
+                <p class="lead">
+                  - перейдите в <span class="eva">Telegram чат c <a href="https://t.me/BorFAsbot">искусственным интеллектом Eva</span></a>
+                  <br>
+                  - нажав кнопку <span><button class="btn btn-primary btn-sm rounded-circle">Меню</button></span> запросите регистрацию
+                  <br>
+                  Всё остальное произойдет автоматически.
+                  <br><br>
+                  Чтобы настроить часовой пояс отличный от МСК, рекомендуется использовать идну из геофункций в <span><button class="btn btn-secondary btn-sm">меню геофункций📡</button></span>;
+                  <br><br>
+                  <strong>Для корректной работы в групповых чатах, после добавления бота в группу, сделайте его администратором.</strong>      
+                </p>
+              </div>
+            </div>
+            <div class="col-md-5">
+              <div class="right-image-blog _anim-items _anim-no-hide">
+                <img class="bd-placeholder-img bd-placeholder-img-lg featurette-image img-fluid mx-auto shadow" width="500" height="500"
+                  src="{% static 'img/index/register.webp' %}" alt="block-register">
+                </img>
+              </div> 
+            </div>      
+          </div>
+        </section>
+      {% endif %}
+      <section id="main-functions">
+        <hr class="featurette-divider">
+        <div class="row featurette">
+          <div class="col-md-7 order-md-2 d-flex align-items-center">
+            <div class="text-blog _anim-items _anim-no-hide">
+              <h2 class="featurette-Заголовок">Основные <span class="text-muted">функции.</span></h2>
+              <div class="lead">
+                <p>📅 Telegram ToDo management</p>
+                <p>🎭 анекдоты</p>
+                <p>🌈 погода в твоём местоположении</p>
+                <p>☔️ прогноз погоды на 4 дня вперёд</p>
+                <p>🛰 отправка GPS местоположения в группу фаворит</p>
+                <p>🏄 список мероприятий в ближайшем от тебя мегаполисе</p>
+                <p>🧠 приватный и групповой чат с ИИ Eva</p>
+                <p>📚 перевод текста на другие языки</p>
+                <p>💬 аудиотранскрипция сообщения</p>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-5 order-md-1">
+            <div class="{% if is_mobile %} right-image-blog {% else %} image-blog {% endif %} _anim-items _anim-no-hide">
+              <img class="bd-placeholder-img bd-placeholder-img-lg featurette-image img-fluid mx-auto shadow" width="500" height="500"
+                src="{% static 'img/index/menu.webp' %}" alt="block-menu">
+              </img>
+            </div>
+          </div>
+        </div>
+      </section>
+      <section id="reminders">
+        <hr class="featurette-divider">
+        <div class="row featurette">
+          <div class="col-md-7 d-flex align-items-center">
+            <div class="text-blog _anim-items _anim-no-hide">
+              <h2 class="featurette-Заголовок">Описание работы  <span class="text-muted">основного модуля.</span></h2>
+              <h4 style="color: #080144;">- Кнопки меню:</h4>
+              <ol style="list-style: none;">
+                <li>
+                  <p>
+                    <strong>💬 добавить запись</strong>(возможен формат ввода:
+                    <em>дата время напоминание &amp; период повтора;
+                    дата напоминание &amp; период повтора;
+                    дата напоминание;
+                    дата День Рождения напоминание &amp; период повтора.
+                    </em>)
+                  </p>
+                <li>
+                  <p>
+                    <strong>❌ удалить запись</strong>(формат ввода:
+                    <em>дата часть напоминания. Примечание: 
+                      если введённая часть совпадает с другой записью, то она также будет удалена.
+                    </em>)
+                  </p>
+                </li>
+                <li>
+                  <p><strong>🚼 календарь рождений</strong>(вывод всех записей с ДР)</p>
+                </li>
+                <li>
+                  <p><strong>📅 планы на дату</strong>(формат ввода: дата)</p>
+                </li>
+                <li>
+                  <p><strong>📝 все планы</strong>(вывод всех найденных записей в базе)</p>
+                </li>
+              </ol>
+              <h4 style="color: #080144;">- Работа в чатах:</h4>
+              <div class="lead">
+                <p>Напоминание созданное в личном чате с ботом, будет оповещать только пользователя в личном чате.</p>
+                <p>Напоминание созданное в группе, будет оповещать только в группе.</p>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-5">
+            <div class="right-image-blog _anim-items _anim-no-hide">
+              <img class="bd-placeholder-img bd-placeholder-img-lg featurette-image img-fluid mx-auto shadow" width="500" height="500"
+                src="{% static 'img/index/message.webp' %}" alt="block-message">
+              </img>
+            </div>
+          </div>
+        </div>
+      </section>
+      <hr class="featurette-divider">
+      <div class="row featurette">
+        <div class="col-md-7 order-md-2 d-flex align-items-center">
+          <div class="text-blog _anim-items _anim-no-hide">
+            <h2 class="featurette-Заголовок">Управление <span class="text-muted">с сайта.</span></h2>
+            <p class="lead">
+              После регистрации и аутентификации на сайте, Вы сможете использовать веб-функции управления напоминаниями.
+            </p>
+          </div>
+        </div>
+        <div class="col-md-5 order-md-1">
+          <div class="{% if is_mobile %} right-image-blog {% else %} image-blog {% endif %} _anim-items _anim-no-hide">
+            <img class="bd-placeholder-img bd-placeholder-img-lg featurette-image img-fluid mx-auto shadow" width="500" height="500"
+              src="{% static 'img/index/site_menu.webp' %}" alt="block-site_menu">
+            </img>
+          </div>
+        </div>
+      </div>
+        <hr class="featurette-divider">  
+        <div class="row featurette">
+          <div class="col-md-7 d-flex align-items-center">
+            <div class="text-blog _anim-items _anim-no-hide">
+              <h2 class="featurette-Заголовок">Заметки  <span class="text-muted"></span></h2>
+              <p class="lead">
+                Telegram-чаты являются источником вдохновения для создания Заметок. Поэтому в Your Todo мы обеспечили возможность их хранения. И сделали это по тому же принципу:<br><br> 
+                Опубликованные Заметки в публичных группах доступны всем пользователям. Однако, если группа является частной, то доступ к заметкам будет ограничен только для участников этой группы. Для просмотра заметок частных групп, вы должны быть её участником, а также быть авторизованным.
+              </p>
+            </div>
+          </div>
+          <div class="col-md-5">
+            <div class="right-image-blog _anim-items _anim-no-hide">
+              <img class="bd-placeholder-img bd-placeholder-img-lg featurette-image img-fluid mx-auto shadow" width="500" height="500"
+                src="{% static 'img/index/notes.webp' %}" alt="block-notes">
+              </img>
+            </div>
+          </div>
+        </div>
+        <hr class="featurette-divider">
+      <!-- /END THE FEATURETTES -->
+    </div><!-- /.container -->
+{% endblock %}
+{% block javascript %}
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      var myCarousel = new bootstrap.Carousel(document.getElementById('myCarousel'));
+    });
+  </script>
+{% endblock %}

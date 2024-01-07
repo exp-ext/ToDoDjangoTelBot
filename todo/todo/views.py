@@ -13,7 +13,7 @@ def index(request: HttpRequest) -> HttpResponse:
         'is_main': is_main,
         'is_mobile': user_agent.is_mobile,
     }
-    template = 'main/index.html'
+    template = 'desktop/main/index.html'
     return render(request, template, context)
 
 

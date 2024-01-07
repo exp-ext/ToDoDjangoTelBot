@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% load thumbnail %}
+{% load static %}
+
+{% block head %}
+  <meta name="description" content="Ваша группа, Ваши Заметки - Организуйте общие мысли с Your ToDo!"/>
+  <meta name="keywords" content="Telegram, заметки, организация заметок, Telegram инструмент, группа">
+
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://www.yourtodo.ru/posts/group/{{ group.slug }}/" />
+
+  <link rel="stylesheet" href="{% static 'css/moving_units.css' %}">
+{% endblock %}
+
+{% block title %} Записи сообщества {{ group.title }} {% endblock %}
+
+{% block headline %} 
+
+  <div class="container pt-5 mb-1">
+      <div class="card shadow rounded text-center bg-secondary {% if is_mobile %} group-unit mt-3 {% else %} moving-unit mt-4 {% endif %} _anim-items _anim-no-hide">
+
+        <div class="card-body">
+          <h1 class="card-header">{{ group.title }}</h1>
+          {% if group.description %}<p class="card-text p-3">Описание: "{{ group.description }}"</p>{% endif %}
+          {% if group.link %}<p class="card-text">Пригласительная ссылка: <a href="{{ group.link }}">{{ group.link }}</a> </p>{% endif %}
+        </div>
+
+        {% if is_admin %}
+          <form actions="{% url 'posts:group_list' group.slug %}" method="POST">
+            {% csrf_token %}
+
+            {% include 'desktop/posts/includes/mailings.html' %}
+
+          </form>
+        {% endif %}
+
+      </div>
+  </div>
+  
+{% endblock %}
+
+{% block content %}
+
+  <div class="container">
+    <div class="ck ck-content">
+      {% for post in page_obj %}
+
+        {% include 'desktop/posts/includes/post_list.html' %}
+
+      {% endfor %}
+    </div>
+
+    {% include 'desktop/posts/includes/paginator.html' %}
+  </div>
+
+<div class="container shadow my-3 p-1 rounded">
+  {% include 'includes/yaribbonadvertising.html' %}
+</div>
+<br>
+
+{% endblock %}

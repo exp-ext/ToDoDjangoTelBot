@@ -45,8 +45,14 @@ class SearchListView(ListView):
     - (:obj:`Paginator`) с результатом поиска в постах;
     - (:obj:`str`) поисковое слово keyword.
     """
-    template_name = 'posts/search_result.html'
+    template_name = 'desktop/posts/search_result.html'
     paginate_by = PAGINATE_BY
+
+    def get_template_names(self):
+        user_agent = get_user_agent(self.request)
+        if user_agent.is_mobile:
+            return ['mobile/posts/search_result.html']
+        return [self.template_name]
 
     def get(self, request, *args, **kwargs):
         self.keyword = request.GET.get('q', '')
@@ -93,9 +99,7 @@ class SearchListView(ListView):
 
     def get_context_data(self, **kwargs) -> Dict[str, Any]:
         context = super().get_context_data(**kwargs)
-        user_agent = get_user_agent(self.request)
         context.update({
-            'is_mobile': user_agent.is_mobile,
             'keyword': self.keyword,
         })
         return context
@@ -141,7 +145,7 @@ class IndexPostsListView(ListView):
     """
     Возвращает :obj:`Paginator` с заметками для общей ленты.
     """
-    template_name = 'posts/index_posts.html'
+    template_name = 'desktop/posts/index_posts.html'
     paginate_by = PAGINATE_BY
 
     def get_queryset(self) -> QuerySet(Post):
@@ -204,7 +208,7 @@ class GroupPostsListView(ListView):
     для группы
     """
     model = Post
-    template_name = 'posts/group_list.html'
+    template_name = 'desktop/posts/group_list.html'
     paginate_by = PAGINATE_BY
 
     def dispatch(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpResponse:
@@ -260,7 +264,7 @@ class ProfileDetailView(DetailView):
     - (:obj:`boolean`) состояние подписки на того автора для пользователя;
     """
     model = User
-    template_name = 'posts/profile.html'
+    template_name = 'desktop/posts/profile.html'
     context_object_name = 'author'
 
     def get_object(self, queryset: QuerySet = None) -> QuerySet(User):
@@ -329,7 +333,7 @@ class PostCreateView(LoginRequiredMixin, CreateView):
     """
     model = Post
     form_class = PostForm
-    template_name = 'posts/create_post.html'
+    template_name = 'desktop/posts/create_post.html'
     initial_post_data = {}
 
     def get_initial(self) -> Dict[str, Any]:
@@ -366,7 +370,7 @@ class PostUpdateView(LoginRequiredMixin, UpdateView):
     """Изменяет запись в БД и делает redirect к представлению этого поста."""
     model = Post
     form_class = PostForm
-    template_name = 'posts/create_post.html'
+    template_name = 'desktop/posts/create_post.html'
     pk_url_kwarg = 'post_identifier_pk'
 
     def get_initial(self) -> Dict[str, Any]:
@@ -398,7 +402,7 @@ class PostDetailView(DetailView):
     - (:obj:`CommentForm`) форму для добавления комментария.
     """
     model = Post
-    template_name = 'posts/post_detail.html'
+    template_name = 'desktop/posts/post_detail.html'
     context_object_name = 'post'
     pk_url_kwarg = 'post_identifier_pk'
     slug_url_kwarg = 'post_identifier_slug'
@@ -635,7 +639,7 @@ class AddCommentView(LoginRequiredMixin, FormView):
     перенаправляет  обратно к посту.
     """
     form_class = CommentForm
-    template_name = 'posts/post_detail.html'
+    template_name = 'desktop/posts/post_detail.html'
 
     def form_valid(self, form: CommentForm) -> HttpResponseRedirect:
         post = get_object_or_404(Post, pk=self.kwargs['post_identifier_pk'])
@@ -667,7 +671,7 @@ class FollowIndexListView(LoginRequiredMixin, ListView):
     Возвращает :obj:`Paginator` с заметками авторов на которых
     подписан авторизованный пользователь в запросе.
     """
-    template_name = 'posts/follow.html'
+    template_name = 'desktop/posts/follow.html'
     paginate_by = PAGINATE_BY
 
     def get_queryset(self) -> QuerySet(Post):

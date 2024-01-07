@@ -1,4 +1,5 @@
 from bs4 import BeautifulSoup
+from django.urls import reverse
 from core.models import Create, CreateUpdater
 from django.contrib.auth import get_user_model
 from django.db import models
@@ -90,6 +91,9 @@ class Post(CreateUpdater):
 
     def __str__(self) -> str:
         return self.title
+
+    def get_absolute_url(self):
+        return reverse('posts:post_detail', kwargs={'post_identifier_slug': self.slug})
 
 
 @receiver(pre_save, sender=Post)

@@ -68,10 +68,10 @@ class TaskViewsTests(TestCase):
     def test_urls_correct_template_by_namespace(self):
         """Namespace:name использует соответствующий шаблон."""
         templates_url_names = {
-            self.notes: 'tasks/notes.html',
-            self.birthdays: 'tasks/notes.html',
-            self.task_edit: 'tasks/create_task.html',
-            self.task_create: 'tasks/create_task.html',
+            self.notes: 'desktop/tasks/notes.html',
+            self.birthdays: 'desktop/tasks/notes.html',
+            self.task_edit: 'desktop/tasks/create_task.html',
+            self.task_create: 'desktop/tasks/create_task.html',
         }
         for address, template in templates_url_names.items():
             with self.subTest(address=address):

@@ -4,10 +4,6 @@
 
 {% block head %}
 
-  {% if advertisement_widget %}
-    {{ advertisement_widget.script|safe }}
-  {% endif %}
-
   <meta name="description" content="{{ post.short_description }}"/>
   <meta name="keywords" content="{{ tags }}">
 
@@ -80,32 +76,17 @@
     </div>
 
     <div class="row py-1">
-
       <aside class="bg-light rounded shadow mb-2">
-          {% include 'mobile/posts/includes/comments.html' %}
+        {% include 'mobile/posts/includes/comments.html' %}
       </aside>
-
-      <aside class="bg-light rounded shadow">
-        {% if advertising %}
-          <div class="ck ck-content">
-            {% include 'mobile/posts/includes/advertising.html' %}
-          </div>
-        {% endif %}
-      </aside>
-
     </div>
 
   </div>
-
-  {% comment %} {% if is_mobile %}
-    {% include 'includes/yamobileflooradvertising.html' %}
-  {% else %}
-    {% include 'includes/yapcflooradvertising.html' %}
-  {% endif %} {% endcomment %}
 
 {% endblock %}
 
 {% block javascript %}
   <script async charset='utf-8' src='//cdn.embedly.com/widgets/platform.js'></script>
-  <script async src="{% static 'js/post_detail.js' %}"></script>  
+  <script async src="{% static 'js/post_detail.js' %}"></script>
+  <script async src="{% static 'js/ya-mob-floor-ad.js' %}"></script>
 {% endblock %}

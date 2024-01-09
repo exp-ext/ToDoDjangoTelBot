@@ -24,8 +24,8 @@
 </div>
 
 {% block javascript %}
-    <script async src="{% static 'js/search.js' %}"></script>
-    <script async src="{% static 'js/hover-effects.js' %}"></script>
+  <script async src="{% static 'js/search.js' %}"></script>
+  <script async src="{% static 'js/hover-effects.js' %}"></script>
   <script>
     $(document).ready(function() {
       var searchUrl = "{% url 'posts:search' %}";

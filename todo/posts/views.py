@@ -517,8 +517,12 @@ class PostDetailView(DetailView):
         ip = self.get_client_ip()
         ref_url = self.get_ref_url()
 
-        random_banner = PartnerBanner.objects.order_by('?').first()
-        random_widget = AdvertisementWidget.objects.order_by('?').first()
+        random_banner = None
+        random_widget = None
+
+        if not self.user_agent.is_mobile:
+            random_banner = PartnerBanner.objects.order_by('?').first()
+            random_widget = AdvertisementWidget.objects.order_by('?').first()
 
         redis_key_post_ips = f'ips_post_{post.id}'
         redis_key_post_counter = f'counter_post_{post.id}'
@@ -566,8 +570,8 @@ class PostDetailView(DetailView):
             'authors_posts_count': post.author.posts.count(),
             'comments': post.comments.all(),
             'form': CommentForm(self.request.POST or None),
-            'advertising': random_banner if random_banner else False,
-            'advertisement_widget': random_widget if random_widget else False,
+            'advertising': random_banner or False,
+            'advertisement_widget': random_widget or False,
             'counter': counter,
             'contents': contents[0].get('children', None) if contents else None,
             'tags': tags,

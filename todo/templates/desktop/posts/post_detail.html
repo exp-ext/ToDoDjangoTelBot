@@ -4,10 +4,6 @@
 
 {% block head %}
 
-  {% if advertisement_widget %}
-    {{ advertisement_widget.script|safe }}
-  {% endif %}
-
   <meta name="description" content="{{ post.short_description }}"/>
   <meta name="keywords" content="{{ tags }}">
 
@@ -40,11 +36,9 @@
 
   <div class="container-fluid pt-5">
     <div class="row mt-3">
-
       {% comment %} первая колонка {% endcomment %}
       <aside class="col-lg-3 col-sm-12">
         <div class="scroll">
-
           {% if contents %}          
             <div class="card p-1 bg-light rounded shadow mb-2">
               <div class="text-center">
@@ -57,11 +51,9 @@
               </ul>
             </div>
           {% endif %}
-
           <div class="card p-1 bg-light rounded shadow group-unit _anim-items _anim-no-hide my-2"> 
             {% include 'includes/yabodyadvertising.html' %}           
           </div>
-
           <div class="group-unit _anim-items _anim-no-hide">
             {% if advertising %}
               <div class="ck ck-content">
@@ -70,58 +62,39 @@
             {% endif %}
             {% include 'desktop/posts/includes/author_detail.html' %}
           </div>
-
         </div>
       </aside>
-
       {% comment %} вторая колонка {% endcomment %}
       <article class="col-lg-8 col-sm-12 bg-light rounded shadow">
         <div class="lobster">
           <h1>{{ post.title }}</h1>
         </div>
-
         {% if post.image %}
           <img class="card-img my-2" src="{{ post.image.url }}" class="d-block w-auto h-100" alt="Картинка к публикации: {{ post.title }}" />
         {% endif %}
-
         <p>
           <div class="ck ck-content">
             <div class="table-wrap">
               {{ post.text|safe }}
             </div>
           </div>
-        </p>
-      
+        </p>      
         {% if tag_posts_present %}
           {% include 'desktop/posts/includes/other_posts.html' %}
         {% endif %}
       </article>
-
     </div>
-
     <aside class="row mb-5  mt-3">
       <div class="col-lg-3 col-sm-12"></div>
-
       <div class="col-lg-8 col-sm-12 bg-light rounded shadow p-3">
-
-        {% comment %}
-          <div id="marketWidget" class="rounded"></div>  
-        {% endcomment %}
-
-        {% include 'desktop/posts/includes/comments.html' %}          
-
+        {% include 'desktop/posts/includes/comments.html' %}
       </div>
     </aside>
-
   </div>
-
-  {% comment %}
-    {% include 'includes/yapcflooradvertising.html' %}
-  {% endcomment %}
-
 {% endblock %}
 
 {% block javascript %}
   <script async charset='utf-8' src='//cdn.embedly.com/widgets/platform.js'></script>
-  <script async src="{% static 'js/post_detail.js' %}"></script>  
+  <script async src="{% static 'js/post_detail.js' %}"></script>
+  <script async src="{% static 'js/ya-desk-floor-ad.js' %}"></script>
 {% endblock %}

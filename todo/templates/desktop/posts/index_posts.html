@@ -23,54 +23,35 @@
         <meta name="twitter:card" content="summary_large_image"/>
         <meta name="twitter:image" content="{{ first_item.image.url }}"/>
         <meta name="twitter:image:alt" content="{{ first_item.slug }}"/>
-
       {% endif %}
     {% endwith %}
   {% endif %}
 
   <link rel="stylesheet" href="{% static 'css/moving_units.css' %}">
-  <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.1/themes/base/jquery-ui.css">
-
 {% endblock %}
 
 {% block title %}Статьи по программированию{% endblock %}
 
 {% block content %}
-
   <div class="container py-5">
-
     {% include 'desktop/posts/includes/switcher.html' %}
-
     <div class="moving-unit _anim-items _anim-no-hide">
       {% include 'desktop/posts/includes/search.html' %}
-    </div> 
-
+    </div>
     <div class="row">
-
       <div class="col-lg-2">
         <div class="scroll">
           <div class="moving-unit _anim-items _anim-no-hide">
             {% include 'desktop/posts/includes/navbar.html' %}
-          </div> 
-        </div> 
+          </div>
+        </div>
       </div>
-
       <div class="col-lg-10">
-        {% for post in page_obj %} 
-          {% include 'desktop/posts/includes/post_list.html' %}        
+        {% for post in page_obj %}
+          {% include 'desktop/posts/includes/post_list.html' %}      
         {% endfor %}
-
         {% include 'desktop/posts/includes/paginator.html' %}
-
-      </div> 
+      </div>
     </div>
-
-  </div> 
-
-  {% comment %} {% if is_mobile %}
-    {% include 'includes/yamobileflooradvertising.html' %}
-  {% else %}
-      {% include 'includes/yapcflooradvertising.html' %}
-  {% endif %} {% endcomment %}
-
+  </div>
 {% endblock %}

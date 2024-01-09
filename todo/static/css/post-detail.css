@@ -1,24 +1,20 @@
 .table-wrap {
-  overflow-x: auto; /* Добавление горизонтального скролла к контейнеру таблицы */
-  display: block; /* Таблицы обычно отображаются как table, но block позволит применить скроллинг */
-}
-  
+  overflow-x: auto;
+  display: block;
+}  
 .table-wrap table {
-  width: 100%; /* Ширина таблицы должна быть в процентах для адаптивности */
-  max-width: none; /* Убедитесь, что таблица может растягиваться за пределы 100% относительно .table-wrap */
-  table-layout: fixed; /* Используйте фиксированное табличное размещение для управления переполнением ячеек */
+  width: 100%;
+  max-width: none;
+  table-layout: fixed;
 }
-
 pre {
   white-space: pre !important;
   overflow-x: auto !important;
   word-wrap: normal !important;
 }
-
 *, *::before, *::after {
     box-sizing: border-box;
 }
-
 .scroll {
     position: sticky;
     top: 76px;

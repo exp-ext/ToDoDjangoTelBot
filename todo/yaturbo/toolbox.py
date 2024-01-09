@@ -73,6 +73,10 @@ class YandexTurboFeedType(FeedType):
         # todo maybe
         # yandex:related
 
+        extended = item['ya_extended_html']
+        if extended:
+            handler.addQuickElement('turbo:extendedHtml', extended)
+
         turbo_contents = item['ya_contents']
 
         if not turbo_contents:
@@ -233,6 +237,7 @@ class YandexTurboFeed(_Feed):
             'ya_contents': contents,
             'ya_source': get_dyn('item_turbo_source', item),
             'ya_topic': get_dyn('item_turbo_topic', item),
+            'ya_extended_html': get_dyn('item_extended_html', item),
         })
 
         return kwargs

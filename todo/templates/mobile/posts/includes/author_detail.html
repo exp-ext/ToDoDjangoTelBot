@@ -18,38 +18,31 @@
         </div>
        {% endif %}
     </li>
-
     {% if post.group and post.group.link %}
       <li class="list-group-item  bg-secondary">
         <p>Группа: {{ post.group }}</p>
         <a type="button" class="button fast white" href="{% url 'posts:group_list' post.group.slug%}">все &#160 записи &#160 группы</a>
       </li>
-    {% endif %} 
-
+    {% endif %}
     <li class="list-group-item  bg-secondary">
       <p>Автор: {{ post.author.get_full_name }}</p>
       <p>Всего постов автора:  <span> {{ authors_posts_count }} </span></p>              
       <a type="button" class="btn button fast white" href="{% url 'posts:profile' post.author %}">все &#160 посты &#160 пользователя</a>
     </li>
-
     {% if post.author == user %}
-
       <li class="list-group-item bg-secondary">  
         <form method="patch" action="{% url 'posts:post_edit' post.pk %}">
         {% csrf_token %}
           <button type="submit" class="button w-100">изменить&#160пост</button>
         </form>
       </li>
-
       <li class="list-group-item bg-secondary">
         <form method="post" action="{% url 'posts:post_delete' post.pk %}">
         {% csrf_token %}
           <button type="submit" class="button reverse dark w-100">удалить&#160пост</button>
         </form>
       </li>
-
     {% endif %}
-
   </ul>
 </div>
 

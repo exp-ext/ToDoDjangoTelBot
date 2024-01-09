@@ -21,13 +21,7 @@ from django.urls import include, path
 from users.views import accounts_profile
 
 from . import views
-from .feeds import TurboFeed
 from .sitemap import DynamicViewSitemap, StaticViewSitemap
-
-feed = TurboFeed()
-feed.configure_analytics_yandex('95265244')
-feed.configure_ad_yandex('R-A-3403802-1', 'yandex_rtb_R-A-3403802-1')
-
 
 SITEMAPS = {
     'static': StaticViewSitemap,
@@ -58,7 +52,6 @@ urlpatterns = [
     path('posts/', include(('posts.urls', 'posts'), namespace='posts')),
     path('ckeditor5/', include('django_ckeditor_5.urls'), name='ck_editor_5_upload_file'),
     path('health/live/', views.health, name='health'),
-    path('feeds/turbo/', feed, name='turbo'),
 ]
 
 if settings.DEBUG:

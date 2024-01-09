@@ -21,16 +21,13 @@
 {% block content %}
   <div class="container py-5">
     <div class="py-3">
-      <div class="ck ck-content">
-  
-        {% include 'desktop/posts/includes/search.html' %} 
-      
+      <div class="ck ck-content">  
+        {% include 'desktop/posts/includes/search.html' %}      
         {% if page_obj %}
           {% include 'desktop/posts/includes/search_group.html' %}
         {% else %}
           {% include 'desktop/posts/includes/thinking-hand.html' %}
         {% endif %}
-
       </div>
     </div>
   </div>

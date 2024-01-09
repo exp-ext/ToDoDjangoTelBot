@@ -9,7 +9,7 @@
     <ul style="display: none; list-style: none;">
     {%for ch in content.children %}
       {%with content=ch template_name="tree_template.html" %}
-         {%include 'mobile/posts/includes/tree_template.html' %}
+         {%include 'turbo/includes/tree_template.html' %}
       {%endwith%}
     {%endfor%}
     </ul>

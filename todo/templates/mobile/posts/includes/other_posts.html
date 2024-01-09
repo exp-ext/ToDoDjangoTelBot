@@ -5,12 +5,9 @@
   <link rel="stylesheet" href="{% static 'css/posts-carousel.css' %}">
 {% endblock %}
 
-<hr> 
-
+<hr>
 <h2>Читайте также:</h2>
-
 <div id="carouselExample" class="carousel slide mb-3" data-bs-ride="carousel">
-
   <div class="carousel-inner">
     {% for post_group in tag_posts_chunked %}
       <div class="carousel-item {{ forloop.first|yesno:'active,' }}">
@@ -18,17 +15,14 @@
           {% for post in post_group %}
             <div class="col-md-4">
               <div class="card shadow">
-
                 {% if not is_mobile %}
                   <a href="{% url 'posts:post_detail' post.slug %}">
                     <img class="card-img-top" src="{{ post.image_url }}" alt="crop-{{ post.slug }}"/>
                   </a>
-                {% endif %}
-                
+                {% endif %}                
                 <div class="card-body">
                   <p class="card-text">{{ post.short_description }}</p>
-                </div>
-                
+                </div>                
               </div>
             </div>
           {% endfor %}

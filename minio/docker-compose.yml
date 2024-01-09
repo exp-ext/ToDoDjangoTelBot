@@ -12,10 +12,8 @@ services:
       - ./certbot/www/:/var/lib/letsencrypt/:rw
       - static_volume:/var/html/static/:ro
       - media_volume:/var/html/media/:ro
-      - type: tmpfs
-        target: /var/cache/nginx/minio_cache
-        tmpfs:
-          size: 500000000
+    tmpfs:
+      - /var/cache/nginx/minio_cache:rw,noexec,nosuid,size=500m
     ports:
       - '80:80'
       - '443:443'

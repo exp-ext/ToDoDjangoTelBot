@@ -1,12 +1,12 @@
 #!/bin/bash
 
-NETWORK_NAME="minionetwork"
+# NETWORK_NAME="minionetwork"
 
-# # Проверяем существование сети
-if [ -z "$(docker network ls -q -f name=$NETWORK_NAME)" ]; then
-  echo "Network $NETWORK_NAME не найдена. Создаю..."
-  docker network create $NETWORK_NAME
-fi
+# # # Проверяем существование сети
+# if [ -z "$(docker network ls -q -f name=$NETWORK_NAME)" ]; then
+#   echo "Network $NETWORK_NAME не найдена. Создаю..."
+#   docker network create $NETWORK_NAME
+# fi
 
 # # Проверка наличия volume media_volume
 # if ! docker volume inspect media_volume > /dev/null 2>&1; then
@@ -29,3 +29,6 @@ else
     echo "Docker Compose не работает. Запускаю..."
     docker compose up --build -d
 fi
+
+sleep 10
+docker compose logs nginx

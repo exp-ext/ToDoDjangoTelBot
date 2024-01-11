@@ -4,7 +4,7 @@ from collections import Counter
 from typing import Any, Dict
 from urllib.parse import quote
 
-from advertising.models import AdvertisementWidget, PartnerBanner
+from advertising.models import PartnerBanner
 from bs4 import BeautifulSoup
 from core.views import get_status_in_group, linkages_check, paginator_handler
 from django.conf import settings
@@ -518,11 +518,8 @@ class PostDetailView(DetailView):
         ref_url = self.get_ref_url()
 
         random_banner = None
-        random_widget = None
-
         if not self.user_agent.is_mobile:
             random_banner = PartnerBanner.objects.order_by('?').first()
-            random_widget = AdvertisementWidget.objects.order_by('?').first()
 
         redis_key_post_ips = f'ips_post_{post.id}'
         redis_key_post_counter = f'counter_post_{post.id}'
@@ -571,7 +568,6 @@ class PostDetailView(DetailView):
             'comments': post.comments.all(),
             'form': CommentForm(self.request.POST or None),
             'advertising': random_banner or False,
-            'advertisement_widget': random_widget or False,
             'counter': counter,
             'contents': contents[0].get('children', None) if contents else None,
             'tags': tags,

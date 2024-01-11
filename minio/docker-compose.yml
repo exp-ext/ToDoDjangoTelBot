@@ -13,7 +13,7 @@ services:
       - static_volume:/var/html/static/:ro
       - media_volume:/var/html/media/:ro
     tmpfs:
-      - /var/cache/nginx/minio_cache:rw,noexec,nosuid,size=500m
+      - /var/cache/nginx/my_cache:rw,noexec,nosuid,size=500m
     ports:
       - '80:80'
       - '443:443'

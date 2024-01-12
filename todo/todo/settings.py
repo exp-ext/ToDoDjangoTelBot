@@ -213,18 +213,20 @@ AWS_S3_OBJECT_PARAMETERS = {
 
 STATIC_BUCKET_NAME = 'todo-static'
 MEDIA_BUCKET_NAME = 'todo-media'
+CKEDITOR_BUCKET_NAME = 'todo-ckeditor'
 DATABASE_BUCKET_NAME = 'todo-database'
 
 USE_S3 = int(os.getenv('USE_S3', default=0))
 
 if USE_S3:
     STATIC_URL = f'{AWS_S3_ENDPOINT_URL}/{STATIC_BUCKET_NAME}/'
-    STATICFILES_STORAGE = 'todo.boto.StaticStorage'
+    STATICFILES_STORAGE = 'todo.storages.StaticStorage'
 
     MEDIA_URL = f'{AWS_S3_ENDPOINT_URL}/{MEDIA_BUCKET_NAME}/'
-    DEFAULT_FILE_STORAGE = 'todo.boto.MediaStorage'
+    DEFAULT_FILE_STORAGE = 'todo.storages.MediaStorage'
+    CKEDITOR_5_FILE_STORAGE = 'todo.storages.CkeditorCustomStorage'
 
-    DBBACKUP_STORAGE = 'todo.boto.DataBaseStorage'
+    DBBACKUP_STORAGE = 'todo.storages.DataBaseStorage'
     DBBACKUP_STORAGE_OPTIONS = {
         'access_key': AWS_ACCESS_KEY_ID,
         'secret_key': AWS_SECRET_ACCESS_KEY,
@@ -301,7 +303,7 @@ CKEDITOR_5_CONFIGS = {
         ],
         'toolbar': ['heading', '|', 'outdent', 'indent', '|', 'bold', 'italic', 'link', 'underline', 'strikethrough',
                     'code', 'subscript', 'superscript', 'highlight', '|', 'codeBlock', 'sourceEditing', 'insertImage',
-                    'bulletedList', 'numberedList', 'todoList', '|', 'blockQuote', 'imageUpload', '|',
+                    'bulletedList', 'numberedList', 'todoList', '|', 'blockQuote', '|',
                     'fontSize', 'fontFamily', 'fontColor', 'fontBackgroundColor', 'mediaEmbed', 'removeFormat',
                     'insertTable', ],
         'image': {

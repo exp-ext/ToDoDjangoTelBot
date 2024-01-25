@@ -12,7 +12,7 @@ if [ $(docker compose ps -q | wc -l) -gt 0 ]; then
     docker compose down && docker compose up --build -d
     docker volume rm $(docker volume ls -q --filter dangling=true)
     docker image rm $(docker image ls -f dangling=true -q)
-    sleep 20
+    sleep 30
     docker compose logs web
 else
     echo "Docker Compose не работает. Запускаю..."

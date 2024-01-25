@@ -76,7 +76,7 @@ services:
     ports:
       - "9009:9000"
     environment:
-      - ASR_MODEL=base
+      - ASR_MODEL=small
       - ASR_ENGINE=openai_whisper
 
   nginx:

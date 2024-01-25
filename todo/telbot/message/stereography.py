@@ -10,6 +10,7 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.http import HttpResponseBadRequest
 from django.shortcuts import get_object_or_404
+from telbot.external_api.chat_gpt import GetAnswerGPT
 from telegram import ChatAction, Update
 from telegram.ext import CallbackContext
 
@@ -29,7 +30,7 @@ class AudioTranscription():
     ERROR_TEXT = 'Что-то пошло не так 🤷🏼'
     STORY_WINDOWS_TIME = 11
     MAX_TYPING_TIME = 10
-    url = 'http://127.0.0.1:9009/asr'
+    url = 'http://127.0.0.1:9009/asr' if settings.DEBUG else 'http://whisper:9000/asr'
     params = {
         'task': 'transcribe',
         'language': 'ru',
@@ -67,11 +68,22 @@ class AudioTranscription():
             )
             self.transcription_text = AudioTranscription.ERROR_TEXT
         finally:
-            self.context.bot.send_message(
-                chat_id=self.update.effective_chat.id,
-                text=self.transcription_text,
-                reply_to_message_id=self.update.message.message_id
-            )
+            if 'вопрос' in self.transcription_text.lower():
+                self.transcription_text = f'Ищю ответ на: {self.transcription_text}'
+                self.update.effective_message.text = self.transcription_text
+                asyncio.create_task(self.send_reply())
+                get_answer = GetAnswerGPT(self.update, self.context)
+                await get_answer.get_answer_davinci()
+            else:
+                await self.send_reply()
+
+    async def send_reply(self) -> None:
+        """Отправляет транскрипцию пользователю."""
+        self.context.bot.send_message(
+            chat_id=self.update.effective_chat.id,
+            text=self.transcription_text,
+            reply_to_message_id=self.update.message.message_id
+        )
 
     async def send_typing_periodically(self) -> None:
         """"

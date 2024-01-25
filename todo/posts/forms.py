@@ -1,12 +1,13 @@
-from io import BytesIO
 import os
-from pytils.translit import slugify
+from io import BytesIO
+
 from bs4 import BeautifulSoup
 from django import forms
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.forms import Textarea
 from django.utils.translation import gettext_lazy as _
 from posts.image_prep import resize_and_crop_image
+from pytils.translit import slugify
 from users.models import Group
 
 from .models import Comment, Post

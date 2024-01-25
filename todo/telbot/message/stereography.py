@@ -29,7 +29,7 @@ class AudioTranscription():
     ERROR_TEXT = 'Что-то пошло не так 🤷🏼'
     STORY_WINDOWS_TIME = 11
     MAX_TYPING_TIME = 10
-    url = 'http://192.168.0.101:9009/asr'
+    url = 'http://127.0.0.1:9009/asr'
     params = {
         'task': 'transcribe',
         'language': 'ru',

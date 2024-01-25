@@ -96,6 +96,15 @@ services:
       - redis
       - celery
 
+  whisper:
+    image: onerahmet/openai-whisper-asr-webservice:latest
+    container_name: main_whisper
+    ports:
+      - "9009:9000"
+    environment:
+      - ASR_MODEL=base
+      - ASR_ENGINE=openai_whisper
+
 volumes:
   postgresql_volume:
   cache_pip_volume:

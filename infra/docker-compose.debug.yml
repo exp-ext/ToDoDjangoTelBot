@@ -74,7 +74,7 @@ services:
     image: onerahmet/openai-whisper-asr-webservice:latest
     container_name: todo_whisper
     ports:
-      - "10000:9000"
+      - "9009:9000"
     environment:
       - ASR_MODEL=base
       - ASR_ENGINE=openai_whisper

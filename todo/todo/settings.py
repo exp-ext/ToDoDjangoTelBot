@@ -233,6 +233,7 @@ if USE_S3:
         'bucket_name': DATABASE_BUCKET_NAME,
         'default_acl': 'private',
     }
+    AWS_S3_REGION_NAME = os.getenv('AWS_S3_REGION_NAME')
 else:
     STATIC_URL = '/static/'
 

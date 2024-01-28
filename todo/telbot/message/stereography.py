@@ -68,7 +68,7 @@ class AudioTranscription():
             )
             self.transcription_text = AudioTranscription.ERROR_TEXT
         finally:
-            if 'вопрос' in self.transcription_text.lower():
+            if any(word in self.transcription_text.lower() for word in ['вопрос', '?']):
                 self.transcription_text = f'Ищю ответ на: {self.transcription_text}'
                 self.update.effective_message.text = self.transcription_text
                 asyncio.create_task(self.send_reply())

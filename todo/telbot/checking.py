@@ -33,6 +33,14 @@ def get_or_create_user(tg_user):
         return json.loads(red_user.decode('utf-8'))
 
     user = User.objects.filter(tg_id=tg_user.id).select_related('favorite_group').first()
+    # user, create = User.objects.get_or_create(tg_id=tg_user.id)
+    # if create:
+    #     user.username = tg_user.username or f'n-{str(1010101 + user.id)[::-1]}'
+    #     user.first_name = tg_user.first_name or tg_user.username
+    #     user.last_name = tg_user.last_name
+    #     user.is_blocked_bot = True
+    #     user.save()
+
     if user:
         red_user = set_user_in_redis(tg_user, user)
     return red_user

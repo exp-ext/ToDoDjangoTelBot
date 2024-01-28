@@ -76,6 +76,7 @@ class Authentication:
             user.username = self.tg_user.username or f'n-{str(1010101 + user.id)[::-1]}'
             user.first_name = self.tg_user.first_name or self.tg_user.username
             user.last_name = self.tg_user.last_name
+            user.is_blocked_bot = False
             user.validation_key = validation_key
             user.validation_key_time = timezone.now().astimezone(timezone.utc)
 

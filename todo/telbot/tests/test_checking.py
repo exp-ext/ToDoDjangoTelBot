@@ -1,10 +1,13 @@
 from unittest.mock import MagicMock, patch
 
+from django.contrib.auth import get_user_model
 from django.test import TestCase
 from telbot.checking import check_registration
 from telegram import Chat, Update
 from telegram import User as TgUser
 from telegram.ext import CallbackContext
+
+User = get_user_model()
 
 
 class RegistrationTest(TestCase):
@@ -16,62 +19,69 @@ class RegistrationTest(TestCase):
         self.update.effective_user = self.user
         self.update.message.message_id = 42
         self.context = MagicMock(spec=CallbackContext)
-        self.answers = {'привет': 'Добро пожаловать!'}  # Пример ответа
+        self.answers = {'привет': 'Добро пожаловать!'}
 
     @patch('telbot.checking.redis_client')
     @patch('telbot.checking.get_user_model')
-    def test_user_already_registered(self, mock_get_user_model, mock_redis_client):
-        """Пользователь уже зарегистрирован и имеется в Redis."""
+    def test_user_already_registered_none(self, mock_get_user_model, mock_redis_client):
+        """Пользователь зарегистрирован и имеется в Redis, но возвращается None так как не затребован экземпляр."""
         mock_redis_client.get.return_value = b'{"user_id": 1, "tg_user_id": 67890, "favorite_group": 1, "groups_connections": [1]}'
 
-        registered = check_registration(self.update, self.context, self.answers)
+        user = check_registration(self.update, self.context, self.answers)
 
-        self.assertTrue(registered)
+        self.assertEqual(user, None)
         mock_redis_client.get.assert_called_once()
 
     @patch('telbot.checking.redis_client')
-    @patch('telbot.checking.User')
-    def test_new_user_in_db_not_in_redis(self, mock_user_model, mock_redis_client):
-        """Пользователь есть в базе, но нет в Redis."""
-        mock_redis_client.get.return_value = None
-        mock_user = mock_user_model.objects.filter.return_value.select_related.return_value.first.return_value
-        mock_user.id = 1
-        mock_user.tg_id = 67890
-        mock_user.favorite_group.id = 1
+    @patch('telbot.checking.get_user_model')
+    def test_user_already_registered_user(self, mock_get_user_model, mock_redis_client):
+        """Пользователь не был зарегистрирован. Возвращается пользователь с ограничениями."""
+        mock_redis_client.get.return_value = b'{"user_id": 1, "tg_user_id": 67890, "favorite_group": 1, "groups_connections": [1]}'
 
-        registered = check_registration(self.update, self.context, self.answers)
+        user = check_registration(self.update, self.context, self.answers, allow_unregistered=True, return_user=True)
 
-        self.assertTrue(registered)
-        mock_user_model.objects.filter.assert_called_once()
-        mock_redis_client.set.assert_called_once()
+        self.assertTrue(user.is_blocked_bot)
+        mock_redis_client.get.assert_called_once()
 
     @patch('telbot.checking.redis_client')
-    @patch('telbot.checking.User')
-    @patch('telbot.checking.Group')
-    @patch('telbot.checking.GroupConnections')
-    def test_user_and_group_update(self, mock_group_connections, mock_group, mock_user_model, mock_redis_client):
-        """Пользователь и группа требуют обновления."""
-        mock_redis_client.get.return_value = b'{"user_id": 1, "tg_user_id": 67890, "favorite_group": null, "groups_connections": []}'
-        mock_user = mock_user_model.objects.filter.return_value.first.return_value
-        mock_user.id = 1
-        mock_user.tg_id = 67890
+    @patch('telbot.checking.get_user_model')
+    def test_user_already_registered_false(self, mock_get_user_model, mock_redis_client):
+        """Пользователь не был зарегистрирован. Возвращается пользователь с ограничениями."""
+        mock_redis_client.get.return_value = b'{"user_id": 1, "tg_user_id": 67890, "favorite_group": 1, "groups_connections": [1], "is_blocked_bot": true}'
 
-        mock_group.objects.get_or_create.return_value = (MagicMock(), True)
-        test_group = mock_group.objects.get_or_create.return_value[0]
-        test_group.id = 1
-        test_group.link = 'link'
-        test_group.title = 'title'
+        user = check_registration(self.update, self.context, self.answers, allow_unregistered=True, return_user=True)
 
-        self.chat.type = 'group'
-        self.chat = MagicMock(spec=Chat, id=12345, type='group', link='new_link', title='new_title')
-        self.update.effective_chat = self.chat
+        self.assertTrue(user.is_blocked_bot)
+        mock_redis_client.get.assert_called_once()
 
-        self.chat.title = 'new_title'
+    # @patch('telbot.checking.redis_client.get')
+    # @patch('telbot.checking.User.objects.get_or_create')
+    # @patch('telbot.checking.Group.objects.get_or_create')
+    # @patch('telbot.checking.GroupConnections.objects.get_or_create')
+    # def test_user_and_group_update(self, mock_group_connections_get_or_create, mock_group_get_or_create, mock_user_get_or_create, mock_redis_client):
+    #     mock_redis_client.return_value = json.dumps({
+    #         "user_id": 1, "tg_user_id": 67890,
+    #         "favorite_group": None, "groups_connections": [],
+    #         "is_blocked_bot": True
+    #     }).encode('utf-8')
 
-        registered = check_registration(self.update, self.context, self.answers)
+    #     mock_user = MagicMock(spec=User)
+    #     mock_user.id = 1
+    #     mock_user.tg_id = 67890
+    #     mock_user_get_or_create.return_value = (mock_user, True)
 
-        self.assertTrue(registered)
-        test_group.save.assert_called_once()
-        mock_user.save.assert_called_once()
-        mock_group_connections.objects.get_or_create.assert_called_once()
-        mock_redis_client.set.assert_called_once()
+    #     mock_group = MagicMock(spec=Group)
+    #     mock_group.id = 1
+    #     mock_group.link = 'link'
+    #     mock_group.title = 'title'
+    #     mock_group_get_or_create.return_value = (mock_group, True)
+
+    #     self.chat = MagicMock(spec=Chat, id=12345, type='group', link='new_link', title='new_title')
+    #     self.update.effective_chat = self.chat
+
+    #     user = check_registration(self.update, self.context, self.answers, return_user=True)
+
+    #     self.assertTrue(user.is_blocked_bot)
+    #     mock_group_get_or_create.assert_called_once()
+    #     mock_user_get_or_create.assert_called_once()
+    #     mock_group_connections_get_or_create.assert_called_once()

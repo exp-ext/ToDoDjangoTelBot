@@ -34,10 +34,10 @@ class GetAnswerGPT():
     STORY_WINDOWS_TIME = 30
     MAX_TYPING_TIME = 3
 
-    def __init__(self, update: Update, context: CallbackContext) -> None:
+    def __init__(self, update: Update, context: CallbackContext, user: User) -> None:
         self.update = update
         self.context = context
-        self.user = None
+        self.user = user
         self.message_text = None
         self.message_tokens = None
         self.current_time = None
@@ -74,7 +74,6 @@ class GetAnswerGPT():
 
     async def get_answer_davinci(self) -> dict:
         """Основная логика."""
-        await self.set_user()
 
         if await self.check_in_works():
             return {'code': 423}
@@ -196,15 +195,6 @@ class GetAnswerGPT():
             ])
         self.prompt.append({'role': 'user', 'content': self.message_text})
 
-    @database_sync_to_async
-    def set_user(self) -> None:
-        """Определяем и назначаем  атрибут user."""
-        self.user = (
-            User.objects
-            .prefetch_related('history_ai')
-            .get(username=self.update.effective_user.username)
-        )
-
     @sync_to_async
     def reply_to_user(self) -> None:
         """Отправляет ответ пользователю."""
@@ -257,16 +247,19 @@ def for_check(update: Update, context: CallbackContext):
         '!': (f'Я обязательно поддержу Вашу дискуссию, если [зарегистрируетесь]({context.bot.link}) 🙃'),
         '': (f'Какая интересная беседа, [зарегистрируетесь]({context.bot.link}) и я подключусь к ней 😇'),
     }
-    return check_registration(update, context, answers_for_check)
+    allow_unregistered = True
+    return check_registration(update, context, answers_for_check, allow_unregistered)
 
 
 def get_answer_davinci_public(update: Update, context: CallbackContext):
-    if for_check(update, context):
-        get_answer = GetAnswerGPT(update, context)
+    user = for_check(update, context)
+    if user:
+        get_answer = GetAnswerGPT(update, context, user)
         asyncio.run(get_answer.get_answer_davinci())
 
 
 def get_answer_davinci_person(update: Update, context: CallbackContext):
-    if update.effective_chat.type == 'private' and for_check(update, context):
-        get_answer = GetAnswerGPT(update, context)
+    user = for_check(update, context)
+    if update.effective_chat.type == 'private' and user:
+        get_answer = GetAnswerGPT(update, context, user)
         asyncio.run(get_answer.get_answer_davinci())

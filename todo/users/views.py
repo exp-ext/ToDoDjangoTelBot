@@ -16,6 +16,7 @@ from django.http import HttpRequest, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.views import View
+from telbot.checking import UserRedisManager
 from telbot.cleaner import delete_messages_by_time
 from telegram import Update
 from telegram.ext import CallbackContext
@@ -79,6 +80,9 @@ class Authentication:
             user.is_blocked_bot = False
             user.validation_key = validation_key
             user.validation_key_time = timezone.now().astimezone(timezone.utc)
+
+            user_manager = UserRedisManager()
+            user_manager.set_user_in_redis(self.tg_user, user)
 
             if not user.image:
                 self.add_profile_picture.apply_async(args=(self.tg_user.id, ModelDataSerializer.serialize(user),))
@@ -391,7 +395,7 @@ def get_coordinates(tg_id: int) -> QuerySet[Location]:
     return user.locations.first() if user else None
 
 
-def set_coordinates(update: Update, _: CallbackContext) -> None:
+def set_coordinates(update: Update, _: CallbackContext, user: User = None) -> None:
     """Получение часового пояса на основе координат пользователя и запись его в базу данных.
 
     ### Args:
@@ -405,7 +409,8 @@ def set_coordinates(update: Update, _: CallbackContext) -> None:
     user_id = chat.id
     latitude = update.message.location.latitude
     longitude = update.message.location.longitude
-    user = User.objects.filter(tg_id=user_id).first()
+    if not user:
+        user = User.objects.filter(tg_id=user_id).first()
 
     if user:
         tf = TimezoneFinder()

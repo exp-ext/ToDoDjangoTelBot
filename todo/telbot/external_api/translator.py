@@ -92,10 +92,7 @@ class GetTranslation():
         """"
         Передаёт TYPING в чат Телеграм откуда пришёл запрос.
         """
-        time_stop = (
-            datetime.now()
-            + timedelta(minutes=GetTranslation.MAX_TYPING_TIME)
-        )
+        time_stop = datetime.now() + timedelta(minutes=GetTranslation.MAX_TYPING_TIME)
         while not self.event.is_set():
             self.context.bot.send_chat_action(
                 chat_id=self.update.effective_chat.id,
@@ -157,9 +154,7 @@ class GetTranslation():
 
     def check_in_works(self) -> bool:
         """Проверяет нет ли уже в работе этого запроса."""
-        if (self.user.history_translation.filter(
-                created_at__range=[self.time_start, self.current_time],
-                message=self.message_text).exists()):
+        if self.user.history_translation.filter(created_at__range=[self.time_start, self.current_time], message=self.message_text).exists():
             return True
         HistoryTranslation.objects.create(
             user=self.user,
@@ -202,9 +197,7 @@ class GetTranslation():
 
 def send_translation(update: Update, context: CallbackContext):
     answers_for_check = {
-        '': ('К сожалению перевод доступен только для  '
-             '[зарегистрированных пользователей]'
-             f'({context.bot.link}).'),
+        '': (f'К сожалению перевод доступен только для [зарегистрированных пользователей]({context.bot.link}).'),
     }
     if check_registration(update, context, answers_for_check) is False:
         return {'code': 401}

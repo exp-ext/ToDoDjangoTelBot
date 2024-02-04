@@ -35,7 +35,7 @@ def main_menu(update: Update, context: CallbackContext) -> None:
         '': (
             f'{update.effective_user.first_name}, пожалуйста пройдите по ссылке [для прохождения процедуры регистрации]({context.bot.link}) 🔆'
             if chat.type != 'private' else
-            f'{update.effective_user.first_name}, пожалуйста пройдите процедуру регистрации выбрав соответствующий пункт в меню 🔆'
+            f'{update.effective_user.first_name}, пожалуйста пройдите процедуру регистрации, выбрав соответствующий пункт в меню 🔆'
         )
     }
 
@@ -142,10 +142,9 @@ def show_my_links(update: Update, context: CallbackContext):
 def ask_auth(update: Update, context: CallbackContext) -> None:
     """Получаем ссылку для авторизации на сайте."""
     chat = update.effective_chat
-
     answers = {
         '': ('Для начала необходимо пройти регистрацию.')
     }
-
-    if check_registration(update, context, answers) and chat.type == 'private':
-        Authentication(update, context).authorization()
+    user = check_registration(update, context, answers, return_user=True)
+    if user and chat.type == 'private':
+        Authentication(update, context, user).authorization()

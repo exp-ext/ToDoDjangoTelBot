@@ -117,7 +117,7 @@ class User(AbstractUser):
     validation_key_time = models.DateTimeField(null=True, blank=True)
     validation_message_id = models.IntegerField(null=True, blank=True)
 
-    is_blocked_bot = models.BooleanField(default=False)
+    is_blocked_bot = models.BooleanField(default=True)
 
     created_at = models.DateTimeField(auto_now_add=True, db_index=True)
 

@@ -49,7 +49,6 @@ class UserRedisManager:
         user.username = tg_user.username or f'n-{str(1010101 + user.id)[::-1]}'
         user.first_name = tg_user.first_name or tg_user.username
         user.last_name = tg_user.last_name
-        user.is_blocked_bot = True
         user.save()
 
 

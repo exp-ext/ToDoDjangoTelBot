@@ -248,7 +248,7 @@ def for_check(update: Update, context: CallbackContext):
         '': (f'Какая интересная беседа, [зарегистрируетесь]({context.bot.link}) и я подключусь к ней 😇'),
     }
     allow_unregistered = True
-    return check_registration(update, context, answers_for_check, allow_unregistered)
+    return check_registration(update, context, answers_for_check, allow_unregistered, return_user=True)
 
 
 def get_answer_davinci_public(update: Update, context: CallbackContext):

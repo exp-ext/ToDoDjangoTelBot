@@ -48,7 +48,7 @@ class Authentication:
     """
     valid_time: int = 5
 
-    def __init__(self, update: Update, context: CallbackContext):
+    def __init__(self, update: Update, context: CallbackContext, user: User = None):
         """Инициализация объекта класса.
 
         ### Args:
@@ -60,6 +60,7 @@ class Authentication:
         self.context = context
         self.chat = update.effective_chat
         self.tg_user = update.effective_user
+        self.user = user
 
     def register(self) -> Dict[str, Any]:
         """Регистрация нового пользователя в системе.
@@ -73,21 +74,21 @@ class Authentication:
 
         try:
             validation_key = self.get_password(length=28)
-            user, _ = User.objects.get_or_create(tg_id=self.tg_user.id)
-            user.username = self.tg_user.username or f'n-{str(1010101 + user.id)[::-1]}'
-            user.first_name = self.tg_user.first_name or self.tg_user.username
-            user.last_name = self.tg_user.last_name
-            user.is_blocked_bot = False
-            user.validation_key = validation_key
-            user.validation_key_time = timezone.now().astimezone(timezone.utc)
+            self.user, _ = User.objects.get_or_create(tg_id=self.tg_user.id)
+            self.user.username = self.tg_user.username or f'n-{str(1010101 + self.user.id)[::-1]}'
+            self.user.first_name = self.tg_user.first_name or self.tg_user.username
+            self.user.last_name = self.tg_user.last_name
+            self.user.is_blocked_bot = False
+            self.user.validation_key = validation_key
+            self.user.validation_key_time = timezone.now().astimezone(timezone.utc)
 
             user_manager = UserRedisManager()
-            user_manager.set_user_in_redis(self.tg_user, user)
+            user_manager.set_user_in_redis(self.tg_user, self.user)
 
-            if not user.image:
-                self.add_profile_picture.apply_async(args=(self.tg_user.id, ModelDataSerializer.serialize(user),))
+            if not self.user.image:
+                self.add_profile_picture.apply_async(args=(self.tg_user.id, ModelDataSerializer.serialize(self.user),))
             password = self.get_password(length=15)
-            user.set_password(password)
+            self.user.set_password(password)
             reply_text = [
                 'Вы успешно зарегистрированы в проекте Your To-Do.\n'
                 'Ниже логин и пароль для входа в личный кабинет:\n'
@@ -98,17 +99,17 @@ class Authentication:
                 f'✔️ [https://www.{settings.DOMAIN}/auth/](https://www.{settings.DOMAIN}/auth/login/tg/{self.tg_user.id}/{validation_key}/)\n〰'
             ]
             message_id = self.send_messages(reply_text)
-            user.validation_message_id = message_id
-            user.save()
+            self.user.validation_message_id = message_id
+            self.user.save()
         except Exception as err:
             user_error_message = 'Произошла непредвиденная ошибка. Разработчики уже занимаются её устранением 💡. Попробуйте позже.'
             self.context.bot.send_message(self.tg_user.id, user_error_message)
             error_message = f'Ошибка при регистрации пользователя c id-{self.tg_user.id} и username-{self.tg_user.username}:\n{err}'
             self.context.bot.send_message(ADMIN_ID, error_message)
 
-        if not user.locations.exists():
+        if not self.user.locations.exists():
             Location.objects.create(
-                user=user,
+                user=self.user,
                 latitude=59.799,
                 longitude=30.274
             )
@@ -126,36 +127,37 @@ class Authentication:
 
         validation_key = self.get_password(length=28)
 
-        user = User.objects.filter(
-            tg_id=self.tg_user.id,
-            username=self.tg_user.username
-        ).first()
+        # if not self.user:
+        #     self.user = User.objects.filter(
+        #         tg_id=self.tg_user.id,
+        #         username=self.tg_user.username
+        #     ).first()
 
-        if not user.image:
-            self.add_profile_picture.apply_async(args=(self.tg_user.id, ModelDataSerializer.serialize(user),))
+        if not self.user.image:
+            self.add_profile_picture.apply_async(args=(self.tg_user.id, ModelDataSerializer.serialize(self.user),))
 
-        user.first_name = self.tg_user.first_name
-        user.last_name = self.tg_user.last_name
+        self.user.first_name = self.tg_user.first_name
+        self.user.last_name = self.tg_user.last_name
 
-        if User.objects.filter(phone_number=self.update.message.contact.phone_number).exclude(id=user.id).exists():
+        if User.objects.filter(phone_number=self.update.message.contact.phone_number).exclude(id=self.user.id).exists():
             reply_text = (
                 'Пользователь с таким номером телефона, уже существует.'
                 'Напишите пожалуйста об этом инциденте разработчику - https://t.me/Borokin'
             )
             self.context.bot.send_message(self.chat.id, reply_text)
         else:
-            user.phone_number = self.update.message.contact.phone_number
+            self.user.phone_number = self.update.message.contact.phone_number
 
-        user.validation_key = validation_key
-        user.validation_key_time = timezone.now().astimezone(timezone.utc)
+        self.user.validation_key = validation_key
+        self.user.validation_key_time = timezone.now().astimezone(timezone.utc)
         reply_text = [
             f'Для быстрой авторизации на [сайте](https://www.{settings.DOMAIN}) пройдите по ссылке:\n〰\n'
             f'✔️ [https://www.{settings.DOMAIN}/auth/](https://www.{settings.DOMAIN}/auth/login/tg/{self.tg_user.id}/{validation_key}/)\n〰'
         ]
         message_id = self.send_messages(reply_text)
-        user.validation_message_id = message_id
+        self.user.validation_message_id = message_id
         try:
-            user.save()
+            self.user.save()
         except Exception as err:
             delete_messages_by_time.apply_async(
                 args=[self.chat.id, message_id],

@@ -1,4 +1,4 @@
-from advertising.models import (AdvertisementWidget, PartnerBanner,
+from advertising.models import (AdvertisementWidget, MyBanner, PartnerBanner,
                                 TelegramMailing)
 from django.contrib import admin
 from django.utils.safestring import mark_safe
@@ -52,3 +52,18 @@ class PartnerBannerAdmin(admin.ModelAdmin):
         ('Текст', {'fields': ('script',)}),
     )
     readonly_fields = ('created_at',)
+
+
+@admin.register(MyBanner)
+class MyBannerAdmin(admin.ModelAdmin):
+    list_display = ('title', 'reference')
+    fieldsets = (
+        ('Данные не для представления на сайте', {'fields': ('created_at', 'title',)}),
+        ('Картинка баннера', {'fields': ('image', 'preview')}),
+        ('Ссылка', {'fields': ('reference',)}),
+        ('Текст', {'fields': ('text',)}),
+    )
+    readonly_fields = ('preview', 'created_at')
+
+    def preview(self, obj):
+        return mark_safe(f'<img src="{obj.image.url}" style="max-height: 200px;">')

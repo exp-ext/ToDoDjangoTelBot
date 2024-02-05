@@ -19,3 +19,20 @@ pre {
     position: sticky;
     top: 76px;
 }
+.image-container {
+  width: 100%;
+  padding-top: 35.3125%;
+  position: relative;
+  background-color: #f0f0f0;
+}
+.image-container img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.hidden-content {
+  display: none;
+}

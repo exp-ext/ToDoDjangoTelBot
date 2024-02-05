@@ -34,6 +34,13 @@
 
 {% block content %}
 
+  <div id="banner-data" 
+    data-reference="{{ my_banner.reference }}" 
+    data-image="{{ my_banner.image.url }}" 
+    data-text="{{ my_banner.text }}"
+    style="display:none;">
+  </div>
+
   <div class="container-fluid pt-5">
     <div class="row mt-3">
       {% comment %} первая колонка {% endcomment %}
@@ -51,10 +58,14 @@
               </ul>
             </div>
           {% endif %}
+
           <div class="card p-1 bg-light rounded shadow group-unit _anim-items _anim-no-hide my-2"> 
-            {% include 'includes/yabodyadvertising.html' %}           
+            {% include 'includes/yabodyadvertising.html' %} 
+            <div id="card-container" style="display:none;">
+            </div>        
           </div>
-          <div class="group-unit _anim-items _anim-no-hide">
+
+          <div class="group-unit _anim-items _anim-no-hide hidden-content">
             {% if advertising %}
               <div class="ck ck-content">
                 {% include 'desktop/posts/includes/advertising.html' %}
@@ -62,6 +73,7 @@
             {% endif %}
             {% include 'desktop/posts/includes/author_detail.html' %}
           </div>
+
         </div>
       </aside>
       {% comment %} вторая колонка {% endcomment %}
@@ -69,16 +81,20 @@
         <div class="lobster">
           <h1>{{ post.title }}</h1>
         </div>
+
         {% if post.image %}
-          <img class="card-img my-2" src="{{ post.image.url }}" class="d-block w-auto h-100" alt="Картинка к публикации: {{ post.title }}" />
+          <div class="image-container">
+            <img src="{{ post.image.url }}" alt="Картинка к публикации: {{ post.title }}" />
+          </div>
         {% endif %}
+
         <p>
           <div class="ck ck-content">
             <div class="table-wrap">
               {{ post.text|safe }}
             </div>
           </div>
-        </p>      
+        </p>
         {% if tag_posts_present %}
           {% include 'desktop/posts/includes/other_posts.html' %}
         {% endif %}
@@ -95,6 +111,12 @@
 
 {% block javascript %}
   <script async charset='utf-8' src='//cdn.embedly.com/widgets/platform.js'></script>
-  <script async src="{% static 'js/post_detail.js' %}"></script>
+  <script defer src="{% static 'js/post_detail.js' %}"></script>
   <script async src="{% static 'js/ya-desk-floor-ad.js' %}"></script>
+  <script>
+    let = isAdLoaded = false;
+    function adLoadedCallback() {
+      isAdLoaded = true;
+    }
+  </script>
 {% endblock %}

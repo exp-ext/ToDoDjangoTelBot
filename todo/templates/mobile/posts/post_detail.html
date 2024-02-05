@@ -59,7 +59,9 @@
           <h1>{{ post.title }}</h1>
         </div>
         {% if post.image %}
-          <img class="card-img my-2" src="{{ post.image.url }}" class="d-block w-auto h-100" alt="Картинка к публикации: {{ post.title }}" />
+          <div class="image-container">
+            <img src="{{ post.image.url }}" alt="Картинка к публикации: {{ post.title }}" />
+          </div>
         {% endif %}
         <p>
           <div class="ck ck-content">

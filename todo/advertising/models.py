@@ -96,3 +96,18 @@ class AdvertisementWidget(Create):
 
     def __str__(self) -> str:
         return self.title
+
+
+class MyBanner(Banner):
+    """Модель для хранения информации о баннерах партнеров.
+
+    ### Attributes:
+    - title (`CharField`): Заголовок баннера.
+    - image (`ImageField`): Путь к изображению баннера.
+    - reference (`TextField`): Ссылка, на которую ведет баннер.
+    - text (`CharField`): Слоган баннера.
+    """
+
+    class Meta:
+        verbose_name = _('мой банер на сайте')
+        verbose_name_plural = _('мои банеры на сайте')

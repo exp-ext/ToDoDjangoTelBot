@@ -16,7 +16,9 @@
             <div class="col-md-4">
               <div class="card shadow">
                 <a href="{% url 'posts:post_detail' post.slug %}">
-                  <img class="card-img-top" src="{{ post.image_url }}" alt="{{ post.title }}" loading="lazy" />
+                  <div class="image-container">
+                    <img class="card-img-top" src="{{ post.image_url }}" alt="{{ post.title }}" loading="lazy" />
+                  </div>  
                 </a>           
                 <div class="card-body">
                   <p class="card-text">{{ post.short_description }}</p>

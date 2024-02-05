@@ -4,7 +4,7 @@ from collections import Counter
 from typing import Any, Dict
 from urllib.parse import quote
 
-from advertising.models import PartnerBanner
+from advertising.models import MyBanner, PartnerBanner
 from bs4 import BeautifulSoup
 from core.views import get_status_in_group, linkages_check, paginator_handler
 from django.conf import settings
@@ -521,6 +521,8 @@ class PostDetailView(DetailView):
         if not self.user_agent.is_mobile:
             random_banner = PartnerBanner.objects.order_by('?').first()
 
+        my_banner = MyBanner.objects.order_by('?').first()
+
         redis_key_post_ips = f'ips_post_{post.id}'
         redis_key_post_counter = f'counter_post_{post.id}'
         redis_key_agent_posts = 'list_agent_posts'
@@ -572,7 +574,8 @@ class PostDetailView(DetailView):
             'contents': contents[0].get('children', None) if contents else None,
             'tags': tags,
             'tag_posts_present': tag_posts_present,
-            'tag_posts_chunked': tag_posts_chunked
+            'tag_posts_chunked': tag_posts_chunked,
+            'my_banner': my_banner
         })
         return context
 

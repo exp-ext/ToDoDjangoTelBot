@@ -33,6 +33,14 @@
 
 {% block content %}
 
+  <div id="banner-data" 
+    data-reference="{{ my_banner.reference }}" 
+    data-image="{{ my_banner.image.url }}" 
+    data-text="{{ my_banner.text }}"
+    data-mobile-text="{{ my_banner.mobile_text }}"
+    style="display:none;">
+  </div>
+  
   <div class="container-fluid my-5">
     <div class="row py-1">
       <aside class="bg-light rounded shadow mb-2">  
@@ -50,8 +58,10 @@
         {% endif %}
       </aside>
 
-      <aside class="bg-light rounded shadow mb-2 py-2"> 
-        {% include 'includes/yabodyadvertising.html' %}
+      <aside id="advertAside" class="bg-light rounded shadow mb-2 py-2"> 
+        {% include 'includes/mobilyabodyadvertising.html' %}
+        <div id="card-container" style="display:none;">
+        </div>
       </aside>
 
       <article class="bg-light rounded shadow">
@@ -89,6 +99,6 @@
 
 {% block javascript %}
   <script async charset='utf-8' src='//cdn.embedly.com/widgets/platform.js'></script>
-  <script async src="{% static 'js/post_detail.js' %}"></script>
+  <script defer src="{% static 'js/post_detail.js' %}"></script>
   <script async src="{% static 'js/ya-mob-floor-ad.js' %}"></script>
 {% endblock %}

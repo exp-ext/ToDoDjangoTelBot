@@ -61,7 +61,7 @@ class MyBannerAdmin(admin.ModelAdmin):
         ('Данные не для представления на сайте', {'fields': ('created_at', 'title',)}),
         ('Картинка баннера', {'fields': ('image', 'preview')}),
         ('Ссылка', {'fields': ('reference',)}),
-        ('Текст', {'fields': ('text',)}),
+        ('Текст', {'fields': ('text', 'mobile_text')}),
     )
     readonly_fields = ('preview', 'created_at')
 

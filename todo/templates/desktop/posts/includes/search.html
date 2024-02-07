@@ -1,0 +1,44 @@
+{% load static %}
+
+{% block head %}  
+  <link rel="stylesheet" href="{% static 'css/search.css' %}">
+  <link rel="stylesheet" href="{% static 'css/hover-effects.css' %}">
+{% endblock %}
+
+<div class="card shadow mb-3 mt-1 bg-secondary">
+  <div class="card-body">
+    <form class="form-inline w-100" action="{% url 'posts:search' %}" class="navbar-form navbar-left" method="get">
+      <div class="form-row w-100">
+        <div class="col mb-1">
+          <input name="q" class="form-control h-50 w-90" type="search" placeholder="Поиск в постах" id="search-input"
+            {% if keyword %} value="{{ keyword }}"{% endif %}>
+        </div>
+        <div class="d-flex flex-row-reverse hover-effects">
+          <button class="button" type="submit">Поиск</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+{% block javascript %}
+  <script src="{% static 'js/search-navbar.js' %}"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const items = JSON.parse('{{ tags | safe }}');
+        const media_bucket = '{{ media_bucket | safe }}'
+        addItemsToNavbar(items, media_bucket);
+    });
+  </script>
+  <script>
+    $(document).ready(function() {
+      var searchUrl = "{% url 'posts:search' %}";
+      initAutocomplete(searchUrl);
+    });
+  </script>
+  <script async src="{% static 'js/hover-effects.js' %}"></script>
+  {% comment %} <script src="{% static 'js/load-img.js' %}"></script>
+  <script>
+    needDiv = '.scroll';
+  </script> {% endcomment %}
+{% endblock %}

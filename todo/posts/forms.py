@@ -1,7 +1,13 @@
+import os
+from io import BytesIO
+
 from bs4 import BeautifulSoup
 from django import forms
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.forms import Textarea
 from django.utils.translation import gettext_lazy as _
+from posts.image_prep import resize_and_crop_image
+from pytils.translit import slugify
 from users.models import Group
 
 from .models import Comment, Post
@@ -52,6 +58,19 @@ class PostForm(forms.ModelForm):
         if len(tag_error) > 1:
             raise forms.ValidationError(tag_error)
         return text
+
+    def clean_image(self):
+        image = self.cleaned_data.get("image")
+
+        if image is not None and hasattr(image, 'read'):
+            file_name = slugify(os.path.splitext(image.name)[0].lower()) + '.webp'
+            img = resize_and_crop_image(image, 960, 339)
+            temp_image = BytesIO()
+            img.save(temp_image, format='WEBP')
+            temp_image.seek(0)
+            uploaded_image = SimpleUploadedFile(file_name, temp_image.getvalue(), content_type='image/webp')
+            return uploaded_image
+        return image
 
 
 class CommentForm(forms.ModelForm):

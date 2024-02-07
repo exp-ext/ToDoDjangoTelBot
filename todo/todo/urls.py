@@ -51,7 +51,7 @@ urlpatterns = [
     path('profile/<str:username>/', accounts_profile, name='accounts_profile'),
     path('posts/', include(('posts.urls', 'posts'), namespace='posts')),
     path('ckeditor5/', include('django_ckeditor_5.urls'), name='ck_editor_5_upload_file'),
-    path('health/live', views.health, name='health'),
+    path('health/live/', views.health, name='health'),
 ]
 
 if settings.DEBUG:

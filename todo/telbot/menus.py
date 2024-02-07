@@ -32,12 +32,14 @@ def main_menu(update: Update, context: CallbackContext) -> None:
     user_name = update.effective_user.first_name
 
     answers = {
-        '': (f'{update.effective_user.first_name}, пожалуйста пройдите по '
-             f'ссылке [для прохождения процедуры регистрации]'
-             f'({context.bot.link}) 🔆')
+        '': (
+            f'{update.effective_user.first_name}, пожалуйста пройдите по ссылке [для прохождения процедуры регистрации]({context.bot.link}) 🔆'
+            if chat.type != 'private' else
+            f'{update.effective_user.first_name}, пожалуйста пройдите процедуру регистрации, выбрав соответствующий пункт в меню 🔆'
+        )
     }
 
-    if check_registration(update, context, answers):
+    if check_registration(update, context, answers) is not False:
         button_list = [
             InlineKeyboardButton('💬 добавить запись', callback_data='add_first_step'),
             InlineKeyboardButton('❌ удалить запись', callback_data='del_first_step'),
@@ -66,11 +68,11 @@ def private_menu(update: Update, context: CallbackContext) -> None:
     chat = update.effective_chat
 
     answers = {
-        '': (f'{update.message.from_user.first_name}, функции геолокации '
-             f'работают только в [private chat]({context.bot.link}) с ботом.')
+        '': (f'{update.message.from_user.first_name}, функции геолокации доступны только после регистрации.')
     }
 
-    if check_registration(update, context, answers):
+    user = check_registration(update, context, answers, return_user=True)
+    if user:
         button_list = [
             InlineKeyboardButton('🌈 погода сейчас', callback_data='weather_per_day'),
             InlineKeyboardButton('☔️ прогноз погоды на 4 дня', callback_data='weather'),
@@ -86,7 +88,7 @@ def private_menu(update: Update, context: CallbackContext) -> None:
             reply_markup=reply_markup,
             parse_mode='Markdown'
         )
-        set_coordinates(update, context)
+        set_coordinates(update, context, user)
 
 
 def ask_registration(update: Update, context: CallbackContext) -> None:
@@ -140,10 +142,9 @@ def show_my_links(update: Update, context: CallbackContext):
 def ask_auth(update: Update, context: CallbackContext) -> None:
     """Получаем ссылку для авторизации на сайте."""
     chat = update.effective_chat
-
     answers = {
         '': ('Для начала необходимо пройти регистрацию.')
     }
-
-    if check_registration(update, context, answers) and chat.type == 'private':
-        Authentication(update, context).authorization()
+    user = check_registration(update, context, answers, return_user=True)
+    if user and chat.type == 'private':
+        Authentication(update, context, user).authorization()

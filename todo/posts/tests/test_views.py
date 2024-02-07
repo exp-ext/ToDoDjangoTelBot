@@ -126,11 +126,11 @@ class PostViewsTests(TestCase):
     def test_urls_correct_template_by_namespace(self):
         """Namespace:name использует соответствующий шаблон."""
         templates_url_names = {
-            self.index: 'posts/index_posts.html',
-            self.profile: 'posts/profile.html',
-            self.post_detail: 'posts/post_detail.html',
-            self.post_edit: 'posts/create_post.html',
-            self.post_create: 'posts/create_post.html',
+            self.index: 'desktop/posts/index_posts.html',
+            self.profile: 'desktop/posts/profile.html',
+            self.post_detail: 'desktop/posts/post_detail.html',
+            self.post_edit: 'desktop/posts/create_post.html',
+            self.post_create: 'desktop/posts/create_post.html',
         }
         for address, template in templates_url_names.items():
             with self.subTest(address=address):

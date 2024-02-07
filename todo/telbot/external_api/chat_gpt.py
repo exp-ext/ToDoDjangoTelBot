@@ -25,14 +25,8 @@ redis_client = settings.REDIS_CLIENT
 
 
 class GetAnswerGPT():
-    """
-    Проверяет регистрацию.
-    Делает запрос и в чат Telegram возвращает результат ответа
-    от API ИИ Dall-E.
-    """
     ERROR_TEXT = (
-        'Что-то пошло не так 🤷🏼\n'
-        'Возможно большой наплыв запросов, которые я не успеваю обрабатывать 🤯'
+        'Что-то пошло не так 🤷🏼\n' 'Возможно большой наплыв запросов, которые я не успеваю обрабатывать 🤯'
     )
     MODEL = 'gpt-3.5-turbo-1106'
     MAX_LONG_MESSAGE = 1024
@@ -40,10 +34,10 @@ class GetAnswerGPT():
     STORY_WINDOWS_TIME = 30
     MAX_TYPING_TIME = 3
 
-    def __init__(self, update: Update, context: CallbackContext) -> None:
+    def __init__(self, update: Update, context: CallbackContext, user: User) -> None:
         self.update = update
         self.context = context
-        self.user = None
+        self.user = user
         self.message_text = None
         self.message_tokens = None
         self.current_time = None
@@ -58,17 +52,13 @@ class GetAnswerGPT():
                 'content':
                     'Your name is Eva and you are experienced senior software developer with extensive experience leading '
                     'teams, mentoring all developers, and delivering high-quality software solutions to customers. '
-                    'The primary language is Russian. '
-                    'Only this Markdown format can be used in text formatting:'
-                    '*bold text* _italic text_'
-                    '[inline URL](http://www.example.com/)'
-                    '`inline fixed-width code`'
-                    '``` pre-formatted fixed-width code block ```'
+                    'The primary language is Russian. Only this Markdown format can be used in text formatting:'
+                    '*bold text* _italic text_ [inline URL](http://www.example.com/) '
+                    '`inline fixed-width code` ``` pre-formatted fixed-width code block ```'
             }
         ]
         self.set_windows_time()
         self.set_message_text()
-        self.set_user()
 
     @classmethod
     async def num_tokens_from_message(cls, message):
@@ -78,22 +68,23 @@ class GetAnswerGPT():
             encoding = tiktoken.get_encoding("cl100k_base")
         return len(encoding.encode(message)) + 4
 
+    @property
+    def check_long_query(self) -> bool:
+        return self.message_tokens > GetAnswerGPT.MAX_LONG_MESSAGE
+
     async def get_answer_davinci(self) -> dict:
         """Основная логика."""
+
         if await self.check_in_works():
             return {'code': 423}
 
         self.message_tokens = await self.num_tokens_from_message(self.message_text)
 
         if self.check_long_query:
-            answer_text = (
+            self.answer_text = (
                 f'{self.user.first_name}, у Вас слишком большой текст запроса. Попробуйте сформулировать его короче.'
             )
-            self.context.bot.send_message(
-                chat_id=self.update.effective_chat.id,
-                text=answer_text,
-                reply_to_message_id=self.update.message.message_id
-            )
+            await self.reply_to_user()
             return {'code': 400}
 
         try:
@@ -111,28 +102,6 @@ class GetAnswerGPT():
             asyncio.create_task(self.create_history_ai())
             await self.reply_to_user()
             await self.del_mess_in_redis()
-
-    @sync_to_async
-    def reply_to_user(self) -> None:
-        """Отправляет ответ пользователю."""
-        try:
-            self.context.bot.send_message(
-                chat_id=self.update.effective_chat.id,
-                text=self.answer_text,
-                reply_to_message_id=self.update.message.message_id,
-                parse_mode=ParseMode.MARKDOWN
-            )
-        except telegram.error.BadRequest:
-            self.context.bot.send_message(
-                chat_id=self.update.effective_chat.id,
-                text=self.answer_text,
-                reply_to_message_id=self.update.message.message_id,
-            )
-        except Exception as err:
-            self.context.bot.send_message(
-                chat_id=ADMIN_ID,
-                text=f'Ошибка при отправке ответа ChatGPT: {str(err)[:1024]}',
-            )
 
     async def send_typing_periodically(self) -> None:
         """"Передаёт TYPING в чат Телеграм откуда пришёл запрос."""
@@ -188,6 +157,17 @@ class GetAnswerGPT():
             self.message_tokens = completion.get('usage')['prompt_tokens']
             self.event.set()
 
+    async def create_history_ai(self):
+        """Создаём запись истории в БД."""
+        self.request_massage = HistoryAI(
+            user=self.user,
+            question=self.message_text,
+            question_tokens=self.message_tokens,
+            answer=self.answer_text,
+            answer_tokens=self.answer_tokens
+        )
+        await self.request_massage.save()
+
     @database_sync_to_async
     def get_prompt(self) -> None:
         """Prompt для запроса в OpenAI и модель user."""
@@ -216,6 +196,28 @@ class GetAnswerGPT():
         self.prompt.append({'role': 'user', 'content': self.message_text})
 
     @sync_to_async
+    def reply_to_user(self) -> None:
+        """Отправляет ответ пользователю."""
+        try:
+            self.context.bot.send_message(
+                chat_id=self.update.effective_chat.id,
+                text=self.answer_text,
+                reply_to_message_id=self.update.message.message_id,
+                parse_mode=ParseMode.MARKDOWN
+            )
+        except telegram.error.BadRequest:
+            self.context.bot.send_message(
+                chat_id=self.update.effective_chat.id,
+                text=self.answer_text,
+                reply_to_message_id=self.update.message.message_id,
+            )
+        except Exception as err:
+            self.context.bot.send_message(
+                chat_id=ADMIN_ID,
+                text=f'Ошибка при отправке ответа ChatGPT: {str(err)[:1024]}',
+            )
+
+    @sync_to_async
     def check_in_works(self) -> bool:
         """Проверяет нет ли уже в работе этого запроса в Redis."""
         queries = redis_client.lrange(f'gpt_user:{self.user.id}', 0, -1)
@@ -229,25 +231,6 @@ class GetAnswerGPT():
         """Удаляет входящее сообщение из Redis."""
         redis_client.lrem(f'gpt_user:{self.user.id}', 1, self.message_text.encode('utf-8'))
 
-    async def create_history_ai(self):
-        """Создаём запись в БД."""
-        self.request_massage = HistoryAI(
-            user=self.user,
-            question=self.message_text,
-            question_tokens=self.message_tokens,
-            answer=self.answer_text,
-            answer_tokens=self.answer_tokens
-        )
-        await self.request_massage.save()
-
-    def set_user(self) -> None:
-        """Определяем и назначаем  атрибут user."""
-        self.user = (
-            User.objects
-            .prefetch_related('history_ai')
-            .get(username=self.update.effective_user.username)
-        )
-
     def set_message_text(self) -> str:
         """Определяем и назначаем атрибут message_text."""
         self.message_text = self.update.effective_message.text
@@ -257,10 +240,6 @@ class GetAnswerGPT():
         self.current_time = datetime.now(timezone.utc)
         self.time_start = self.current_time - timedelta(minutes=GetAnswerGPT.STORY_WINDOWS_TIME)
 
-    @property
-    def check_long_query(self) -> bool:
-        return self.message_tokens > GetAnswerGPT.MAX_LONG_MESSAGE
-
 
 def for_check(update: Update, context: CallbackContext):
     answers_for_check = {
@@ -268,16 +247,19 @@ def for_check(update: Update, context: CallbackContext):
         '!': (f'Я обязательно поддержу Вашу дискуссию, если [зарегистрируетесь]({context.bot.link}) 🙃'),
         '': (f'Какая интересная беседа, [зарегистрируетесь]({context.bot.link}) и я подключусь к ней 😇'),
     }
-    return check_registration(update, context, answers_for_check)
+    allow_unregistered = True
+    return check_registration(update, context, answers_for_check, allow_unregistered, return_user=True)
 
 
 def get_answer_davinci_public(update: Update, context: CallbackContext):
-    if for_check(update, context):
-        get_answer = GetAnswerGPT(update, context)
+    user = for_check(update, context)
+    if user:
+        get_answer = GetAnswerGPT(update, context, user)
         asyncio.run(get_answer.get_answer_davinci())
 
 
 def get_answer_davinci_person(update: Update, context: CallbackContext):
-    if update.effective_chat.type == 'private' and for_check(update, context):
-        get_answer = GetAnswerGPT(update, context)
+    user = for_check(update, context)
+    if update.effective_chat.type == 'private' and user:
+        get_answer = GetAnswerGPT(update, context, user)
         asyncio.run(get_answer.get_answer_davinci())

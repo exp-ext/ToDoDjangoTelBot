@@ -9,7 +9,7 @@ from channels.db import database_sync_to_async
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.http import HttpResponseBadRequest
-from django.shortcuts import get_object_or_404
+from telbot.external_api.chat_gpt import GetAnswerGPT
 from telegram import ChatAction, Update
 from telegram.ext import CallbackContext
 
@@ -29,7 +29,7 @@ class AudioTranscription():
     ERROR_TEXT = 'Что-то пошло не так 🤷🏼'
     STORY_WINDOWS_TIME = 11
     MAX_TYPING_TIME = 10
-    url = 'http://192.168.0.101:9009/asr'
+    url = 'http://127.0.0.1:9009/asr' if settings.DEBUG else 'http://whisper:9000/asr'
     params = {
         'task': 'transcribe',
         'language': 'ru',
@@ -37,16 +37,15 @@ class AudioTranscription():
     }
     headers = {'accept': 'application/json'}
 
-    def __init__(self, update: Update, context: CallbackContext) -> None:
+    def __init__(self, update: Update, context: CallbackContext, user: User) -> None:
         self.update = update
         self.context = context
         self.file_id = update.message.voice.file_id
-        self.user = None
+        self.user = user
         self.current_time = None
         self.time_start = None
         self.transcription_text = None
         self.event = asyncio.Event()
-        self.set_user()
         self.set_windows_time()
 
     async def get_audio_transcription(self) -> dict:
@@ -67,11 +66,22 @@ class AudioTranscription():
             )
             self.transcription_text = AudioTranscription.ERROR_TEXT
         finally:
-            self.context.bot.send_message(
-                chat_id=self.update.effective_chat.id,
-                text=self.transcription_text,
-                reply_to_message_id=self.update.message.message_id
-            )
+            if any(word in self.transcription_text.lower() for word in ['вопрос', '?']):
+                self.transcription_text = f'Ищю ответ на: {self.transcription_text}'
+                self.update.effective_message.text = self.transcription_text
+                asyncio.create_task(self.send_reply())
+                get_answer = GetAnswerGPT(self.update, self.context, self.user)
+                await get_answer.get_answer_davinci()
+            else:
+                await self.send_reply()
+
+    async def send_reply(self) -> None:
+        """Отправляет транскрипцию пользователю."""
+        self.context.bot.send_message(
+            chat_id=self.update.effective_chat.id,
+            text=self.transcription_text,
+            reply_to_message_id=self.update.message.message_id
+        )
 
     async def send_typing_periodically(self) -> None:
         """"
@@ -125,10 +135,6 @@ class AudioTranscription():
         redis_client.lpush(f'whisper_user:{self.user.id}', self.file_id)
         return False
 
-    def set_user(self) -> None:
-        """Определяем и назначаем  атрибут user."""
-        self.user = get_object_or_404(User, username=self.update.effective_user.username)
-
     def set_windows_time(self) -> None:
         """Определяем и назначаем атрибуты current_time и time_start."""
         self.current_time = datetime.now(timezone.utc)
@@ -137,7 +143,10 @@ class AudioTranscription():
 
 def send_audio_transcription(update: Update, context: CallbackContext):
     answers_for_check = {'': f'Сделаю транскрибацию, если [зарегистрируетесь]({context.bot.link}).'}
-    if check_registration(update, context, answers_for_check) is False:
+    allow_unregistered = True
+    return_user = True
+    user = check_registration(update, context, answers_for_check, allow_unregistered, return_user)
+    if not user:
         return {'code': 401}
-    instance = AudioTranscription(update, context)
+    instance = AudioTranscription(update, context, user)
     asyncio.run(instance.get_audio_transcription())

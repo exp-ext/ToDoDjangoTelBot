@@ -1,0 +1,18 @@
+{% load static %}
+{% load thumbnail %}
+{% block head %}
+  <link rel="stylesheet" href="{% static 'css/moving_units.css' %}">
+{% endblock %}
+{% for post in post_list %}
+  <a href="{% url 'posts:post_detail' post.slug %}" class="text-decoration-none">
+    <div class="card mb-3 group-unit _anim-items _anim-no-hide">
+      {% thumbnail post.image "960x339" crop="center" upscale=True as im %}
+        <img class="card-img-top" src="{{ im.url }}" alt="crop-{{ post.slug }}" />
+      {% endthumbnail %}
+      <div class="card-body">
+        <h5 class="card-title">{{ post.title }}</h5>
+        <p class="card-text">{{ post.filter_text }}</p>
+      </div>
+    </div>
+  </a>
+{% endfor %}

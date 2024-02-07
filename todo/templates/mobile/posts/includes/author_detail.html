@@ -1,0 +1,51 @@
+{% load static %}
+
+{% block head %}  
+  <link rel="stylesheet" href="{% static 'css/hover-effects.css' %}">
+{% endblock %}
+
+<div class="hover-effects">
+  <ul class="list-group shadow my-2">
+    <li class="list-group-item bg-secondary">
+      <p>Дата публикации: {{ post.created_at|date:"d E Y" }}</p>      
+      {% if request.user.is_authenticated %}
+        <div class="wow fadeInUp animated" data-wow-duration="1200ms" style="visibility: visible; animation-duration: 1200ms; animation-name: fadeInUp;">
+          <p>
+          <span class="counter-title">Просмотров</span>
+              <i class="fa fa-user medium-icon"></i>
+              <span class="timer counter alt-font appear" data-to="600" data-speed="7000">{{ counter }}</span>
+          </p>
+        </div>
+       {% endif %}
+    </li>
+    {% if post.group and post.group.link %}
+      <li class="list-group-item  bg-secondary">
+        <p>Группа: {{ post.group }}</p>
+        <a type="button" class="button fast white" href="{% url 'posts:group_list' post.group.slug%}">все &#160 записи &#160 группы</a>
+      </li>
+    {% endif %}
+    <li class="list-group-item  bg-secondary">
+      <p>Автор: {{ post.author.get_full_name }}</p>
+      <p>Всего постов автора:  <span> {{ authors_posts_count }} </span></p>              
+      <a type="button" class="btn button fast white" href="{% url 'posts:profile' post.author %}">все &#160 посты &#160 пользователя</a>
+    </li>
+    {% if post.author == user %}
+      <li class="list-group-item bg-secondary">  
+        <form method="patch" action="{% url 'posts:post_edit' post.pk %}">
+        {% csrf_token %}
+          <button type="submit" class="button w-100">изменить&#160пост</button>
+        </form>
+      </li>
+      <li class="list-group-item bg-secondary">
+        <form method="post" action="{% url 'posts:post_delete' post.pk %}">
+        {% csrf_token %}
+          <button type="submit" class="button reverse dark w-100">удалить&#160пост</button>
+        </form>
+      </li>
+    {% endif %}
+  </ul>
+</div>
+
+{% block javascript %}
+  <script async src="{% static 'js/hover-effects.js' %}"></script>  
+{% endblock %}

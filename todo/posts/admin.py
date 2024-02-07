@@ -56,7 +56,11 @@ class PostAdmin(admin.ModelAdmin):
 @admin.register(PostTags)
 class PostTagsAdmin(admin.ModelAdmin):
     prepopulated_fields = {'slug': ('title',)}
-    pass
+
+    readonly_fields = ('preview',)
+
+    def preview(self, obj):
+        return mark_safe(f'<img src="{obj.image.url}" style="max-height: 200px;">')
 
 
 @admin.register(Comment)

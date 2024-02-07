@@ -96,6 +96,15 @@ services:
       - redis
       - celery
 
+  whisper:
+    image: onerahmet/openai-whisper-asr-webservice:latest
+    container_name: todo_whisper
+    expose:
+      - 9000
+    environment:
+      - ASR_MODEL=small
+      - ASR_ENGINE=openai_whisper
+
 volumes:
   postgresql_volume:
   cache_pip_volume:

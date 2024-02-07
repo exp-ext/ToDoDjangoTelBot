@@ -1,6 +1,8 @@
-from datetime import datetime, timedelta
+from datetime import datetime
 
 from django.contrib.auth import get_user_model
+from django.db.models import DateTimeField
+from django.db.models.functions import Trunc
 from django.shortcuts import get_object_or_404
 from telegram import Update
 from telegram.ext import CallbackContext, ConversationHandler
@@ -34,59 +36,45 @@ def del_notes(update: Update, context: CallbackContext):
     """Удаление записи в модели Task."""
     chat = update.effective_chat
     message_thread_id = update.effective_message.message_thread_id
-    user = get_object_or_404(
-        User,
-        username=update.message.from_user.username
-    )
-    user_locally = user.locations.first()
+    tg_username = update.message.from_user.username
+    text = " ".join(update.message.text.split()).replace('- ', '')
 
-    text = update.message.text.replace('  ', ' ').replace('- ', '')
+    user = get_object_or_404(User.objects.prefetch_related('locations'), username=tg_username)
+    user_locally = user.locations.first() if user.locations.exists() else 'UTC'
 
     try:
         pars = TaskParse(text, user_locally.timezone)
         pars.parse_message()
 
-        del_id = (context.user_data['del_message'], update.message.message_id)
-        for id in del_id:
+        del_id = (context.user_data.get('del_message'), update.message.message_id)
+        for id in filter(None, del_id):
             context.bot.delete_message(chat.id, id)
 
-        if pars.server_date:
-            if pars.user_date.hour == 0 and pars.user_date.minute == 0:
-                time_range = [
-                    pars.server_date,
-                    pars.server_date + timedelta(days=1)
-                ]
-                tasks = user.tasks.filter(
-                    server_datetime__range=time_range,
-                    text__icontains=pars.only_message[1:]
-                )
-            else:
-                tasks = user.tasks.filter(
-                    server_datetime=pars.server_date,
-                    text__icontains=pars.only_message[1:]
-                )
-            count = len(tasks)
+        reply_text = f'*{update.message.from_user.first_name}*, не удалось разобрать дату 🧐. Попробуйте снова 🙄.'
 
+        if pars.server_date:
+            tasks = user.tasks.filter(text__icontains=pars.only_message)
+
+            if pars.user_date.hour == 0 and pars.user_date.minute == 0:
+                start_of_day = datetime.combine(pars.user_date, datetime.min.time())
+                end_of_day = datetime.combine(pars.user_date, datetime.max.time())
+                tasks = tasks.filter(server_datetime__range=(start_of_day, end_of_day))
+            else:
+                tasks = tasks.annotate(
+                    server_datetime_hour=Trunc('server_datetime', 'hour', output_field=DateTimeField())
+                ).filter(server_datetime_hour=pars.server_date.replace(minute=0, second=0, microsecond=0))
+
+            count = tasks.count()
             if count > 0:
                 tasks.delete()
+                single = count == 1
                 reply_text = (
-                    f'Напоминани{"е" if count == 1 else "я"} с текстом  *<{pars.only_message}>*\n'
-                    f'на дату: *{datetime.strftime(pars.user_date, "%d.%m.%Y")}*\n'
-                    f'Удален{"о" if count == 1 else "ы"} безвозвратно'
-                    f'{"." if count==1 else "в количестве "+str(count)+"шт."}'
+                    f'Напоминани{"е" if single else "я"} с текстом *<{pars.only_message}>* на дату *{pars.user_date.strftime("%d.%m.%Y")}*, '
+                    f'удален{"о" if single else "ы"} безвозвратно{"." if single else f" в количестве {count}шт."}'
                 )
             else:
-                reply_text = (
-                    f'Не удалось найти напоминание *<{pars.only_message}>*\n'
-                    'на дату: '
-                    f'*{datetime.strftime(pars.user_date, "%d.%m.%Y")}*\n'
-                    'Попробуйте снова.'
-                )
-        else:
-            reply_text = (
-                f'*{update.message.from_user.first_name}*, '
-                'не удалось разобрать что это за дата 🧐. Попробуйте снова 🙄.'
-            )
+                reply_text = f'Не удалось найти напоминание *<{pars.only_message}>* на дату: *{pars.user_date.strftime("%d.%m.%Y")}*. Попробуйте снова.'
+
         send_service_message(chat.id, reply_text, 'Markdown', message_thread_id)
     except Exception as error:
         raise KeyError(error)

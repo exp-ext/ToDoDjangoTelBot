@@ -17,12 +17,10 @@ document.addEventListener("DOMContentLoaded", function() {
   `;
 
   const mobileContent = `
-    <div class="d-flex justify-content-center align-items-center h-100">
-        <a href="${banner.reference}" target="_blank" rel="nofollow" class="d-flex justify-content-center align-items-center flex-shrink-0" style="max-width: 50%;">
-          <img src="${banner.image}" style="max-width: 100%; height: auto;" />
-        </a>
-        <p class="flex-grow-1 d-flex" style="max-width: 50%; margin: 0;">${banner.mobileText}</p>
-    </div>
+    <a href="${banner.reference}" target="_blank" rel="nofollow" class="d-flex justify-content-center align-items-center flex-shrink-0" style="max-width: 50%;">
+      <img src="${banner.image}" style="max-width: 100%; height: auto;" />
+    </a>
+    <p class="flex-grow-1 d-flex" style="max-width: 50%; margin: 0;">${banner.mobileText}</p>
   `;
 
   const adContainer = document.getElementById('yandex_rtb_R-A-3403802-1');

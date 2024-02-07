@@ -36,8 +36,7 @@ pre {
 .hidden-content {
   display: none;
 }
-
 #advertAside {
-  height: 250px;
+  height: 300px;
   max-height: 300px;
 }

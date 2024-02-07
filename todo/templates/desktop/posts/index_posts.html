@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block head %}
+  <meta name="description" content="Исследуйте разнообразие тем и статей по программированию, включая Python, Django, Data Science и многое другое на YourToDo!"/>
+  <meta name="keywords" content="Python, Django, Data Science, Архитектура, Git, VBA, Docker, Очереди, Фронтенд, Серверы, Строки, JavaScript, программирование, разработка">
+  
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://www.yourtodo.ru{% url 'posts:index_posts' %}" />
+
+  <meta property="og:site_name" content="YourToDo.ru"/>
+  <meta property="og:title" content="Статьи по программированию"/>
+  <meta property="og:type" content="website"/>
+  <meta property="og:url" content="https://www.yourtodo.ru{% url 'posts:index_posts' %}"/>
+  <meta property="og:description" content="Подробные статьи и руководства по программированию и связанным технологиям. Узнайте больше о последних тенденциях и лучших практиках."/>
+
+  {% if page_obj %}
+    {% with first_item=page_obj|first %}
+      {% if first_item.image %}
+        <meta property="og:image" content="{{ first_item.image.url }}"/>
+        <meta property="og:image:alt" content="{{ first_item.slug }}"/>
+
+        <meta name="twitter:card" content="summary_large_image"/>
+        <meta name="twitter:image" content="{{ first_item.image.url }}"/>
+        <meta name="twitter:image:alt" content="{{ first_item.slug }}"/>
+      {% endif %}
+    {% endwith %}
+  {% endif %}
+
+  <link rel="stylesheet" href="{% static 'css/moving_units.css' %}">
+{% endblock %}
+
+{% block title %}Статьи по программированию{% endblock %}
+
+{% block content %}
+  <div class="container py-5">
+    {% include 'desktop/posts/includes/switcher.html' %}
+    <div class="moving-unit _anim-items _anim-no-hide">
+      {% include 'desktop/posts/includes/search.html' %}
+    </div>
+    <div class="row">
+      <div class="col-lg-2">
+        <div class="scroll">
+          <div class="moving-unit _anim-items _anim-no-hide">
+            {% include 'desktop/posts/includes/navbar.html' %}
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-10">
+        {% for post in page_obj %}
+          {% include 'desktop/posts/includes/post_list.html' %}      
+        {% endfor %}
+        {% include 'desktop/posts/includes/paginator.html' %}
+      </div>
+    </div>
+  </div>
+{% endblock %}

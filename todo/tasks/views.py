@@ -16,7 +16,7 @@ from .models import Task
 
 
 class TasksListView(LoginRequiredMixin, ListView):
-    template_name = 'tasks/notes.html'
+    template_name = 'desktop/tasks/notes.html'
     paginate_by = 12
 
     def get_context_data(self, **kwargs) -> Dict[str, Any]:
@@ -67,7 +67,7 @@ class TaskCreateView(LoginRequiredMixin, CreateView):
     """
     model = Task
     form_class = TaskForm
-    template_name = 'tasks/create_task.html'
+    template_name = 'desktop/tasks/create_task.html'
 
     def __init__(self) -> None:
         super().__init__()
@@ -107,7 +107,7 @@ class TaskUpdateView(LoginRequiredMixin, UpdateView):
     """Изменяет запись в БД и делает redirect на лист с записями."""
     model = Task
     form_class = TaskForm
-    template_name = 'tasks/create_task.html'
+    template_name = 'desktop/tasks/create_task.html'
     pk_url_kwarg = 'task_id'
 
     def __init__(self) -> None:

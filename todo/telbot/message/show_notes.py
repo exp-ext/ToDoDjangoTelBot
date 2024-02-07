@@ -18,10 +18,7 @@ User = get_user_model()
 def first_step_show(update: Update, context: CallbackContext):
     chat = update.effective_chat
     message_thread_id = update.effective_message.message_thread_id
-    req_text = (
-        f'*{update.effective_user.first_name}*, '
-        'введите дату, на которую хотите вывести заметки 📆'
-    )
+    req_text = f'*{update.effective_user.first_name}*, введите дату, на которую хотите вывести заметки 📆'
     message_id = context.bot.send_message(
         chat.id,
         req_text,
@@ -35,8 +32,7 @@ def first_step_show(update: Update, context: CallbackContext):
 
 def show_at_date(update: Update, context: CallbackContext):
     """
-    Выводит список записей на конкретный день в чат
-    в зависимости от private или group.
+    Выводит список записей на конкретный день в чат в зависимости от private или group.
     """
     chat = update.effective_chat
     user = get_object_or_404(
@@ -91,11 +87,11 @@ def show(update: Update, context: CallbackContext,
     message_thread_id = update.effective_message.message_thread_id
     tg_user = update.effective_user
     user = get_object_or_404(
-        User,
+        User.objects.prefetch_related('groups_connections', 'locations'),
         username=tg_user.username
     )
     user_locally = user.locations.first()
-    user_tz = pytz.timezone(user_locally.timezone)
+    user_tz = pytz.timezone(user_locally.timezone) if user_locally else None
     group = None
 
     if chat.type == 'private':
@@ -105,8 +101,7 @@ def show(update: Update, context: CallbackContext,
                 server_datetime__month=at_date.month
             )
         else:
-            groups = user.groups_connections.values('group_id')
-            groups_id = tuple(x['group_id'] for x in groups)
+            groups_id = user.groups_connections.values_list('group_id', flat=True)
             tasks = (
                 Task.objects
                 .filter(Q(user=user) | Q(group_id__in=groups_id))
@@ -114,67 +109,31 @@ def show(update: Update, context: CallbackContext,
                 .order_by('server_datetime__month', 'server_datetime__day')
             )
     else:
-        group = get_object_or_404(
-            Group,
-            chat_id=chat.id
+        group = get_object_or_404(Group, chat_id=chat.id)
+        tasks = (
+            group.tasks.filter(server_datetime__day=at_date.day, server_datetime__month=at_date.month)
+            if at_date else group.tasks.filter(it_birthday=it_birthday)
         )
-        if at_date:
-            tasks = group.tasks.filter(
-                server_datetime__day=at_date.day,
-                server_datetime__month=at_date.month
-            )
-        else:
-            tasks = group.tasks.filter(it_birthday=it_birthday)
 
     notes = []
-
     for item in tasks:
-        if item.it_birthday:
-            utc_date = item.server_datetime
-            user_date = utc_date.astimezone(user_tz)
-            notes.append(
-                f'<b>{datetime.strftime(user_date, "%d.%m")}  - <i>{item.text}</i></b>'
-            )
-        else:
-            if not at_date or item.server_datetime.year == at_date.year:
-                utc_date = item.server_datetime
-                user_date = utc_date.astimezone(user_tz)
-                utc_remind = item.remind_at
-                remind = utc_remind.astimezone(user_tz)
-                user_time = datetime.strftime(user_date, "%H:%M")
-                user_time = '' if user_time == '00:00' else f' в {user_time} '
-                if_owner = (
-                    f'- <i>автор {item.user.first_name} {item.user.last_name}\n</i>'
-                    if not group and item.user.username != str(tg_user.username) else ''
-                )
-                if_group = f' в группе "{item.group.title}"' if not group and item.group else ''
-                notes.append(
-                    f'{datetime.strftime(user_date, "%d.%m.%Y")} {user_time}'
-                    f'- {item.text}\n'
-                    f'{if_owner}'
-                    f'<b><i>- напомню в {datetime.strftime(remind, "%H:%M")}ч{if_group}</i></b>\n'
-                )
-    if tasks:
-        if it_birthday:
-            note_sort = (
-                f'<strong>{update.effective_user.first_name}, найдены записи Дней Рождений 🎉:</strong>\n'
-                '~~~~~~~~~~~~~~\n'
-            )
-        else:
-            note_sort = (
-                f'<strong>{update.effective_user.first_name},  в планах есть записи 📜:</strong>\n\n'
-            )
-    else:
-        if it_birthday:
-            note_sort = (
-                f'<strong>{update.effective_user.first_name},  не найдены записи о Днях Рождений 🤷🏼</strong>\n'
-            )
-        else:
-            note_sort = (
-                f'<strong>{update.effective_user.first_name},  у нас нет никаких планов 🙅🏼‍♀️</strong>\n'
-            )
-    for n in notes:
-        note_sort = note_sort + f'{n}\n'
+        utc_date = item.server_datetime
+        user_date = utc_date.astimezone(user_tz) if user_tz else utc_date
+
+        if item.it_birthday or (not at_date or item.server_datetime.year == at_date.year):
+            note = f'<b>{user_date.strftime("%d.%m.%Y")}{" в " + user_date.strftime("%H:%M") if not item.it_birthday else ""} - {item.text}</b>'
+            if not group and item.user.username != tg_user.username:
+                note += f'\n- <i>автор {item.user.get_full_name()}</i>'
+            if not group and item.group:
+                note += f'\nвывод в группе "{item.group.title}"'
+            if item.remind_at and not item.it_birthday:
+                remind_time = item.remind_at.astimezone(user_tz) if user_tz else item.remind_at
+                note += f'<b><i>\n- напомню в {remind_time.strftime("%H:%M")}ч</i></b>'
+            note += '\n'
+            notes.append(note)
+
+    note_sort = f'<strong>{tg_user.first_name}, {"найденные записи" if tasks else "не найдены записи"}{" Дней Рождений 🎉" if it_birthday else " у Вас в планах 📜"}</strong>:\n\n'
+    note_sort += '\n'.join(notes)
 
     context.bot.send_message(
         chat_id=chat.id,

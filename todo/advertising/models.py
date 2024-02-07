@@ -96,3 +96,20 @@ class AdvertisementWidget(Create):
 
     def __str__(self) -> str:
         return self.title
+
+
+class MyBanner(Banner):
+    """Модель для хранения информации о баннерах партнеров.
+
+    ### Attributes:
+    - title (`CharField`): Заголовок баннера.
+    - image (`ImageField`): Путь к изображению баннера.
+    - reference (`TextField`): Ссылка, на которую ведет баннер.
+    - text (`CharField`): Слоган баннера.
+    - mobile_text (`CharField`): Слоган баннера для мобильной версии.
+    """
+    mobile_text = CKEditor5Field(_('слоган банера для мобильной версии'), config_name='extends')
+
+    class Meta:
+        verbose_name = _('мой банер на сайте')
+        verbose_name_plural = _('мои банеры на сайте')

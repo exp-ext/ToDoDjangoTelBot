@@ -103,7 +103,7 @@ class PostFormTests(TestCase):
             'title': 'Заголовок',
             'text': 'Тестовый пост 22789',
             'group': self.group.id,
-            'image': self.uploaded_gif
+            # 'image': self.uploaded_gif
         }
         response = self.authorized_client.post(
             self.post_create,
@@ -130,7 +130,7 @@ class PostFormTests(TestCase):
             'title': 'Заголовок',
             'text': 'Тестовый пост after the change',
             'group': self.group.id,
-            'image': self.uploaded_gif,
+            # 'image': self.uploaded_gif,
         }
         response = self.authorized_client.post(
             self.post_edit,

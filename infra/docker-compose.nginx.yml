@@ -99,8 +99,8 @@ services:
   whisper:
     image: onerahmet/openai-whisper-asr-webservice:latest
     container_name: todo_whisper
-    ports:
-      - "10000:9000"
+    expose:
+      - 9000
     environment:
       - ASR_MODEL=base
       - ASR_ENGINE=openai_whisper
@@ -110,7 +110,7 @@ services:
     container_name: todo_nginx
     command: '/bin/sh -c ''while :; do sleep 6h & wait $${!}; nginx -s reload; done & nginx -g "daemon off;"'''
     volumes:
-      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./nginx/default_dev.conf:/etc/nginx/conf.d/default.conf:ro
       - ./certbot/conf/:/etc/letsencrypt/:rw
       - ./certbot/www/:/var/lib/letsencrypt/:rw
       - static_volume:/var/html/static/:rw

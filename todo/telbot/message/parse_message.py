@@ -92,9 +92,7 @@ class TaskParse:
     def set_only_message(self, initial_message: str, string_date: str):
         """Удаляет дату из текста сообщения и назначает его only_message."""
         message = initial_message.replace(string_date, '').strip()
-        self.only_message = (
-            message[:1].upper() + message[1:] if message else ''
-        )
+        self.only_message = message[:1].upper() + message[1:] if message else ''
 
     def set_user_date(self, date: datetime):
         """Назначает datetime user_date относительно его ТЗ."""
@@ -104,9 +102,7 @@ class TaskParse:
     def set_server_date(self, date: datetime):
         """Назначает datetime server_date по UTC."""
         if self.birthday:
-            self.server_date = self.utc.localize(
-                date.replace(hour=0, minute=0, second=0, microsecond=0)
-            )
+            self.server_date = self.utc.localize(date.replace(hour=0, minute=0, second=0, microsecond=0))
         else:
             self.server_date = self.user_date.astimezone(self.utc)
 

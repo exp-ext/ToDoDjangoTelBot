@@ -1,4 +1,5 @@
 import json
+from typing import Optional, Tuple
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -12,41 +13,73 @@ User = get_user_model()
 redis_client = settings.REDIS_CLIENT
 
 
-def set_user_in_redis(tg_user: Update.effective_user, user: User):
-    """Обновляет запись в Redis db."""
-    red_user = {
-        'user_id': user.id,
-        'tg_user_id': tg_user.id,
-        'tg_user_username': tg_user.username,
-        'favorite_group': user.favorite_group.id if user.favorite_group else None,
-        'groups_connections': list(user.groups_connections.values_list('group__id', flat=True)),
-    }
-    redis_client.set(f"user:{tg_user.id}", json.dumps(red_user))
-    return red_user
+class UserRedisManager:
+
+    def set_user_in_redis(self, tg_user, user: User) -> dict:
+        """Обновляет запись в Redis db."""
+        red_user = {
+            'user_id': user.id,
+            'tg_user_id': tg_user.id,
+            'tg_user_username': tg_user.username,
+            'favorite_group': user.favorite_group.id if user.favorite_group else None,
+            'groups_connections': list(user.groups_connections.values_list('group__id', flat=True)),
+            'is_blocked_bot': user.is_blocked_bot,
+        }
+        redis_client.set(f"user:{tg_user.id}", json.dumps(red_user))
+        return red_user
+
+    def get_or_create_user(self, tg_user, return_user) -> Tuple[dict, Optional[User]]:
+        """Возвращает User."""
+        redis_key = f"user:{tg_user.id}"
+        red_user = redis_client.get(redis_key)
+        red_user = json.loads(red_user.decode('utf-8')) if red_user else None
+
+        if red_user and not red_user.get('is_blocked_bot') and not return_user:
+            return red_user, None
+
+        user, created = User.objects.get_or_create(tg_id=tg_user.id)
+        if created:
+            self._update_new_user(user, tg_user)
+
+        red_user = self.set_user_in_redis(tg_user, user)
+        return red_user, user
+
+    def _update_new_user(self, user, tg_user):
+        """Обновляет нового пользователя."""
+        user.username = tg_user.username or f'n-{str(1010101 + user.id)[::-1]}'
+        user.first_name = tg_user.first_name or tg_user.username
+        user.last_name = tg_user.last_name
+        user.save()
 
 
-def get_or_create_user(tg_user):
-    """Возвращает User."""
-    redis_key = f"user:{tg_user.id}"
-    red_user = redis_client.get(redis_key)
-    if red_user:
-        return json.loads(red_user.decode('utf-8'))
+def check_registration(update: Update,
+                       context: CallbackContext,
+                       answers: dict,
+                       allow_unregistered: bool = False,
+                       return_user: bool = False) -> bool or User:
+    """Проверяет регистрацию пользователя. Регистрирует пользователя если он не был зарегистрирован, но с ограничениями.
+    Если чат не является приватным, функция также обновляет информацию о связанных группах.
 
-    user = User.objects.filter(tg_id=tg_user.id).select_related('favorite_group').first()
-    if user:
-        red_user = set_user_in_redis(tg_user, user)
-    return red_user
+    ## Args:
+    - update ('Update'): Объект Update от Telegram Bot API, содержащий информацию о сообщении.
+    - context ('CallbackContext'): Контекст выполнения, предоставляемый Python-telegram-bot.
+    - answers ('dict'): Словарь с возможными ответами для пользователя.
+    - allow_unregistered ('bool', optional): Флаг, указывающий, разрешено ли не зарегистрированным пользователям использовать вызвавшую функцию. По умолчанию False.
+    - return_user ('bool', optional): Флаг, указывающий, следует ли возвращать объект пользователя. По умолчанию False, и возвращает None.
 
+    ## Returns:
+    - 'bool': Если регистрация проверена успешно возвращает или user('User') если return_user=True или None, иначе False.
 
-def check_registration(update: Update, context: CallbackContext, answers: dict) -> bool:
-    """Проверка регистрации пользователя и назначение группы."""
+    ## Raises:
+    - Возможные исключения, которые могут быть вызваны внутренними методами.
+    """
     chat = update.effective_chat
     tg_user = update.effective_user
-    red_user = get_or_create_user(tg_user)
+    user_manager = UserRedisManager()
+    red_user, user = user_manager.get_or_create_user(tg_user, return_user)
     text = None
-
     message_text = update.effective_message.text or ''
-    if not red_user:
+    if red_user.get('is_blocked_bot') and allow_unregistered is False:
         text = next((answers[key] for key in answers if key in message_text), None)
         message_id = context.bot.send_message(
             chat_id=chat.id,
@@ -74,7 +107,7 @@ def check_registration(update: Update, context: CallbackContext, answers: dict) 
             group.title = chat.title
             update_group = True
 
-        if not red_user.get('favorite_group') or group.id not in red_user.get('groups_connections'):
+        if (not red_user.get('favorite_group') or group.id not in red_user.get('groups_connections')) and not user:
             user = User.objects.filter(tg_id=tg_user.id).first()
 
         if not red_user.get('favorite_group'):
@@ -90,6 +123,6 @@ def check_registration(update: Update, context: CallbackContext, answers: dict) 
 
         if update_user:
             user.save()
-            set_user_in_redis(tg_user, user)
+            user_manager.set_user_in_redis(tg_user, user)
 
-    return True
+    return user

@@ -4,7 +4,7 @@ from collections import Counter
 from typing import Any, Dict
 from urllib.parse import quote
 
-from advertising.models import AdvertisementWidget, PartnerBanner
+from advertising.models import MyBanner, PartnerBanner
 from bs4 import BeautifulSoup
 from core.views import get_status_in_group, linkages_check, paginator_handler
 from django.conf import settings
@@ -45,8 +45,14 @@ class SearchListView(ListView):
     - (:obj:`Paginator`) с результатом поиска в постах;
     - (:obj:`str`) поисковое слово keyword.
     """
-    template_name = 'posts/search_result.html'
+    template_name = 'desktop/posts/search_result.html'
     paginate_by = PAGINATE_BY
+
+    def get_template_names(self):
+        user_agent = get_user_agent(self.request)
+        if user_agent.is_mobile:
+            return ['mobile/posts/search_result.html']
+        return [self.template_name]
 
     def get(self, request, *args, **kwargs):
         self.keyword = request.GET.get('q', '')
@@ -93,9 +99,7 @@ class SearchListView(ListView):
 
     def get_context_data(self, **kwargs) -> Dict[str, Any]:
         context = super().get_context_data(**kwargs)
-        user_agent = get_user_agent(self.request)
         context.update({
-            'is_mobile': user_agent.is_mobile,
             'keyword': self.keyword,
         })
         return context
@@ -141,8 +145,14 @@ class IndexPostsListView(ListView):
     """
     Возвращает :obj:`Paginator` с заметками для общей ленты.
     """
-    template_name = 'posts/index_posts.html'
+    template_name = 'desktop/posts/index_posts.html'
     paginate_by = PAGINATE_BY
+
+    def get_template_names(self):
+        user_agent = get_user_agent(self.request)
+        if user_agent.is_mobile:
+            return ['mobile/posts/index_posts.html']
+        return [self.template_name]
 
     def get_queryset(self) -> QuerySet(Post):
         tag = self.request.GET.get('q', '')
@@ -170,7 +180,6 @@ class IndexPostsListView(ListView):
 
     def get_context_data(self, **kwargs: Any) -> Dict[str, Any]:
         context = super().get_context_data(**kwargs)
-        user_agent = get_user_agent(self.request)
         custom_order = Case(When(slug='vse', then=Value(0)), default=Value(1), output_field=IntegerField())
         queryset = PostTags.objects.annotate(custom_sort=custom_order).order_by('custom_sort')
         data = [
@@ -184,7 +193,6 @@ class IndexPostsListView(ListView):
         ]
         json_data = json.dumps(data, cls=DjangoJSONEncoder)
         context.update({
-            'is_mobile': user_agent.is_mobile,
             'tags': json_data,
             'media_bucket': settings.MEDIA_URL,
             'pagination_querystring': self.get_pagination_querystring(),
@@ -204,8 +212,14 @@ class GroupPostsListView(ListView):
     для группы
     """
     model = Post
-    template_name = 'posts/group_list.html'
+    template_name = 'desktop/posts/group_list.html'
     paginate_by = PAGINATE_BY
+
+    def get_template_names(self):
+        user_agent = get_user_agent(self.request)
+        if user_agent.is_mobile:
+            return ['mobile/posts/group_list.html']
+        return [self.template_name]
 
     def dispatch(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpResponse:
         self.group = get_object_or_404(Group, slug=self.kwargs['slug'])
@@ -227,13 +241,11 @@ class GroupPostsListView(ListView):
 
     def get_context_data(self, **kwargs: Any) -> Dict[str, Any]:
         context = super().get_context_data(**kwargs)
-        user_agent = get_user_agent(self.request)
         context.update({
             'group': self.group,
             'is_admin': self.is_admin,
             'form': self.form,
             'forism_check': self.forism_check,
-            'is_mobile': user_agent.is_mobile,
         })
         return context
 
@@ -260,8 +272,14 @@ class ProfileDetailView(DetailView):
     - (:obj:`boolean`) состояние подписки на того автора для пользователя;
     """
     model = User
-    template_name = 'posts/profile.html'
+    template_name = 'desktop/posts/profile.html'
     context_object_name = 'author'
+
+    def get_template_names(self):
+        user_agent = get_user_agent(self.request)
+        if user_agent.is_mobile:
+            return ['mobile/posts/profile.html']
+        return [self.template_name]
 
     def get_object(self, queryset: QuerySet = None) -> QuerySet(User):
         queryset = (
@@ -274,13 +292,11 @@ class ProfileDetailView(DetailView):
         context = super().get_context_data(**kwargs)
         post_list = self.get_user_posts().select_related('author', 'group')
         page_obj = paginator_handler(self.request, post_list, PAGINATE_BY)
-        user_agent = get_user_agent(self.request)
         user = self.request.user
         context.update({
             'page_obj': page_obj,
             'posts_count': page_obj.paginator.count,
             'following': False if user.is_anonymous else user.follower.filter(author=self.object).exists(),
-            'is_mobile': user_agent.is_mobile,
         })
         return context
 
@@ -329,7 +345,7 @@ class PostCreateView(LoginRequiredMixin, CreateView):
     """
     model = Post
     form_class = PostForm
-    template_name = 'posts/create_post.html'
+    template_name = 'desktop/posts/create_post.html'
     initial_post_data = {}
 
     def get_initial(self) -> Dict[str, Any]:
@@ -366,7 +382,7 @@ class PostUpdateView(LoginRequiredMixin, UpdateView):
     """Изменяет запись в БД и делает redirect к представлению этого поста."""
     model = Post
     form_class = PostForm
-    template_name = 'posts/create_post.html'
+    template_name = 'desktop/posts/create_post.html'
     pk_url_kwarg = 'post_identifier_pk'
 
     def get_initial(self) -> Dict[str, Any]:
@@ -398,11 +414,16 @@ class PostDetailView(DetailView):
     - (:obj:`CommentForm`) форму для добавления комментария.
     """
     model = Post
-    template_name = 'posts/post_detail.html'
+    template_name = 'desktop/posts/post_detail.html'
     context_object_name = 'post'
     pk_url_kwarg = 'post_identifier_pk'
     slug_url_kwarg = 'post_identifier_slug'
     tag_queryset = None
+
+    def get_template_names(self):
+        if self.user_agent.is_mobile:
+            return ['mobile/posts/post_detail.html']
+        return [self.template_name]
 
     def get_post_slug_from_redis(self, post_pk: int) -> str or None:
         """Получает слаг поста по его идентификатору из Redis.
@@ -492,12 +513,15 @@ class PostDetailView(DetailView):
         context = super().get_context_data(**kwargs)
         post = kwargs.get('object')
 
-        user_agent = get_user_agent(self.request)
+        self.user_agent = get_user_agent(self.request)
         ip = self.get_client_ip()
         ref_url = self.get_ref_url()
 
-        random_banner = PartnerBanner.objects.order_by('?').first()
-        random_widget = AdvertisementWidget.objects.order_by('?').first()
+        random_banner = None
+        if not self.user_agent.is_mobile:
+            random_banner = PartnerBanner.objects.order_by('?').first()
+
+        my_banner = MyBanner.objects.order_by('?').first()
 
         redis_key_post_ips = f'ips_post_{post.id}'
         redis_key_post_counter = f'counter_post_{post.id}'
@@ -518,13 +542,13 @@ class PostDetailView(DetailView):
 
             agent_data = {
                 'post_id': post.id,
-                'browser': user_agent.browser.family,
-                'os': user_agent.os.family,
-                'is_bot': user_agent.is_bot,
-                'is_mobile': user_agent.is_mobile,
-                'is_pc': user_agent.is_pc,
-                'is_tablet': user_agent.is_tablet,
-                'is_touch_capable': user_agent.is_touch_capable,
+                'browser': self.user_agent.browser.family,
+                'os': self.user_agent.os.family,
+                'is_bot': self.user_agent.is_bot,
+                'is_mobile': self.user_agent.is_mobile,
+                'is_pc': self.user_agent.is_pc,
+                'is_tablet': self.user_agent.is_tablet,
+                'is_touch_capable': self.user_agent.is_touch_capable,
                 'ip': ip,
                 'ref_url': ref_url
             }
@@ -545,14 +569,13 @@ class PostDetailView(DetailView):
             'authors_posts_count': post.author.posts.count(),
             'comments': post.comments.all(),
             'form': CommentForm(self.request.POST or None),
-            'is_mobile': user_agent.is_mobile,
-            'advertising': random_banner if random_banner else False,
-            'advertisement_widget': random_widget if random_widget else False,
+            'advertising': random_banner or False,
             'counter': counter,
             'contents': contents[0].get('children', None) if contents else None,
             'tags': tags,
             'tag_posts_present': tag_posts_present,
-            'tag_posts_chunked': tag_posts_chunked
+            'tag_posts_chunked': tag_posts_chunked,
+            'my_banner': my_banner
         })
         return context
 
@@ -586,7 +609,8 @@ class PostDetailView(DetailView):
                 'slug': post.slug,
                 'short_description': post.short_description
             })
-        return ', '.join(tags), query.count() > 0, self.chunker(posts_processed, 3)
+        line_size = 1 if self.user_agent.is_mobile else 3
+        return ', '.join(tags), query.count() > 0, self.chunker(posts_processed, line_size)
 
     @staticmethod
     def chunker(seq, size):
@@ -635,7 +659,7 @@ class AddCommentView(LoginRequiredMixin, FormView):
     перенаправляет  обратно к посту.
     """
     form_class = CommentForm
-    template_name = 'posts/post_detail.html'
+    template_name = 'desktop/posts/post_detail.html'
 
     def form_valid(self, form: CommentForm) -> HttpResponseRedirect:
         post = get_object_or_404(Post, pk=self.kwargs['post_identifier_pk'])
@@ -667,7 +691,7 @@ class FollowIndexListView(LoginRequiredMixin, ListView):
     Возвращает :obj:`Paginator` с заметками авторов на которых
     подписан авторизованный пользователь в запросе.
     """
-    template_name = 'posts/follow.html'
+    template_name = 'desktop/posts/follow.html'
     paginate_by = PAGINATE_BY
 
     def get_queryset(self) -> QuerySet(Post):

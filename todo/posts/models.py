@@ -4,6 +4,8 @@ from django.contrib.auth import get_user_model
 from django.db import models
 from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
+from django.template.loader import render_to_string
+from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from django_ckeditor_5.fields import CKEditor5Field
 from pytils.translit import slugify
@@ -90,6 +92,19 @@ class Post(CreateUpdater):
 
     def __str__(self) -> str:
         return self.title
+
+    def get_absolute_url(self):
+        return reverse('posts:post_detail', kwargs={'post_identifier_slug': self.slug})
+
+    def html_turbo(self):
+        root_contents = self.contents.filter(depth=1).first()
+        contents = PostContents.dump_bulk(root_contents) if root_contents else None
+        context = {
+            'post': self,
+            'contents': contents[0].get('children', None) if contents else None,
+        }
+        html_content = render_to_string('turbo/post_detail.html', context)
+        return html_content
 
 
 @receiver(pre_save, sender=Post)

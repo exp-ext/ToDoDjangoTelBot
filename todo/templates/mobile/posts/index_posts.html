@@ -33,7 +33,7 @@
 {% block title %}Статьи по программированию{% endblock %}
 
 {% block content %}
-  <div class="container py-5">
+  <div class="container pt-5">
     <div class="mt-3 moving-unit _anim-items _anim-no-hide">
       {% include 'mobile/posts/includes/search.html' %}
     </div>
@@ -41,5 +41,8 @@
       {% include 'mobile/posts/includes/post_list.html' %}        
     {% endfor %}
     {% include 'mobile/posts/includes/paginator.html' %}
-  </div> 
+  </div>
+  <div class="container mb-5 px-2 rounded">
+    {% include 'includes/yaribbonadvertising.html' %}
+  </div>
 {% endblock %}

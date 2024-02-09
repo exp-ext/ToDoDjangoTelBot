@@ -32,7 +32,17 @@
                   {% endif %}">
             {% csrf_token %}
             {{ form.media }}
-            {{ form.as_p }}
+            {{ form.title }}
+            {{ form.group }}
+            {{ form.text }}
+            {{ form.short_description }}
+            
+            <div id="add-image">
+                <input type="file" name="image" accept="image/*" id="file-input" />
+                <div class="image-grid" id="image-grid">
+                </div>
+            </div>
+
             <div class="d-flex justify-content-end">              
               <button type="submit" class="btn btn-primary">
                 {% if form.initial.is_edit %}
@@ -40,8 +50,9 @@
                 {% else %}
                   Добавить
                 {% endif %}
-              </button>
+              </button>              
             </div>
+
           </form>
       </div>
     </div>
@@ -53,4 +64,5 @@
     var autosaveUrl = "{% url 'posts:autosave' %}";
   </script>
   <script src="{% static 'js/autosave.js' %}"></script>
+  <script src="{% static 'js/create-post.js' %}"></script>
 {% endblock %}

@@ -2,23 +2,23 @@ name: ToDo-app workflow
 
 on: [push]
 
-env:
-  DEBUG: 1
-  IS_TEST: 1
-  POSTGRES_DB: db
-  POSTGRES_USER: user
-  POSTGRES_PASSWORD: postgres
-  POSTGRES_HOST: localhost
-  POSTGRES_PORT: 5432
-  REDIS_HOST: localhost
-  REDIS_PORT: 6379
-  REDIS_PASSWORD: redis
-  TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
-  DOMAIN: test.com
-
 jobs:
   tests:
     runs-on: ubuntu-latest
+    env:
+      DEBUG: 1
+      IS_TEST: 1
+      POSTGRES_ENGINE: django.db.backends.postgresql
+      POSTGRES_DB: db
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_HOST: localhost
+      POSTGRES_PORT: 5432
+      REDIS_HOST: localhost
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: redis
+      TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+      DOMAIN: test.com
     services:
       redis:
         image: redis

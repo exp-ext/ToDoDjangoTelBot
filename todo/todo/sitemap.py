@@ -19,7 +19,7 @@ class DynamicViewSitemap(Sitemap):
     changefreq = 'daily'
 
     def items(self):
-        return Post.objects.all()
+        return Post.objects.filter(moderation='PS')
 
     def location(self, item):
         return reverse('posts:post_detail', args=[item.slug])

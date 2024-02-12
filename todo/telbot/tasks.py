@@ -30,53 +30,54 @@ EXTEND = {
 }
 
 
-def sending_messages(tasks: QuerySet[Task], this_datetime: datetime, event_text: str = '') -> str:
+def sending_messages(tasks: QuerySet, this_datetime: datetime, event_text: str = '') -> str:
     """Перебор записей и отправка их адресатам."""
-    messages = {}
-    tasks_to_update = []
-    tasks_to_delete = []
-
+    messages = dict()
     for task in tasks:
         recipient = task.group.chat_id if task.group else task.user.tg_id
-        user_tz = messages.get(recipient, {}).get('user_tz')
-        if not user_tz:
+        if recipient not in messages:
             user_locally = task.user.locations.first()
             user_tz = pytz.timezone(user_locally.timezone)
-            messages[recipient] = {'user_tz': user_tz, 'reply_text': ''}
-
-        header, picture = '', f'<a href="{task.picture_link}">​​​​​​</a>'
+            messages.update({
+                recipient: {
+                    'user_tz': user_tz,
+                    'reply_text': '',
+                }
+            })
         if task.group:
-            delta_min = int((task.server_datetime - this_datetime).total_seconds() / 60 + 1)
-            header = (
-                'Время начала:' if delta_min <= 0 else
-                f'📝 через {delta_min // 60}час {delta_min % 60}мин' if delta_min >= 60 else
-                f'📝 через {delta_min % 60}мин'
-            )
+            delta = task.server_datetime - this_datetime
+            delta_min = int(delta.total_seconds() / 60 + 1)
+            if delta_min >= 60:
+                header = f'📝 через {delta_min // 60 }час {delta_min % 60 }мин'
+            elif delta_min <= 0:
+                header = 'Время начала:'
+            else:
+                header = f'📝 через {delta_min % 60 }мин'
         else:
-            user_date = task.server_datetime.astimezone(user_tz)
-            header = f'В {user_date.strftime("%H:%M")}'
-        header = '' if task.it_birthday else f'<b>-- {header} -></b>'
+            user_date = task.server_datetime.astimezone(messages[recipient]['user_tz'])
+            header = f'В {datetime.strftime(user_date, "%H:%M")}'
 
+        header = '' if task.it_birthday else f'<b>-- {header} -></b>'
+        picture = f'<a href="{task.picture_link}">​​​​​​</a>'
         messages[recipient]['reply_text'] += f'{header}{picture}\n{task.text}\n\n'
 
         if not task.it_birthday:
             if task.reminder_period == 'N':
-                tasks_to_delete.append(task)
+                task.delete()
             else:
                 task.server_datetime += EXTEND[task.reminder_period]
-                tasks_to_update.append(task)
-
-    for task in tasks_to_delete:
-        task.delete()
-    Task.objects.bulk_update(tasks_to_update, ['server_datetime'])
+                task.save()
 
     for recipient, body in messages.items():
         reply_text = event_text + body['reply_text']
         try:
-            bot.send_message(chat_id=recipient, text=reply_text, parse_mode=ParseMode.HTML)
+            bot.send_message(
+                chat_id=recipient,
+                text=reply_text,
+                parse_mode=ParseMode.HTML
+            )
         except Exception:
             continue
-
     return f'Send {len(messages)} messages'
 
 

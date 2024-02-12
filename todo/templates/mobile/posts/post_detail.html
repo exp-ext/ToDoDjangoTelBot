@@ -7,7 +7,12 @@
   <meta name="description" content="{{ post.short_description }}"/>
   <meta name="keywords" content="{{ tags }}">
 
-  <meta name="robots" content="index, follow">
+  {% if post.moderation == 'PS' %}
+    <meta name="robots" content="index, follow">
+  {% else %}
+    <meta name="robots" content="noindex">
+  {% endif %}
+
   <link rel="canonical" href="https://www.yourtodo.ru{% url 'posts:post_detail' post.slug %}" />
 
   <meta property="og:site_name" content="YourToDo.ru"/>
@@ -58,7 +63,7 @@
         {% endif %}
       </aside>
 
-      <aside id="advertAside" class="d-flex justify-content-center align-items-center h-100 bg-light rounded shadow mb-2 py-2"> 
+      <aside id="advertAside" class="d-flex justify-content-center align-items-center bg-light rounded shadow mb-2 py-2"> 
         {% include 'includes/mobilyabodyadvertising.html' %}
         <div id="card-container" style="display:none;">
         </div>

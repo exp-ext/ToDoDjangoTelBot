@@ -7,7 +7,12 @@
   <meta name="description" content="{{ post.short_description }}"/>
   <meta name="keywords" content="{{ tags }}">
 
-  <meta name="robots" content="index, follow">
+  {% if post.moderation == 'PS' %}
+    <meta name="robots" content="index, follow">
+  {% else %}
+    <meta name="robots" content="noindex">
+  {% endif %}
+
   <link rel="canonical" href="https://www.yourtodo.ru{% url 'posts:post_detail' post.slug %}" />
 
   <meta property="og:site_name" content="YourToDo.ru"/>

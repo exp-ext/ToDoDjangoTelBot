@@ -62,3 +62,11 @@ ipython>=8.7.0
 
 # Debagger
 django_debug_toolbar>=4.0.0
+
+
+# test
+torch==2.2.0 -f https://download.pytorch.org/whl/cpu
+torchvision==0.17.0 -f https://download.pytorch.org/whl/cpu
+torchaudio==2.2.0 -f https://download.pytorch.org/whl/cpu
+transformers
+qdrant-client

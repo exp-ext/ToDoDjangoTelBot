@@ -24,7 +24,7 @@ class TasksListView(LoginRequiredMixin, ListView):
         context['timezone'] = self.request.user.locations.first().timezone
         return context
 
-    def get_queryset(self) -> QuerySet(Task):
+    def get_queryset(self) -> QuerySet:
         user = self.request.user
         groups_id = user.groups_connections.values_list('group', flat=True)
 

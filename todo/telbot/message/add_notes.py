@@ -94,7 +94,7 @@ class NoteManager:
         reply_text = f'Напоминание: *{pars.only_message}*\nСоздано\nна дату: *{pars.user_date.strftime("%d.%m.%Y")}*\n'
         if not task.it_birthday:
             new_date = pars.user_date - timedelta(minutes=self.delta_time_min)
-            reply_text += f'на время: *{new_date.strftime("%H:%M")}*\n'
+            reply_text += f'с оповещением в *{new_date.strftime("%H:%M")}*\n'
         send_service_message(self.chat.id, reply_text, 'Markdown', self.message_thread_id)
 
 

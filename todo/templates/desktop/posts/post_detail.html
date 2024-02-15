@@ -7,7 +7,7 @@
   <meta name="description" content="{{ post.short_description }}"/>
   <meta name="keywords" content="{{ tags }}">
 
-  {% if post.moderation == 'PS' %}
+  {% if post.moderation == 'PS' and group_public %}
     <meta name="robots" content="index, follow">
   {% else %}
     <meta name="robots" content="noindex">

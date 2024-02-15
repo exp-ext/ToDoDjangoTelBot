@@ -28,6 +28,7 @@ services:
       dockerfile: Dockerfile
       args:
         DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY}
+        HF_HOME: ${TRANSFORMERS_CACHE}
     container_name: todo_django
     restart: always
     command: ./config/webtodo/entrypoint.sh
@@ -37,6 +38,7 @@ services:
       - backup_volume:/app/backup/:rw
       - cache_pip_volume:/root/.cache/pip/:rw
       - cache_apt_volume:/var/cache/apt/archives/:rw
+      - transformers_cache:/app/.cache/huggingface/:rw
     ports:
       - "8000:8000"
     env_file:
@@ -105,6 +107,15 @@ services:
       - ASR_MODEL=base
       - ASR_ENGINE=openai_whisper
 
+  qdrant:
+    image: qdrant/qdrant
+    container_name: todo_qdrant
+    ports:
+      - "6333:6333"
+      - "6334:6334"
+    volumes:
+      - qdrant_storage:/qdrant/storage
+
   nginx:
     image: nginx:latest
     container_name: todo_nginx
@@ -140,3 +151,5 @@ volumes:
   whisper_volume:
   static_volume:
   media_volume:
+  qdrant_storage:
+  transformers_cache:

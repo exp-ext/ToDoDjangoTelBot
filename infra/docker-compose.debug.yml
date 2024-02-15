@@ -80,13 +80,30 @@ services:
       - ASR_ENGINE=openai_whisper
 
   qdrant:
-    image: qdrant/qdrant
+    image: qdrant/qdrant:latest
     container_name: todo_qdrant
     ports:
       - "6333:6333"
       - "6334:6334"
+    expose:
+      - 6333
+      - 6334
+      - 6335
+    configs:
+      - source: qdrant_config
+        target: /qdrant/config/production.yaml
     volumes:
-      - qdrant_storage:/qdrant/storage
+      - qdrant_data:/qdrant_data
+
+  pytorch:
+    image: pytorch/torchserve:latest
+    container_name: todo_pytorch
+    ports:
+      - "6080:8080"
+      - "6081:8081"
+      - "6082:8082"
+      - "7070:7070"
+      - "7071:7071"
 
   nginx:
     image: nginx:latest
@@ -103,4 +120,9 @@ volumes:
   cache_pip_volume:
   cache_apt_volume:
   pgadmin_data_todo:
-  qdrant_storage:
+  qdrant_data:
+
+configs:
+  qdrant_config:
+    content: |
+            log_level: INFO

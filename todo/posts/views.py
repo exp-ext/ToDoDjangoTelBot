@@ -154,7 +154,7 @@ class IndexPostsListView(ListView):
             return ['mobile/posts/index_posts.html']
         return [self.template_name]
 
-    def get_queryset(self) -> QuerySet(Post):
+    def get_queryset(self) -> QuerySet:
         tag = self.request.GET.get('q', '')
         user = self.request.user
         post_list = (
@@ -236,7 +236,7 @@ class GroupPostsListView(ListView):
         self.forism_check = self.group.group_mailing.filter(mailing_type='forismatic_quotes').exists()
         return super().dispatch(request, *args, **kwargs)
 
-    def get_queryset(self) -> QuerySet(Post):
+    def get_queryset(self) -> QuerySet:
         return self.group.posts.select_related('author', 'group').filter(moderation='PS')
 
     def get_context_data(self, **kwargs: Any) -> Dict[str, Any]:
@@ -281,7 +281,7 @@ class ProfileDetailView(DetailView):
             return ['mobile/posts/profile.html']
         return [self.template_name]
 
-    def get_object(self, queryset: QuerySet = None) -> QuerySet(User):
+    def get_object(self, queryset: QuerySet = None) -> QuerySet:
         queryset = (
             super().get_queryset()
             .prefetch_related('posts__author', 'posts__group')
@@ -300,7 +300,7 @@ class ProfileDetailView(DetailView):
         })
         return context
 
-    def get_user_posts(self) -> QuerySet(Post):
+    def get_user_posts(self) -> QuerySet:
         groups = self.get_user_groups()
         moderation = ('PS', 'WT') if self.request.user == self.object else ('PS',)
         return (
@@ -309,7 +309,7 @@ class ProfileDetailView(DetailView):
             .select_related('author', 'group')
         )
 
-    def get_user_groups(self) -> QuerySet(Group):
+    def get_user_groups(self) -> QuerySet:
         if self.request.user.is_authenticated:
             groups = self.request.user.groups_connections.values_list('group_id', flat=True)
             return Group.objects.filter(id__in=groups)
@@ -425,7 +425,7 @@ class PostDetailView(DetailView):
             return ['mobile/posts/post_detail.html']
         return [self.template_name]
 
-    def get_post_slug_from_redis(self, post_pk: int) -> str or None:
+    def get_post_slug_from_redis(self, post_pk: int) -> str | bool:
         """Получает слаг поста по его идентификатору из Redis.
 
         ### Parameters:
@@ -440,7 +440,7 @@ class PostDetailView(DetailView):
             return self.get_slug_by_pk(data_list, post_pk)
         return None
 
-    def get_slug_by_pk(self, id_slug_pair: list, post_pk: int) -> str or None:
+    def get_slug_by_pk(self, id_slug_pair: list, post_pk: int) -> str:
         """Получает слаг из пары идентификатора и слага поста.
 
         ### Parameters:
@@ -499,7 +499,7 @@ class PostDetailView(DetailView):
         context = self.get_context_data(object=self.object)
         return self.render_to_response(context)
 
-    def get_queryset(self) -> QuerySet(Post):
+    def get_queryset(self) -> QuerySet:
         queryset = super().get_queryset().select_related('author', 'group').prefetch_related('tags')
         user = self.request.user
         if user.is_anonymous:
@@ -575,7 +575,8 @@ class PostDetailView(DetailView):
             'tags': tags,
             'tag_posts_present': tag_posts_present,
             'tag_posts_chunked': tag_posts_chunked,
-            'my_banner': my_banner
+            'my_banner': my_banner,
+            'group_public': not post.group or bool(post.group.link)
         })
         return context
 
@@ -694,7 +695,7 @@ class FollowIndexListView(LoginRequiredMixin, ListView):
     template_name = 'desktop/posts/follow.html'
     paginate_by = PAGINATE_BY
 
-    def get_queryset(self) -> QuerySet(Post):
+    def get_queryset(self) -> QuerySet:
         user = self.request.user
         post_list = (
             Post.objects

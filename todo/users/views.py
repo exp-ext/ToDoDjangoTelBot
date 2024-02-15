@@ -48,7 +48,7 @@ class Authentication:
     """
     valid_time: int = 5
 
-    def __init__(self, update: Update, context: CallbackContext, user: User = None):
+    def __init__(self, update: Update, context: CallbackContext, user: QuerySet = None):
         """Инициализация объекта класса.
 
         ### Args:
@@ -397,7 +397,7 @@ def get_coordinates(tg_id: int) -> QuerySet[Location]:
     return user.locations.first() if user else None
 
 
-def set_coordinates(update: Update, _: CallbackContext, user: User = None) -> None:
+def set_coordinates(update: Update, _: CallbackContext, user: QuerySet = None) -> None:
     """Получение часового пояса на основе координат пользователя и запись его в базу данных.
 
     ### Args:

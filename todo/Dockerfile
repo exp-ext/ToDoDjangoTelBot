@@ -4,7 +4,7 @@ WORKDIR /app
 
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
-    DJANGO_SECRET_KEY=DJANGO_SECRET_KEY
+    DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY}
 
 RUN --mount=type=cache,target=/var/cache/apt/archives/ \
     apt-get update && apt-get install --no-install-recommends --no-install-suggests -y \

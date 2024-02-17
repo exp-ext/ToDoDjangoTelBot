@@ -17,4 +17,6 @@ if [ $(docker compose ps -q | wc -l) -gt 0 ]; then
 else
     echo "Docker Compose не работает. Запускаю..."
     docker compose up --build -d
+    sleep 30
+    docker compose logs web
 fi

@@ -117,20 +117,8 @@ services:
       - media_volume:/var/html/media/:rw
     ports:
       - "80:80"
-      - "443:443"
     depends_on:
       - web
-
-  certbot:
-    image: certbot/certbot
-    container_name: todo_certbot
-    restart: unless-stopped
-    volumes:
-      - ./certbot/conf/:/etc/letsencrypt/:rw
-      - ./certbot/www/:/var/lib/letsencrypt/:rw
-    entrypoint: '/bin/sh -c "trap exit TERM; while :; do certbot renew; sleep 48h & wait $${!}; done;"'
-    depends_on:
-      - nginx
 
 volumes:
   postgresql_volume:

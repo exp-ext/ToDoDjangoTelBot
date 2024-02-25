@@ -1,3 +1,4 @@
+import json
 import secrets
 import string
 import uuid
@@ -30,6 +31,7 @@ from .models import Location
 
 User = get_user_model()
 ADMIN_ID = settings.TELEGRAM_ADMIN_ID
+redis_client = settings.REDIS_CLIENT
 
 
 class Authentication:
@@ -69,12 +71,27 @@ class Authentication:
         - Dict[str, Any]: Результат регистрации пользователя.
 
         """
-        if self.check_chat_type():
-            return JsonResponse({"error": "Chat type not private."})
 
         try:
             validation_key = self.get_password(length=28)
-            self.user, _ = User.objects.get_or_create(tg_id=self.tg_user.id)
+            self.user, create = User.objects.get_or_create(tg_id=self.tg_user.id)
+            password = self.get_password(length=15)
+            self.user.set_password(password)
+
+            preview_auth_text = ''
+
+            if create:
+                preview_auth_text = (
+                    'Поздравляем с успешной регистрацией в проекте "Your To-Do"! \n\n🎉🎉🎉\n\n'
+                    'На нашем сайте Вы найдете захватывающий контент для всех, кто увлечен программированием.\n\n'
+                    'Также у Вас есть возможность пообщаться с нашим ботом Евой на любые интересующие вас темы.\n\n'
+                    'Создавайте напоминания, и они будут отправлены прямо в этот чат или в выбранную группу. 📅\n\n'
+                    'И это далеко не все... Откройте для себя множество других возможностей!'
+                )
+
+            if self.context.args and not self.get_user_check_id():
+                return None
+
             self.user.username = self.tg_user.username or f'n-{str(1010101 + self.user.id)[::-1]}'
             self.user.first_name = self.tg_user.first_name or self.tg_user.username
             self.user.last_name = self.tg_user.last_name
@@ -87,17 +104,17 @@ class Authentication:
 
             if not self.user.image:
                 self.add_profile_picture.apply_async(args=(self.tg_user.id, ModelDataSerializer.serialize(self.user),))
-            password = self.get_password(length=15)
-            self.user.set_password(password)
-            reply_text = [
-                'Вы успешно зарегистрированы в проекте Your To-Do.\n'
-                'Ниже логин и пароль для входа в личный кабинет:\n'
-                '⤵️\n',
-                f'{self.tg_user.username}\n',
-                f'{password}\n',
-                f'Для быстрой авторизации на [сайте](https://www.{settings.DOMAIN}) пройдите по ссылке:\n〰\n'
+
+            auth_text = (
+                f'Для авторизации на [сайте](https://www.{settings.DOMAIN}) пройдите по ссылке:\n〰\n'
                 f'✔️ [https://www.{settings.DOMAIN}/auth/](https://www.{settings.DOMAIN}/auth/login/tg/{self.tg_user.id}/{validation_key}/)\n〰'
-            ]
+            )
+
+            if preview_auth_text:
+                reply_text = [preview_auth_text, auth_text]
+            else:
+                reply_text = [auth_text]
+
             message_id = self.send_messages(reply_text)
             self.user.validation_message_id = message_id
             self.user.save()
@@ -113,7 +130,13 @@ class Authentication:
                 latitude=59.799,
                 longitude=30.274
             )
-        return JsonResponse({"ok": "User created."})
+
+    def get_user_check_id(self):
+        user_check_id = self.context.args[0]
+        if redis_client.get(f'user_check_id:{user_check_id}') is not None:
+            redis_client.delete(f'user_check_id:{user_check_id}')
+            return True
+        return False
 
     def authorization(self) -> Dict[str, Any]:
         """Аутентификация пользователя.
@@ -122,16 +145,8 @@ class Authentication:
         - Dict[str, Any]: Результат аутентификации пользователя.
 
         """
-        if self.check_chat_type():
-            return JsonResponse({"error": "Chat type not private."})
 
         validation_key = self.get_password(length=28)
-
-        # if not self.user:
-        #     self.user = User.objects.filter(
-        #         tg_id=self.tg_user.id,
-        #         username=self.tg_user.username
-        #     ).first()
 
         if not self.user.image:
             self.add_profile_picture.apply_async(args=(self.tg_user.id, ModelDataSerializer.serialize(self.user),))
@@ -193,23 +208,6 @@ class Authentication:
         )
         return message_id
 
-    def check_chat_type(self):
-        """Проверка типа чата пользователя.
-
-        ### Returns:
-            bool: True, если тип чата не является "private", иначе False.
-
-        """
-        if self.chat.type != 'private':
-            message_id = self.context.bot.send_message(
-                self.chat.id,
-                f'{self.tg_user.first_name}, '
-                'эта функция доступна только в "private"'
-            ).message_id
-            delete_messages_by_time.apply_async(args=[self.chat.id, message_id], countdown=20)
-            return True
-        return False
-
     @staticmethod
     def get_password(length):
         """
@@ -269,7 +267,7 @@ class LoginTgView(View):
 
     """
 
-    def post(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpRequest:
+    def get(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpRequest:
         """Обработка POST-запроса для аутентификации.
 
         ### Args:
@@ -285,17 +283,22 @@ class LoginTgView(View):
         if not HashCheck(data).check_hash():
             return render(request, 'users/error.html', {'msg': 'Bad hash!'})
 
-        photo_url = data.pop('photo_url')
-        response = requests.GET.get(photo_url)
+        photo_url = data.get('photo_url', None)
+        keys = {'tg_id': 'id', 'username': 'username', 'first_name': 'first_name', 'last_name': 'last_name'}
+        user_info = {k: data.get(v) for k, v in keys.items() if data.get(v) is not None}
 
+        response = requests.get(photo_url, timeout=5)
         if response.status_code == 200:
             temp_file = NamedTemporaryFile(delete=True)
             temp_file.write(response.content)
             temp_file.flush()
 
-        user, status = User.objects.get_or_create(**data)
+        user, status = User.objects.get_or_create(tg_id=user_info.pop('tg_id'))
         if status:
             user.set_password(Authentication.get_password())
+
+        for key, value in user_info.items():
+            setattr(user, key, value)
         user.image.save(f'{uuid.uuid4}.jpg', File(temp_file))
         user.save()
         temp_file.close()
@@ -345,6 +348,16 @@ class LoginTgLinkView(View):
                 countdown=5
             )
         return redirect('index')
+
+
+class LoginTgButtonView(View):
+
+    def get(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpRequest:
+
+        user_check_id = uuid.uuid4()
+        telegram_url = f'https://t.me/{settings.TELEGRAM_BOT_NAME}?start={user_check_id}'
+        redis_client.setex(f'user_check_id:{str(user_check_id)}', 120, json.dumps(request.session.session_key))
+        return JsonResponse({'url': telegram_url})
 
 
 @login_required

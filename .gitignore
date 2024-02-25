@@ -166,3 +166,5 @@ logs
 default_dev.conf
 minio.tar.gz
 minio_backets.tar.gz
+
+minio/

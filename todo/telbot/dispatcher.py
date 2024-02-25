@@ -25,13 +25,12 @@ def setup_dispatcher(dp: Dispatcher):
     """
     Добавление обработчиков событий из Telegram
     """
-    # команды
-    dp.add_handler(
-        CommandHandler('registration', ask_registration)
-    )
     # основное меню и его Handler's
     dp.add_handler(
         CommandHandler('main_menu', main_menu)
+    )
+    dp.add_handler(
+        CommandHandler('start', ask_registration)
     )
     dp.add_handler(
         ConversationHandler(

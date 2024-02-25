@@ -3,6 +3,7 @@ from typing import Optional, Tuple
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.db.models import Model
 from telegram import ParseMode, Update
 from telegram.ext import CallbackContext
 from users.models import Group, GroupConnections
@@ -15,7 +16,7 @@ redis_client = settings.REDIS_CLIENT
 
 class UserRedisManager:
 
-    def set_user_in_redis(self, tg_user, user: User) -> dict:
+    def set_user_in_redis(self, tg_user, user: Model) -> dict:
         """Обновляет запись в Redis db."""
         red_user = {
             'user_id': user.id,
@@ -28,7 +29,7 @@ class UserRedisManager:
         redis_client.set(f"user:{tg_user.id}", json.dumps(red_user))
         return red_user
 
-    def get_or_create_user(self, tg_user, return_user) -> Tuple[dict, Optional[User]]:
+    def get_or_create_user(self, tg_user, return_user) -> Tuple[dict, Optional[Model]]:
         """Возвращает User."""
         redis_key = f"user:{tg_user.id}"
         red_user = redis_client.get(redis_key)
@@ -56,7 +57,7 @@ def check_registration(update: Update,
                        context: CallbackContext,
                        answers: dict,
                        allow_unregistered: bool = False,
-                       return_user: bool = False) -> bool or User:
+                       return_user: bool = False) -> bool | Model:
     """Проверяет регистрацию пользователя. Регистрирует пользователя если он не был зарегистрирован, но с ограничениями.
     Если чат не является приватным, функция также обновляет информацию о связанных группах.
 

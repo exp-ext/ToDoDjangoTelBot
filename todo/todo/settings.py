@@ -23,6 +23,7 @@ load_dotenv()
 # bots settings
 DOMAIN = os.getenv('DOMAIN')
 TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
+TELEGRAM_BOT_NAME = os.getenv('TELEGRAM_BOT_NAME')
 OW_API_TOKEN = os.getenv('OW_API_TOKEN', default='some_token_to_pass_test')
 YANDEX_GEO_API_TOKEN = os.getenv('YANDEX_GEO_API_TOKEN', default='some_token_to_pass_test')
 

@@ -9,7 +9,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
   const desktopContent = `
     <a href="${banner.reference}" target="_blank" rel="nofollow">
-      <img class="card-img-top mx-auto d-block" src="${banner.image}" style="width: 380px; height: 380px;" />
+      <img class="card-img-top mx-auto d-block" src="${banner.image}" style="max-width: 100%; max-height: 380px; height: auto;" />
     </a>
     <div class="card-body">
       <p class="card-text">${banner.text}</p>

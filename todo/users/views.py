@@ -78,6 +78,11 @@ class Authentication:
             password = self.get_password(length=15)
             self.user.set_password(password)
 
+            delete_messages_by_time.apply_async(
+                args=[self.chat.id, self.update.effective_message.message_id],
+                countdown=0
+            )
+
             preview_auth_text = ''
 
             if create:

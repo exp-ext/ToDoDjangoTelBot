@@ -40,7 +40,7 @@ class DispatcherTestCase(TestCase):
         self.assertTrue(mock_CallbackQueryHandler.called)
         self.assertTrue(mock_MessageHandler.called)
 
-        mock_CommandHandler.assert_any_call('registration', ANY)
+        mock_CommandHandler.assert_any_call('start', ANY)
         mock_ConversationHandler.assert_any_call(
             entry_points=[ANY],
             states={'add_note': [ANY]},

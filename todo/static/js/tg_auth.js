@@ -1,11 +1,12 @@
 document.addEventListener('DOMContentLoaded', function() {
-    document.getElementById('redirectLink').addEventListener('click', function() {
-        fetch('auth/login/tg/generate-td-auth-url/')
-            .then(response => response.json())
-            .then(data => {
-                const telegramUrl = data.url
-                window.location.href = telegramUrl;
-            })
-            .catch(error => console.error('Error fetching the ID:', error));
+    document.body.addEventListener('click', function(event) {
+        if (event.target.id === 'redirectLink') {
+            fetch('/auth/login/tg/generate-td-auth-url/')
+                .then(response => response.json())
+                .then(data => {
+                    window.location.href = data.url;
+                })
+                .catch(error => console.error('Error fetching the ID:', error));
+        }
     });
 });

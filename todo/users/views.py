@@ -357,7 +357,7 @@ class LoginTgLinkView(View):
 
 class LoginTgButtonView(View):
 
-    def get(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpRequest:
+    def get(self, request: HttpRequest) -> HttpRequest:
 
         user_check_id = uuid.uuid4()
         telegram_url = f'https://t.me/{settings.TELEGRAM_BOT_NAME}?start={user_check_id}'

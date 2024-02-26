@@ -3,14 +3,15 @@ import secrets
 import string
 import uuid
 from datetime import timedelta
-from typing import Any, Dict, OrderedDict
-from typing import Dict, Any, List
+from typing import Any, Dict, List, OrderedDict
+
 import requests
 from core.serializers import ModelDataSerializer
 from django.conf import settings
 from django.contrib.auth import get_user_model, login
 from django.contrib.auth.decorators import login_required
 from django.core.files import File
+from django.core.files.base import ContentFile
 from django.core.files.temp import NamedTemporaryFile
 from django.db.models.query import QuerySet
 from django.http import HttpRequest, HttpResponse, JsonResponse
@@ -57,9 +58,6 @@ class Authentication:
                 countdown=0
             )
 
-            if self.context.args and not self.check_session_key_by_id():  # TODO дописать с сессией и возвратом а страницу
-                return None
-
             if created or self.user.is_blocked_bot:
                 self.user.set_password(self.get_password(length=15))
                 self.save_user_location()
@@ -67,6 +65,9 @@ class Authentication:
             validation_key = self.generate_validation_key()
             reply_text = self.compose_auth_link_message(validation_key, created)
             message_id = self.send_messages(reply_text)
+
+            if self.context.args:
+                self.send_url_by_user()
 
             self.user.is_blocked_bot = False
 
@@ -82,7 +83,6 @@ class Authentication:
             return None
         except Exception as err:
             self.handle_registration_error(err)
-            return {"status": "error", "message": str(err)}
 
     def authorization(self) -> Dict[str, Any]:
         """Аутентификация пользователя."""
@@ -99,7 +99,6 @@ class Authentication:
             return None
         except Exception as err:
             self.handle_authorization_error(err)
-            return {"status": "error", "message": str(err)}
 
     def send_messages(self, reply_text: List[str]) -> int:
         """Отправка сообщений пользователю."""
@@ -120,12 +119,12 @@ class Authentication:
         user, created = User.objects.get_or_create(tg_id=self.tg_user.id, defaults={"username": self.tg_user.username})
         return user, created
 
-    def check_session_key_by_id(self):
-        user_check_id = self.context.args[0]
-        if redis_client.get(f'user_check_id:{user_check_id}') is not None:
-            redis_client.delete(f'user_check_id:{user_check_id}')
-            return True
-        return False
+    def send_url_by_user(self):
+        user_uuid = self.context.args[0]
+        redirect_url = redis_client.get(f'redirect_url_by_user_id:{user_uuid}')
+        if redirect_url:
+            redis_client.delete(f'redirect_url_by_user_id:{user_uuid}')
+            redis_client.setex(f'redirect_url_by_user_id:{self.tg_user.id}', 600, redirect_url)
 
     def generate_validation_key(self) -> str:
         """Генерирует ключ для валидации пользователя."""
@@ -142,7 +141,7 @@ class Authentication:
                 'На нашем сайте Вы найдете захватывающий контент для всех, кто увлечен программированием.\n\n'
                 'Также у Вас есть возможность пообщаться с нашим ботом Евой на любые интересующие вас темы.\n\n'
                 'Создавайте напоминания, и они будут отправлены прямо в этот чат или в выбранную группу. 📅\n\n'
-                'И это далеко не все... Откройте для себя множество других возможностей!'
+                'И это далеко не все... Откройте для себя множество других возможностей!\n\n'
             )
         else:
             preview_text = ""
@@ -178,84 +177,37 @@ class Authentication:
     @staticmethod
     @app.task(ignore_result=True)
     def add_profile_picture(tg_user_id: int, user: OrderedDict):
-        """Добавляет фотографию профиля юзера.
-
-        ### Args:
-        - tg_user_id (`int`): Идентификатор пользователя в Telegram.
-        - user (`OrderedDict`): Сериализованный объект пользователя.
-
-        """
+        """Добавляет фотографию профиля пользователя из Telegram."""
         user = ModelDataSerializer.deserialize(user)
-        url = f'https://api.telegram.org/bot{settings.TELEGRAM_TOKEN}/getUserProfilePhotos'
-        params = {'user_id': tg_user_id}
-        response = requests.get(url, params=params)
-        data = response.json()
+        session = requests.Session()
 
-        if response.status_code == 200:
-            file_id = data['result']['photos'][0][0]['file_id']
-            url = f'https://api.telegram.org/bot{settings.TELEGRAM_TOKEN}/getFile'
-            params = {
-                'file_id': file_id
-            }
-            response = requests.get(url, params=params)
-            data = response.json()
-            if response.status_code == 200:
-                file_path = data['result']['file_path']
-                file_url = f'https://api.telegram.org/file/bot{settings.TELEGRAM_TOKEN}/{file_path}'
-                response = requests.get(file_url)
-                if response.status_code == 200:
-                    temp_file = NamedTemporaryFile(delete=True)
-                    temp_file.write(response.content)
-                    temp_file.flush()
-                    user.image.save(f'{uuid.uuid4}.jpg', File(temp_file))
-                    temp_file.close()
+        try:
+            photos_url = f'https://api.telegram.org/bot{settings.TELEGRAM_TOKEN}/getUserProfilePhotos'
+            photos_response = session.get(photos_url, params={'user_id': tg_user_id})
+            photos_response.raise_for_status()
+            photos_data = photos_response.json()
+            if not photos_data['result']['photos']:
+                return None
 
+            file_id = photos_data['result']['photos'][0][0]['file_id']
 
-class LoginTgView(View):
-    """Класс для обработки аутентификации пользователя через Telegram виджет.
+            file_url = f'https://api.telegram.org/bot{settings.TELEGRAM_TOKEN}/getFile'
+            file_response = session.get(file_url, params={'file_id': file_id})
+            file_response.raise_for_status()
+            file_path = file_response.json()['result']['file_path']
 
-    ### Methods:
-        post(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpRequest: Обработка POST-запроса для аутентификации.
+            photo_url = f'https://api.telegram.org/file/bot{settings.TELEGRAM_TOKEN}/{file_path}'
+            photo_response = session.get(photo_url)
+            photo_response.raise_for_status()
 
-    """
+            file_name = f"{uuid.uuid4()}.jpg"
+            user.image.save(file_name, ContentFile(photo_response.content))
 
-    def get(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpRequest:
-        """Обработка POST-запроса для аутентификации.
+        except requests.RequestException as e:
+            print(f"Ошибка при загрузке или сохранении фотографии профиля c tg_id {tg_user_id}: {e}")
 
-        ### Args:
-        - request (`HttpRequest`): HTTP-запрос.
-        - *args: Переменные позиционных аргументов.
-        - **kwargs: Переменные ключевых аргументов.
-
-        ### Returns:
-        - HttpRequest: HTTP-ответ.
-
-        """
-        data = request.GET
-        if not HashCheck(data).check_hash():
-            return render(request, 'users/error.html', {'msg': 'Bad hash!'})
-
-        photo_url = data.get('photo_url', None)
-        keys = {'tg_id': 'id', 'username': 'username', 'first_name': 'first_name', 'last_name': 'last_name'}
-        user_info = {k: data.get(v) for k, v in keys.items() if data.get(v) is not None}
-
-        response = requests.get(photo_url, timeout=5)
-        if response.status_code == 200:
-            temp_file = NamedTemporaryFile(delete=True)
-            temp_file.write(response.content)
-            temp_file.flush()
-
-        user, status = User.objects.get_or_create(tg_id=user_info.pop('tg_id'))
-        if status:
-            user.set_password(Authentication.get_password())
-
-        for key, value in user_info.items():
-            setattr(user, key, value)
-        user.image.save(f'{uuid.uuid4}.jpg', File(temp_file))
-        user.save()
-        temp_file.close()
-        login(request, user)
-        return redirect('index')
+        finally:
+            session.close()
 
 
 class LoginTgLinkView(View):
@@ -270,15 +222,13 @@ class LoginTgLinkView(View):
     """
     valid_time: int = 10
 
-    def get(self, request: HttpRequest, user_id: str, key: str, *args: Any, **kwargs: Any) -> HttpRequest:
+    def get(self, request: HttpRequest, user_id: str, key: str) -> HttpRequest:
         """Авторизует пользователя по ссылке из Телеграм.
 
         ### Args:
         - request (HttpRequest): HTTP-запрос.
         - user_id (str): Идентификатор пользователя в Телеграм.
         - key (str): Ключ для авторизации.
-        - *args: Переменные позиционных аргументов.
-        - **kwargs: Переменные ключевых аргументов.
 
         ### Returns:
         - HttpRequest: HTTP-ответ.
@@ -299,16 +249,26 @@ class LoginTgLinkView(View):
                 args=[user_id, user.validation_message_id],
                 countdown=5
             )
-        return redirect('index')
+
+        url = self.get_url_from_redis(user_id) or 'index'
+        return redirect(url)
+
+    def get_url_from_redis(self, user_id):
+        url = redis_client.get(f'redirect_url_by_user_id:{user_id}')
+        if not url:
+            return None
+        redis_client.delete(f'redirect_url_by_user_id:{user_id}')
+        return json.loads(url)
 
 
 class LoginTgButtonView(View):
 
     def get(self, request: HttpRequest) -> HttpRequest:
-
-        user_check_id = uuid.uuid4()
-        telegram_url = f'https://t.me/{settings.TELEGRAM_BOT_NAME}?start={user_check_id}'
-        redis_client.setex(f'user_check_id:{str(user_check_id)}', 120, json.dumps(request.session.session_key))
+        """Отправляет JSON с URL для авторизации через Телеграмм."""
+        user_id = uuid.uuid4()
+        telegram_url = f'https://t.me/{settings.TELEGRAM_BOT_NAME}?start={user_id}'
+        referer_url = request.META.get('HTTP_REFERER')
+        redis_client.setex(f'redirect_url_by_user_id:{str(user_id)}', 300, json.dumps(referer_url))
         return JsonResponse({'url': telegram_url})
 
 
@@ -406,3 +366,37 @@ def block(request: HttpRequest) -> HttpResponse:
     }
     template = 'users/block.html'
     return render(request, template, context)
+
+
+class LoginTgView(View):
+    """
+    Класс для обработки аутентификации пользователя через Telegram виджет.
+    """
+
+    def get(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpRequest:
+        """В данный момент не работает из-за cookies"""
+        data = request.GET
+        if not HashCheck(data).check_hash():
+            return render(request, 'users/error.html', {'msg': 'Bad hash!'})
+
+        photo_url = data.get('photo_url', None)
+        keys = {'tg_id': 'id', 'username': 'username', 'first_name': 'first_name', 'last_name': 'last_name'}
+        user_info = {k: data.get(v) for k, v in keys.items() if data.get(v) is not None}
+
+        response = requests.get(photo_url, timeout=5)
+        if response.status_code == 200:
+            temp_file = NamedTemporaryFile(delete=True)
+            temp_file.write(response.content)
+            temp_file.flush()
+
+        user, status = User.objects.get_or_create(tg_id=user_info.pop('tg_id'))
+        if status:
+            user.set_password(Authentication.get_password())
+
+        for key, value in user_info.items():
+            setattr(user, key, value)
+        user.image.save(f'{uuid.uuid4}.jpg', File(temp_file))
+        user.save()
+        temp_file.close()
+        login(request, user)
+        return redirect('index')

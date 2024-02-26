@@ -4,7 +4,7 @@ import string
 import uuid
 from datetime import timedelta
 from typing import Any, Dict, OrderedDict
-
+from typing import Dict, Any, List
 import requests
 from core.serializers import ModelDataSerializer
 from django.conf import settings
@@ -35,29 +35,12 @@ redis_client = settings.REDIS_CLIENT
 
 
 class Authentication:
-    """Класс для аутентификации пользователей и регистрации новых пользователей в системе.
+    """Класс для аутентификации пользователей и регистрации новых пользователей в системе."""
 
-    ### Attributes:
-    - valid_time (`int`): Время в минутах, в течение которого действует ссылка для аутентификации.
+    valid_time: int = 5  # Время в минутах, в течение которого действует ссылка для аутентификации.
 
-    ### Methods:
-    - __init__(self, update: Update, context: CallbackContext): Инициализация объекта класса.
-    - register(self) -> Dict[str, Any]: Регистрация нового пользователя.
-    - authorization(self) -> Dict[str, Any]: Аутентификация пользователя.
-    - send_messages(self, reply_text): Отправка сообщений пользователю.
-    - check_chat_type(self): Проверка типа чата пользователя.
-
-    """
-    valid_time: int = 5
-
-    def __init__(self, update: Update, context: CallbackContext, user: QuerySet = None):
-        """Инициализация объекта класса.
-
-        ### Args:
-            update (`Update`): Объект, представляющий Telegram Update.
-            context (`CallbackContext`): Объект, представляющий контекст Callback Query.
-
-        """
+    def __init__(self, update, context, user=None):
+        """Инициализация объекта класса."""
         self.update = update
         self.context = context
         self.chat = update.effective_chat
@@ -65,44 +48,30 @@ class Authentication:
         self.user = user
 
     def register(self) -> Dict[str, Any]:
-        """Регистрация нового пользователя в системе.
-
-        ### Returns:
-        - Dict[str, Any]: Результат регистрации пользователя.
-
-        """
-
+        """Регистрация нового пользователя в системе."""
         try:
-            validation_key = self.get_password(length=28)
-            self.user, create = User.objects.get_or_create(tg_id=self.tg_user.id)
-            password = self.get_password(length=15)
-            self.user.set_password(password)
+            self.user, created = self.get_user_by_telegram_id()
 
             delete_messages_by_time.apply_async(
                 args=[self.chat.id, self.update.effective_message.message_id],
                 countdown=0
             )
 
-            preview_auth_text = ''
-
-            if create:
-                preview_auth_text = (
-                    'Поздравляем с успешной регистрацией в проекте "Your To-Do"! \n\n🎉🎉🎉\n\n'
-                    'На нашем сайте Вы найдете захватывающий контент для всех, кто увлечен программированием.\n\n'
-                    'Также у Вас есть возможность пообщаться с нашим ботом Евой на любые интересующие вас темы.\n\n'
-                    'Создавайте напоминания, и они будут отправлены прямо в этот чат или в выбранную группу. 📅\n\n'
-                    'И это далеко не все... Откройте для себя множество других возможностей!'
-                )
-
-            if self.context.args and not self.get_user_check_id():
+            if self.context.args and not self.check_session_key_by_id():  # TODO дописать с сессией и возвратом а страницу
                 return None
 
-            self.user.username = self.tg_user.username or f'n-{str(1010101 + self.user.id)[::-1]}'
-            self.user.first_name = self.tg_user.first_name or self.tg_user.username
-            self.user.last_name = self.tg_user.last_name
+            if created or self.user.is_blocked_bot:
+                self.user.set_password(self.get_password(length=15))
+                self.save_user_location()
+
+            validation_key = self.generate_validation_key()
+            reply_text = self.compose_auth_link_message(validation_key, created)
+            message_id = self.send_messages(reply_text)
+
             self.user.is_blocked_bot = False
-            self.user.validation_key = validation_key
-            self.user.validation_key_time = timezone.now().astimezone(timezone.utc)
+
+            self.user.validation_message_id = message_id
+            self.user.save()
 
             user_manager = UserRedisManager()
             user_manager.set_user_in_redis(self.tg_user, self.user)
@@ -110,101 +79,34 @@ class Authentication:
             if not self.user.image:
                 self.add_profile_picture.apply_async(args=(self.tg_user.id, ModelDataSerializer.serialize(self.user),))
 
-            auth_text = (
-                f'Для авторизации на [сайте](https://www.{settings.DOMAIN}) пройдите по ссылке:\n〰\n'
-                f'✔️ [https://www.{settings.DOMAIN}/auth/](https://www.{settings.DOMAIN}/auth/login/tg/{self.tg_user.id}/{validation_key}/)\n〰'
-            )
+            return None
+        except Exception as err:
+            self.handle_registration_error(err)
+            return {"status": "error", "message": str(err)}
 
-            if preview_auth_text:
-                reply_text = [preview_auth_text, auth_text]
-            else:
-                reply_text = [auth_text]
-
+    def authorization(self) -> Dict[str, Any]:
+        """Аутентификация пользователя."""
+        try:
+            validation_key = self.generate_validation_key()
+            reply_text = self.compose_auth_link_message(validation_key)
             message_id = self.send_messages(reply_text)
             self.user.validation_message_id = message_id
             self.user.save()
+
+            if not self.user.image:
+                self.add_profile_picture.apply_async(args=(self.tg_user.id, ModelDataSerializer.serialize(self.user),))
+
+            return None
         except Exception as err:
-            user_error_message = 'Произошла непредвиденная ошибка. Разработчики уже занимаются её устранением 💡. Попробуйте позже.'
-            self.context.bot.send_message(self.tg_user.id, user_error_message)
-            error_message = f'Ошибка при регистрации пользователя c id-{self.tg_user.id} и username-{self.tg_user.username}:\n{err}'
-            self.context.bot.send_message(ADMIN_ID, error_message)
+            self.handle_authorization_error(err)
+            return {"status": "error", "message": str(err)}
 
-        if not self.user.locations.exists():
-            Location.objects.create(
-                user=self.user,
-                latitude=59.799,
-                longitude=30.274
-            )
-
-    def get_user_check_id(self):
-        user_check_id = self.context.args[0]
-        if redis_client.get(f'user_check_id:{user_check_id}') is not None:
-            redis_client.delete(f'user_check_id:{user_check_id}')
-            return True
-        return False
-
-    def authorization(self) -> Dict[str, Any]:
-        """Аутентификация пользователя.
-
-        ### Returns:
-        - Dict[str, Any]: Результат аутентификации пользователя.
-
-        """
-
-        validation_key = self.get_password(length=28)
-
-        if not self.user.image:
-            self.add_profile_picture.apply_async(args=(self.tg_user.id, ModelDataSerializer.serialize(self.user),))
-
-        self.user.first_name = self.tg_user.first_name
-        self.user.last_name = self.tg_user.last_name
-
-        if User.objects.filter(phone_number=self.update.message.contact.phone_number).exclude(id=self.user.id).exists():
-            reply_text = (
-                'Пользователь с таким номером телефона, уже существует.'
-                'Напишите пожалуйста об этом инциденте разработчику - https://t.me/Borokin'
-            )
-            self.context.bot.send_message(self.chat.id, reply_text)
-        else:
-            self.user.phone_number = self.update.message.contact.phone_number
-
-        self.user.validation_key = validation_key
-        self.user.validation_key_time = timezone.now().astimezone(timezone.utc)
-        reply_text = [
-            f'Для быстрой авторизации на [сайте](https://www.{settings.DOMAIN}) пройдите по ссылке:\n〰\n'
-            f'✔️ [https://www.{settings.DOMAIN}/auth/](https://www.{settings.DOMAIN}/auth/login/tg/{self.tg_user.id}/{validation_key}/)\n〰'
-        ]
-        message_id = self.send_messages(reply_text)
-        self.user.validation_message_id = message_id
+    def send_messages(self, reply_text: List[str]) -> int:
+        """Отправка сообщений пользователю."""
         try:
-            self.user.save()
-        except Exception as err:
-            delete_messages_by_time.apply_async(
-                args=[self.chat.id, message_id],
-                countdown=0
-            )
-            reply_text = 'Произошла непредвиденная ошибка. Разработчики уже занимаются её устранением 💡.'
-            self.context.bot.send_message(self.chat.id, reply_text)
-            error_message = f'Ошибка при авторизации пользователя c id-{self.tg_user.id} и username-{self.tg_user.username}:\n{err}'
-            self.context.bot.send_message(ADMIN_ID, error_message)
-
-        return JsonResponse({"ok": "Link sent."})
-
-    def send_messages(self, reply_text) -> None:
-        """Отправка сообщений пользователю.
-
-        ### Args:
-        - reply_text (`List`): Список текстовых сообщений для отправки.
-
-        ### Returns:
-        - int: Идентификатор последнего отправленного сообщения.
-
-        """
-        for text in reply_text:
-            try:
-                message_id = self.update.message.reply_text(text=text, parse_mode='Markdown').message_id
-            except Exception:
-                message_id = self.update.message.reply_text(text=text).message_id
+            message_id = self.update.message.reply_text(text=reply_text, parse_mode='Markdown').message_id
+        except Exception:
+            message_id = self.update.message.reply_text(text=reply_text).message_id
 
         lifetime = 60 * self.valid_time
         delete_messages_by_time.apply_async(
@@ -213,20 +115,65 @@ class Authentication:
         )
         return message_id
 
+    def get_user_by_telegram_id(self):
+        """Получает пользователя по его Telegram ID или создает нового."""
+        user, created = User.objects.get_or_create(tg_id=self.tg_user.id, defaults={"username": self.tg_user.username})
+        return user, created
+
+    def check_session_key_by_id(self):
+        user_check_id = self.context.args[0]
+        if redis_client.get(f'user_check_id:{user_check_id}') is not None:
+            redis_client.delete(f'user_check_id:{user_check_id}')
+            return True
+        return False
+
+    def generate_validation_key(self) -> str:
+        """Генерирует ключ для валидации пользователя."""
+        validation_key = self.get_password(length=28)
+        self.user.validation_key = validation_key
+        self.user.validation_key_time = timezone.now().astimezone(timezone.utc)
+        return validation_key
+
+    def compose_auth_link_message(self, validation_key: str, is_new_user: bool = False) -> str:
+        """Формирует сообщение со ссылкой для аутентификации на сайте."""
+        if is_new_user:
+            preview_text = (
+                'Поздравляем с успешной регистрацией в проекте "Your To-Do"! \n\n🎉🎉🎉\n\n'
+                'На нашем сайте Вы найдете захватывающий контент для всех, кто увлечен программированием.\n\n'
+                'Также у Вас есть возможность пообщаться с нашим ботом Евой на любые интересующие вас темы.\n\n'
+                'Создавайте напоминания, и они будут отправлены прямо в этот чат или в выбранную группу. 📅\n\n'
+                'И это далеко не все... Откройте для себя множество других возможностей!'
+            )
+        else:
+            preview_text = ""
+        auth_link = (
+            f'Для авторизации на [сайте](https://www.{settings.DOMAIN}) пройдите по ссылке:\n〰\n'
+            f'✔️ [https://www.{settings.DOMAIN}/auth/](https://www.{settings.DOMAIN}/auth/login/tg/{self.tg_user.id}/{validation_key}/)\n〰'
+        )
+        return preview_text + auth_link
+
+    def save_user_location(self):
+        """Сохранение местоположения пользователя при регистрации."""
+        if not self.user.locations.exists():
+            Location.objects.create(user=self.user, latitude=59.799, longitude=30.274)
+
+    def handle_registration_error(self, err):
+        """Обработка ошибок при регистрации пользователя."""
+        error_message = f"Ошибка при регистрации пользователя c id-{self.tg_user.id} и username-{self.tg_user.username}:\n{err}"
+        self.context.bot.send_message(self.tg_user.id, "Произошла ошибка при регистрации. Попробуйте позже.")
+        self.context.bot.send_message(ADMIN_ID, error_message)
+
+    def handle_authorization_error(self, err):
+        """Обработка ошибок при авторизации пользователя."""
+        error_message = f"Ошибка при авторизации пользователя c id-{self.tg_user.id} и username-{self.tg_user.username}:\n{err}"
+        self.context.bot.send_message(self.tg_user.id, "Произошла ошибка при авторизации. Попробуйте позже.")
+        self.context.bot.send_message(ADMIN_ID, error_message)
+
     @staticmethod
-    def get_password(length):
-        """
-        Генератор паролей.
-
-        ### Args:
-        - length (`int`): Длина пароля.
-
-        ### Returns:
-        - `str`: Сгенерированный пароль.
-
-        """
-        character_set = string.digits + string.ascii_letters
-        return ''.join(secrets.choice(character_set) for _ in range(length))
+    def get_password(length: int) -> str:
+        """Генератор паролей."""
+        characters = string.ascii_letters + string.digits
+        return ''.join(secrets.choice(characters) for _ in range(length))
 
     @staticmethod
     @app.task(ignore_result=True)

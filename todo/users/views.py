@@ -38,7 +38,7 @@ redis_client = settings.REDIS_CLIENT
 class Authentication:
     """Класс для аутентификации пользователей и регистрации новых пользователей в системе."""
 
-    valid_time: int = 5  # Время в минутах, в течение которого действует ссылка для аутентификации.
+    valid_time: int = 5
 
     def __init__(self, update, context, user=None):
         """Инициализация объекта класса."""

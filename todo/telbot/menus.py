@@ -113,7 +113,7 @@ def ask_registration(update: Update, context: CallbackContext) -> None:
         ).message_id
         delete_messages_by_time.apply_async(
             args=[chat.id, message_id],
-            countdown=60 * 5
+            countdown=60
         )
         Authentication(update, context).register()
 

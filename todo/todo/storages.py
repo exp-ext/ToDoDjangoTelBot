@@ -16,10 +16,11 @@ class StaticStorage(S3StaticStorage):
     custom_domain = '{}.hb.ru-msk.vkcs.cloud'.format(bucket_name)
 
 
-class MediaStorage(S3Boto3Storage):
+class MediaStorage(S3StaticStorage):
     bucket_name = settings.MEDIA_BUCKET_NAME
     default_acl = 'public-read'
     file_overwrite = False
+    custom_domain = '{}.hb.ru-msk.vkcs.cloud'.format(bucket_name)
 
 
 class DataBaseStorage(S3Boto3Storage):

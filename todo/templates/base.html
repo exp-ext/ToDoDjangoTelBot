@@ -12,7 +12,6 @@
   <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js" async></script>
   <script src="https://cdn.jsdelivr.net/npm/jquery-ui@1.13.2/dist/jquery-ui.min.js" async></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" async></script>
-  <script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/highlight.min.js" async></script>
   {% include 'includes/yacounter.html' %}
 
   <link rel="icon" href="{% static 'img/fav/favicon.ico' %}" type="image/x-icon">
@@ -50,13 +49,14 @@
   <!-- post loads -->  
 
   <link href="https://cdn.jsdelivr.net/npm/jquery-ui@1.13.2/themes/base/theme.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/styles/default.min.css"> 
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/styles/xcode.min.css"> 
 
   <script src="{% static 'js/anim-item.js' %}" async></script>
 
   <link rel="stylesheet" href="{% static 'django_ckeditor_5/dist/styles.css' %}" type="text/css">
   <script src="{% static 'django_ckeditor_5/dist/bundle.js' %}" async></script>
 
+  <script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/highlight.min.js" defer></script>
   <script>    
     function checkForHljs() {
       if (window.hljs) {
@@ -67,12 +67,11 @@
     }
     checkForHljs();
   </script>
-
-  <script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/languages/python.min.js" type="text/javascript" async></script>
-  <script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/languages/javascript.min.js" type="text/javascript" async></script>
+  <script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/languages/python.min.js" type="text/javascript" defer></script>
+  <script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/languages/javascript.min.js" type="text/javascript" defer></script>
 
   <script src="{% static 'js/chat-popup.js' %}" async></script>
-  <script src="{% static 'js/tg_auth.js' %}"></script>
+  <script src="{% static 'js/tg_auth.js' %}" defer></script>
 
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 

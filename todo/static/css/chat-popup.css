@@ -5,24 +5,18 @@
   justify-content: center;
   color: white;
   position: fixed;
-  bottom: 56px;
-  right: 24px;
-  max-width: 56px;
-  max-height: 56px;
-  min-height: 56px;
-  min-width: 56px;
   width: 56px;
   height: 56px;
-  transform: translateY(70px);
-  transition: all 250ms ease-out;
   border-radius: 50%;
-  opacity: 0;
-  background-repeat: no-repeat;
-  background-attachment: fixed;
-  background: #1f343d;
+  background: #1f343d no-repeat fixed;
+  transition: transform 250ms ease-out, opacity 250ms ease-out;
   z-index: 2;
+  bottom: 56px;
+  right: 24px;
+  opacity: 0;
+  transform: translateY(70px);
 }
-.floating-chat i {
+.floating-chat i, .floating-chat .chat .header i, .floating-chat .chat .chat_list i {
   font-size: 24px;
 }
 .floating-chat.enter {
@@ -383,7 +377,6 @@
 }
 @media screen and (max-width: 768px) {
   .floating-chat.expand {
-    position: fixed;
     top: 0;
     left: 0;
     width: 100%;
@@ -391,6 +384,5 @@
     max-width: 100vw;
     max-height: 100vh;
     overflow: hidden;
-    z-index: 9999;
   }
 }

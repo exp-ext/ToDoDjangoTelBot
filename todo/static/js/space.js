@@ -1,7 +1,7 @@
 function drawVisor() {
     const canvas = document.getElementById('visor');
     const ctx = canvas.getContext('2d');
-    
+
     ctx.beginPath();
     ctx.moveTo(5, 45);
     ctx.bezierCurveTo(15, 64, 45, 64, 55, 45);

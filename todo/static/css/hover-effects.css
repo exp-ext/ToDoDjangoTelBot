@@ -12,7 +12,6 @@
 .hover-effects .button.fast {
   --duration: .32s;
 }
-
 .hover-effects .button {
   --background: #275efe;
   --text: #fff;
@@ -99,19 +98,16 @@
 .hover-effects .button.reverse:hover span {
   --m: calc(var(--font-size));
 }
-
 .hover-effects html {
   box-sizing: border-box;
   -webkit-font-smoothing: antialiased;
 }
-
 .hover-effects * {
   box-sizing: inherit;
 }
 .hover-effects *:before, *:after {
   box-sizing: inherit;
 }
-
 .hover-effects body {
   min-height: 100vh;
   display: flex;

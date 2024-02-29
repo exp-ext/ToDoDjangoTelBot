@@ -31,14 +31,10 @@
     });
   </script>
   <script>
-    $(document).ready(function() {
+    window.onload = function() {
       var searchUrl = "{% url 'posts:search' %}";
       initAutocomplete(searchUrl);
-    });
+    };
   </script>
-  <script async src="{% static 'js/hover-effects.js' %}"></script>
-  {% comment %} <script src="{% static 'js/load-img.js' %}"></script>
-  <script>
-    needDiv = '.scroll';
-  </script> {% endcomment %}
+  <script src="{% static 'js/hover-effects.js' %}"></script>  
 {% endblock %}

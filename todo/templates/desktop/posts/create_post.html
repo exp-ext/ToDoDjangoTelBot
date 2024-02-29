@@ -34,26 +34,26 @@
             {{ form.media }}
 
             <div class="form-group {% if form.title.errors %}has-error{% endif %}">
-                {{ form.title }}
                 {% for error in form.title.errors %}
                     <div class="alert alert-danger">{{ error }}</div>
                 {% endfor %}
+                {{ form.title }}
             </div>
 
             {{ form.group }}
 
             <div class="form-group {% if form.text.errors %}has-error{% endif %}">
-                {{ form.text }}
                 {% for error in form.text.errors %}
                     <div class="alert alert-danger">{{ error }}</div>
                 {% endfor %}
+                {{ form.text }}
             </div>
 
             <div class="form-group {% if form.short_description.errors %}has-error{% endif %}">
-                {{ form.short_description }}
                 {% for error in form.short_description.errors %}
                     <div class="alert alert-danger">{{ error }}</div>
                 {% endfor %}
+                {{ form.short_description }}
             </div>
             
             <div id="add-image">

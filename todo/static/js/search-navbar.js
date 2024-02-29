@@ -1,4 +1,3 @@
-// autocomplete.js
 function initAutocomplete(searchUrl) {
   $("#search-input").autocomplete({
     source: searchUrl,
@@ -27,7 +26,6 @@ function initAutocomplete(searchUrl) {
   };
 }
 
-// Функция для добавления элементов в навбар и инициализации всплывающих подсказок
 (function() {
     function addItemsToNavbar(items, media_bucket) {
         const navbarItems = document.getElementById('navbarItems');

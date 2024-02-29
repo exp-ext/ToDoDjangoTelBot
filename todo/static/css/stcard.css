@@ -2,7 +2,6 @@
 	font-family: 'BadScript-Regular';
 	src: url('../fonts/BadScript-Regular.ttf') format("truetype");
 }
-
 .stcard-container {
 	display: flex;
 	justify-content: center;  

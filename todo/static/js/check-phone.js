@@ -11,8 +11,7 @@ function setCursorPosition(pos, e) {
 }
 
 function mask(e) {
-    //console.log('mask',e);
-    var matrix = this.placeholder,// .defaultValue
+    var matrix = this.placeholder,
         i = 0,
         def = matrix.replace(/\D/g, ""),
         val = this.value.replace(/\D/g, "");

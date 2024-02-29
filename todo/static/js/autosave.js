@@ -10,7 +10,7 @@ function sendFormData() {
     if (domEditableElement && domEditableElement.ckeditorInstance) {
         const editorInstance = domEditableElement.ckeditorInstance;
         let editorData = editorInstance.getData();
-        formData.set('text', editorData); // Обновление данных 'text'
+        formData.set('text', editorData);
     }
 
     fetch(autosaveUrl, {

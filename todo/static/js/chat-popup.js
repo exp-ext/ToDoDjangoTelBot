@@ -56,7 +56,6 @@ $(document).ready(function () {
         element.find('#sendMessage').click(sendNewMessage);
 
         if (chatIsEmpty) {
-            // Запрос на получение последних сообщений
             $.ajax({
                 url: '/ai/last-message/',
                 type: 'GET',

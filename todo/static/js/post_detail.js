@@ -6,23 +6,20 @@ document.addEventListener("DOMContentLoaded", function() {
     text: bannerData.getAttribute('data-text'),
     mobileText: bannerData.getAttribute('data-mobile-text')
   };
-
   const desktopContent = `
     <a href="${banner.reference}" target="_blank" rel="nofollow">
-      <img class="card-img-top mx-auto d-block" src="${banner.image}" style="max-width: 100%; max-height: 380px; height: auto;" />
+      <img class="card-img-top mx-auto d-block" src="${banner.image}" alt="QR-code" style="max-width: 100%; max-height: 380px; height: auto;" />
     </a>
     <div class="card-body">
       <p class="card-text">${banner.text}</p>
     </div>
   `;
-
   const mobileContent = `
     <a href="${banner.reference}" target="_blank" rel="nofollow" class="d-flex justify-content-center align-items-center flex-shrink-0" style="max-width: 50%;">
-      <img src="${banner.image}" style="max-width: 100%; height: auto;" />
+      <img src="${banner.image}" alt="QR-code" style="max-width: 100%; height: auto;" />
     </a>
     <p class="flex-grow-1 d-flex" style="max-width: 50%; margin: 0;">${banner.mobileText}</p>
   `;
-
   const adContainer = document.getElementById('yandex_rtb_R-A-3403802-1');
   const adMobileContainer = document.getElementById('yandex_rtb_R-A-3403802-10');
 
@@ -57,8 +54,7 @@ $(document).ready(function() {
         $(this).text(Math.ceil(now));
       }
     });
-    }); 
-
+    });
 });
 
 document.querySelectorAll('oembed[url]').forEach(element => {

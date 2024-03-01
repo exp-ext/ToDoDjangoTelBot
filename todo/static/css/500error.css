@@ -5,11 +5,9 @@
   --block-light-background: linear-gradient(to right, #2579ba 0%,#0089f2 26%,#214db2 50%,#010023 51%,#0d0e19 100%);
   --block-light-border: 5px solid;
 }
-
 * {
   box-sizing: border-box;
 }
-
 main {
   width: 100vw;
   height: 100vh;
@@ -212,7 +210,6 @@ main #code-error h1 {
   font-weight: bold;
   margin: 1vw 0;
 }
-
 @keyframes anim-ball {
   20% {
     transform: rotate(180deg);

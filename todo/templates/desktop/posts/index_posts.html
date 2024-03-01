@@ -35,13 +35,13 @@
 {% block content %}
   <div class="container py-5">
     {% include 'desktop/posts/includes/switcher.html' %}
-    <div class="moving-unit _anim-items _anim-no-hide">
+    <div class="{% if not request.GET.q %}moving-unit _anim-items _anim-no-hide{% endif %}">
       {% include 'desktop/posts/includes/search.html' %}
     </div>
     <div class="row">
       <div class="col-lg-2">
         <div class="scroll">
-          <div class="moving-unit _anim-items _anim-no-hide">
+          <div class="{% if not request.GET.q %}moving-unit _anim-items _anim-no-hide{% endif %}">
             {% include 'desktop/posts/includes/navbar.html' %}
           </div>
         </div>

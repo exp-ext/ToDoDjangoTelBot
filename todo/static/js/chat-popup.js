@@ -153,17 +153,10 @@ $(document).ready(function () {
     }
 
     function createUUID() {
-        var s = [];
-        var hexDigits = "0123456789abcdef";
-        for (var i = 0; i < 36; i++) {
-            s[i] = hexDigits.charAt(Math.floor(Math.random() * 16));
-        }
-        s[14] = "4";
-        s[19] = hexDigits.charAt((s[19] & 0x3) | 0x8);
-        s[8] = s[13] = s[18] = s[23] = "-";
-
-        var uuid = s.join("");
-        return uuid;
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+            const r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+            return v.toString(16);
+        });
     }
 
 });

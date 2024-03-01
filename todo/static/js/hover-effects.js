@@ -1,1 +1,5 @@
-document.querySelectorAll('.button').forEach(button => button.innerHTML = '<div><span>' + button.textContent.trim().split('').join('</span><span>') + '</span></div>');
+document.querySelectorAll('.button').forEach(button => {
+  const text = button.textContent.trim();
+  const spannedText = text.split('').map(letter => `<span>${letter}</span>`).join('');
+  button.innerHTML = `<div>${spannedText}</div>`;
+});

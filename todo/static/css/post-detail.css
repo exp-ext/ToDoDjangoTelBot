@@ -40,3 +40,9 @@ pre {
   height: 300px;
   max-height: 300px;
 }
+.hidden {
+  display: none;
+}
+.visible {
+  display: block;
+}

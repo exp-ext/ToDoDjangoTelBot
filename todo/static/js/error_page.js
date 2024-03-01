@@ -5,9 +5,8 @@ anime({
     loop: true,
     easing: 'easeInOutSine',
     direction: 'alternate'
-  });
-  
-  anime({
+  });  
+anime({
     targets: '#zero',
     translateX: 10,
     autoplay: true,

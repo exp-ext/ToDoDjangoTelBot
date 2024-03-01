@@ -10,25 +10,28 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 });
-
 const animItems = document.querySelectorAll('._anim-items');
+let optimized = false;
 if (animItems.length > 0) {
-    window.addEventListener('scroll', animOnScroll);
-
+    window.addEventListener('scroll', () => {
+        if (!optimized) {
+            requestAnimationFrame(animOnScroll);
+            optimized = true;
+        }
+    });
     function animOnScroll() {
-        for (let index = 0; index < animItems.length; index++) {
-            const animItem = animItems[index];
-            const animItemsHeight = animItem.offsetHeight;
-            const animItemsOffset = offset(animItem).top;
+        const windowHeight = window.innerHeight;
+        animItems.forEach(animItem => {
+            const animItemHeight = animItem.offsetHeight;
+            const animItemOffset = offset(animItem).top;
             const animStart = 4;
-
-            let animItemPoint = window.innerHeight - animItemsHeight / animStart;
-            if (animItemsHeight > window.innerHeight) {
-                animItemPoint = window.innerHeight - window.innerHeight / animStart;
+            let animItemPoint = windowHeight - animItemHeight / animStart;
+            if (animItemHeight > windowHeight) {
+                animItemPoint = windowHeight - windowHeight / animStart;
             }
             if (
-                window.scrollY > animItemsOffset - animItemPoint &&
-                window.scrollY < animItemsOffset + animItemsHeight
+                (window.scrollY > animItemOffset - animItemPoint) &&
+                (window.scrollY < animItemOffset + animItemHeight)
             ) {
                 animItem.classList.add('_active');
             } else {
@@ -36,13 +39,13 @@ if (animItems.length > 0) {
                     animItem.classList.remove('_active');
                 }
             }
-        }
+        });
+        optimized = false;
     }
     function offset(el) {
         const rect = el.getBoundingClientRect(),
-            scrollLeft = window.scrollX || document.documentElement.scrollLeft,
             scrollTop = window.scrollY || document.documentElement.scrollTop;
-        return { top: rect.top + scrollTop, left: rect.left + scrollLeft };
+        return { top: rect.top + scrollTop };
     }
     setTimeout(() => {
         animOnScroll();

@@ -1,19 +1,18 @@
+*, *::before, *::after {
+    box-sizing: border-box;
+}
 .table-wrap {
   overflow-x: auto;
   display: block;
-}  
+}
 .table-wrap table {
   width: 100%;
-  max-width: none;
   table-layout: fixed;
 }
 pre {
   white-space: pre !important;
   overflow-x: auto !important;
   word-wrap: normal !important;
-}
-*, *::before, *::after {
-    box-sizing: border-box;
 }
 .scroll {
     position: sticky;
@@ -33,15 +32,11 @@ pre {
   height: 100%;
   object-fit: cover;
 }
-.hidden-content {
+.hidden-content, .hidden {
   display: none;
 }
 #advertAside {
   height: 300px;
-  max-height: 300px;
-}
-.hidden {
-  display: none;
 }
 .visible {
   display: block;

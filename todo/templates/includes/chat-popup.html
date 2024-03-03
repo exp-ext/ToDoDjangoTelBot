@@ -4,7 +4,6 @@
   <link rel="stylesheet" href="{% static 'css/chat-popup.css' %}">
 {% endblock %}
 {% csrf_token %}
-
 <div class="floating-chat">
     <div class="eva"><strong>Eva</strong></div>
   <div class="chat ck ck-content">
@@ -25,7 +24,6 @@
       </div>
   </div>
 </div>
-
-  {% block javascript %}
+{% block javascript %}
   <script src="{% static 'js/chat-popup.js' %}" defer></script>
-  {% endblock %}
+{% endblock %}

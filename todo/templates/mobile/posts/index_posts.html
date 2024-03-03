@@ -1,37 +1,29 @@
 {% extends "base.html" %}
 {% load static %}
-
 {% block head %}
   <meta name="description" content="Исследуйте разнообразие тем и статей по программированию, включая Python, Django, Data Science и многое другое на YourToDo!"/>
-  <meta name="keywords" content="Python, Django, Data Science, Архитектура, Git, VBA, Docker, Очереди, Фронтенд, Серверы, Строки, JavaScript, программирование, разработка">
-  
+  <meta name="keywords" content="Python, Django, Data Science, Архитектура, Git, VBA, Docker, Очереди, Фронтенд, Серверы, Строки, JavaScript, программирование, разработка">  
   <meta name="robots" content="index, follow">
   <link rel="canonical" href="https://www.yourtodo.ru{% url 'posts:index_posts' %}" />
-
   <meta property="og:site_name" content="YourToDo.ru"/>
   <meta property="og:title" content="Статьи по программированию"/>
   <meta property="og:type" content="website"/>
   <meta property="og:url" content="https://www.yourtodo.ru{% url 'posts:index_posts' %}"/>
   <meta property="og:description" content="Подробные статьи и руководства по программированию и связанным технологиям. Узнайте больше о последних тенденциях и лучших практиках."/>
-
   {% if page_obj %}
     {% with first_item=page_obj|first %}
       {% if first_item.image %}
         <meta property="og:image" content="{{ first_item.image.url }}"/>
         <meta property="og:image:alt" content="{{ first_item.slug }}"/>
-
         <meta name="twitter:card" content="summary_large_image"/>
         <meta name="twitter:image" content="{{ first_item.image.url }}"/>
         <meta name="twitter:image:alt" content="{{ first_item.slug }}"/>
       {% endif %}
     {% endwith %}
   {% endif %}
-
   <link rel="stylesheet" href="{% static 'css/moving_units.css' %}">
 {% endblock %}
-
 {% block title %}Статьи по программированию{% endblock %}
-
 {% block content %}
   <div class="container pt-5">
     <div class="mt-3 moving-unit _anim-items _anim-no-hide">

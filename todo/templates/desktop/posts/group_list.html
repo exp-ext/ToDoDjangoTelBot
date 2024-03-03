@@ -1,34 +1,26 @@
 {% extends "base.html" %}
 {% load thumbnail %}
 {% load static %}
-
 {% block head %}
   <meta name="description" content="{{ group.description }}"/>
   <meta name="keywords" content="Telegram, заметки, группа">
-
   <meta name="robots" content="index, follow">
   <link rel="canonical" href="https://www.yourtodo.ru{% url 'posts:group_list' group.slug %}" />
-
   <meta property="og:site_name" content="YourToDo.ru"/>
   <meta property="og:title" content="{{ group.title }}"/>
   <meta property="og:type" content="website"/>
   <meta property="og:url" content="https://www.yourtodo.ru{% url 'posts:group_list' group.slug %}"/>
   <meta property="og:description" content="{{ group.description }}"/>
-
   {% if group.image %}
     <meta property="og:image" content="{{ group.image.url }}"/>
     <meta property="og:image:alt" content="Телеграмм сообщество: {{ group.title }}"/>
-
     <meta name="twitter:card" content="summary_large_image"/>
     <meta name="twitter:image" content="{{ group.image.url }}"/>
     <meta name="twitter:image:alt" content="Телеграмм сообщество: {{ group.title }}"/>
   {% endif %}
-
   <link rel="stylesheet" href="{% static 'css/moving_units.css' %}">
 {% endblock %}
-
 {% block title %} Записи сообщества {{ group.title }} {% endblock %}
-
 {% block headline %}
   <div class="container pt-5 my-2">
     <div class="card shadow rounded text-center bg-secondary moving-unit mt-4 _anim-items _anim-no-hide">
@@ -46,7 +38,6 @@
     </div>
   </div>  
 {% endblock %}
-
 {% block content %}
   <div class="container">
     <div class="ck ck-content">

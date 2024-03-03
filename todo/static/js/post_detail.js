@@ -110,3 +110,17 @@ function toggleList(event, toggleIcon) {
     icon.classList.toggle('bi-circle');
   }
 }
+document.addEventListener('DOMContentLoaded', (event) => {
+  const button = document.createElement('button');
+  button.id = 'scrollToTopBtn';
+  button.textContent = '↑ оглавление';
+  button.style.display = 'none';
+  document.body.appendChild(button);
+  setTimeout(() => {
+    button.style.display = 'block';
+  }, 30000);
+  function scrollToTop() {
+    window.scrollTo({top: 0, behavior: 'smooth'});
+  }
+  button.addEventListener('click', scrollToTop);
+});

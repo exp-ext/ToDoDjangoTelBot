@@ -1,22 +1,14 @@
 {% extends "base.html" %}
-
 {% block title %} Публикации избранных авторов {% endblock %}
-
 {% block headline %}    
   <h1>Публикации избранных авторов</h1>
 {% endblock %}
-
 {% block content %}
   <div class="container">
-
-    {% include 'mobile/posts/includes/switcher.html' %}
-    
+    {% include 'mobile/posts/includes/switcher.html' %}    
       {% for post in page_obj %}      
         {% include 'mobile/posts/includes/post_list.html' %}        
-      {% endfor %}
- 
+      {% endfor %} 
   </div>
-
   {% include 'mobile/posts/includes/paginator.html' %}
-
 {% endblock %}

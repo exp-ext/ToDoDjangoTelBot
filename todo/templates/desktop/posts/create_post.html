@@ -2,13 +2,10 @@
 {% load static %}
 {% load user_filters %}
 {% load thumbnail %}
-
 {% block head %}
   <link rel="stylesheet" href="{% static 'css/post-create.css' %}">
 {% endblock %}
-
 {% block title %}Редактор заметок{% endblock %}
-
 {% block content %}
   <div class="container py-5">
     <div class="row justify-content-center py-3">
@@ -32,36 +29,30 @@
                   {% endif %}">
             {% csrf_token %}
             {{ form.media }}
-
             <div class="form-group {% if form.title.errors %}has-error{% endif %}">
                 {% for error in form.title.errors %}
                     <div class="alert alert-danger">{{ error }}</div>
                 {% endfor %}
                 {{ form.title }}
             </div>
-
             {{ form.group }}
-
             <div class="form-group {% if form.text.errors %}has-error{% endif %}">
                 {% for error in form.text.errors %}
                     <div class="alert alert-danger">{{ error }}</div>
                 {% endfor %}
                 {{ form.text }}
             </div>
-
             <div class="form-group {% if form.short_description.errors %}has-error{% endif %}">
                 {% for error in form.short_description.errors %}
                     <div class="alert alert-danger">{{ error }}</div>
                 {% endfor %}
                 {{ form.short_description }}
-            </div>
-            
+            </div>            
             <div id="add-image">
                 <input type="file" name="image" accept="image/*" id="file-input" />
                 <div class="image-grid" id="image-grid">
                 </div>
             </div>
-
             <div class="d-flex justify-content-end">              
               <button type="submit" class="btn btn-primary">
                 {% if form.initial.is_edit %}
@@ -71,13 +62,11 @@
                 {% endif %}
               </button>              
             </div>
-
           </form>
       </div>
     </div>
   </div>
 {% endblock %}
-
 {% block javascript %}
   <script type="text/javascript">
     var autosaveUrl = "{% url 'posts:autosave' %}";

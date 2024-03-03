@@ -46,7 +46,40 @@ pre {
   margin-right: 3px;
   vertical-align: middle;
 }
-.li-tree {
-  padding-top: 3px;
-  padding-bottom: 3px;
+.tree-content hr{
+  margin-top: 4px;
+  margin-bottom: 12px;
+}
+.tree-content a {
+  color: black;
+}
+.carousel-item a {
+  text-decoration: none;
+}
+:root {
+  --scroll-btn-bg-color: #ddd;
+  --scroll-btn-bg-color-hover: #555;
+  --scroll-btn-color: black;
+  --scroll-btn-color-hover: white;
+  --scroll-btn-bottom: 20px;
+  --scroll-btn-right: 30px;
+  --scroll-btn-padding: 12px;
+  --scroll-btn-border-radius: 10px;
+}
+#scrollToTopBtn {
+  position: fixed;
+  bottom: var(--scroll-btn-bottom);
+  right: var(--scroll-btn-right);
+  z-index: 99;
+  border: none;
+  outline: none;
+  background-color: var(--scroll-btn-bg-color);
+  color: var(--scroll-btn-color);
+  cursor: pointer;
+  padding: var(--scroll-btn-padding);
+  border-radius: var(--scroll-btn-border-radius);
+}
+#scrollToTopBtn:hover {
+  background-color: var(--scroll-btn-bg-color-hover);
+  color: var(--scroll-btn-color-hover);
 }

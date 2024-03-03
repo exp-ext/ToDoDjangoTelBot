@@ -47,13 +47,14 @@
   </div>
   
   <div class="container-fluid my-5">
-    <div class="row py-1">
+    <div class="row pt-1">
       <aside class="bg-light rounded shadow mb-2">  
-        {% if contents %}          
+        {% if contents %}
+          <div class="lobster text-center pt-2">
+            <h1>{{ post.title }}</h1>
+          </div> 
+          <hr>
           <div class="py-1 bg-light mb-1">
-            <div class="text-center">
-              <h4><strong>Оглавление</strong></h4>
-            </div>
             <ul class="list-unstyled">
               {%for content in contents %}
                 {%include 'mobile/posts/includes/tree_template.html' %}
@@ -69,10 +70,7 @@
         </div>
       </aside>
 
-      <article class="bg-light rounded shadow">
-        <div class="lobster">
-          <h1>{{ post.title }}</h1>
-        </div>
+      <article class="bg-light rounded shadow pt-3">
         {% if post.image %}
           <div class="image-container">
             <img src="{{ post.image.url }}" alt="Картинка к публикации: {{ post.title }}" />
@@ -85,15 +83,18 @@
             </div>
           </div>
         </p>
-        {% if tag_posts_present %}
-          {% include 'mobile/posts/includes/other_posts.html' %}
-        {% endif %}
       </article>
+        {% if tag_posts_present %}
+        <aside class="bg-light rounded shadow my-3 py-2">
 
+          {% include 'mobile/posts/includes/other_posts.html' %}
+
+        </aside>
+        {% endif %}
     </div>
 
-    <div class="row py-1">
-      <aside class="bg-light rounded shadow mb-2">
+    <div class="row">
+      <aside class="bg-light rounded shadow mb-1">
         {% include 'mobile/posts/includes/comments.html' %}
       </aside>
     </div>

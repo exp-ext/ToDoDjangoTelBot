@@ -47,7 +47,7 @@ class PostForm(forms.ModelForm):
     def clean_text(self) -> str:
         text = self.cleaned_data.get('text')
         soup = BeautifulSoup(text, features="html.parser")
-        max_len_tag = 50
+        max_len_tag = 40
         tag_error = [forms.ValidationError(f'Теги h2 и h4 не могут быть более {max_len_tag} символов!!! Необходимо исправить: ')]
 
         for tag in soup.find_all(['h2', 'h4']):

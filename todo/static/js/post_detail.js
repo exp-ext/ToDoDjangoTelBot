@@ -49,9 +49,11 @@ document.addEventListener("DOMContentLoaded", function() {
     }
   }
   function checkAdBlock() {
+    const adContainer = document.getElementById('yandex_rtb_R-A-3403802-1');
+    const adMobileContainer = document.getElementById('yandex_rtb_R-A-3403802-10');
     if ((adContainer && adContainer.innerHTML.trim() === "") || 
       (adMobileContainer && adMobileContainer.innerHTML.trim() === "")) {
-      updateAdBlockContent();
+      requestAnimationFrame(updateAdBlockContent);
     }
   }
   setTimeout(checkAdBlock, 1500);
@@ -70,22 +72,26 @@ $(document).ready(function() {
     });
 });
 document.querySelectorAll('oembed[url]').forEach(element => {
+  const url = element.getAttribute('url');
   const anchor = document.createElement('a');
-  anchor.setAttribute('href', element.getAttribute('url'));
+  anchor.href = url;
   anchor.className = 'embedly-card';
   element.appendChild(anchor);
 });
 function scrollDown(event) {
-  var targetId = event.target.getAttribute('href').slice(1);
-  var targetElement = document.getElementById(targetId);
-  if (targetElement) {
-    event.preventDefault();
-    var offset = 64;
-    var targetPosition = targetElement.offsetTop - offset;
-    window.scrollTo({
-      top: targetPosition,
-      behavior: 'smooth'
-    });
+  const hrefAttribute = event.target.getAttribute('href');
+  if (hrefAttribute && hrefAttribute.startsWith('#')) {
+    const targetId = hrefAttribute.slice(1);
+    const targetElement = document.getElementById(targetId);
+    if (targetElement) {
+      event.preventDefault();
+      const offset = 64;
+      const targetPosition = targetElement.offsetTop - offset;
+      window.scrollTo({
+        top: targetPosition,
+        behavior: 'smooth'
+      });
+    }
   }
 }
 setTimeout(function() {
@@ -100,10 +106,7 @@ function toggleList(event, toggleIcon) {
     ul.classList.toggle('hidden');
     ul.classList.toggle('visible');
     const icon = toggleIcon.querySelector('i');
-    if (icon.classList.contains('bi-plus-circle')) {
-      icon.classList.replace('bi-plus-circle', 'bi-circle');
-    } else {
-      icon.classList.replace('bi-circle', 'bi-plus-circle');
-    }
+    icon.classList.toggle('bi-plus-circle');
+    icon.classList.toggle('bi-circle');
   }
 }

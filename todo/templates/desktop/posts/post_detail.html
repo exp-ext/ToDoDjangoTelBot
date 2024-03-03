@@ -53,9 +53,10 @@
       <aside class="col-lg-3 col-sm-12">
         <div class="scroll">
           {% if contents %}          
-            <div class="card p-1 bg-light rounded shadow mb-2">
-              <div class="text-center">
+            <div class="card px-1 bg-light rounded shadow mb-2">
+              <div class="text-center pt-3">
                 <h4><strong>Оглавление</strong></h4>
+                <hr>
               </div>
               <ul class="list-unstyled">
                 {%for content in contents %}
@@ -84,7 +85,7 @@
       </aside>
       {% comment %} вторая колонка {% endcomment %}
       <article class="col-lg-8 col-sm-12 bg-light rounded shadow">
-        <div class="lobster">
+        <div class="lobster py-3">
           <h1>{{ post.title }}</h1>
         </div>
 

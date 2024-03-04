@@ -4,7 +4,8 @@ from django.db.models import Value
 from django.db.models.functions import Concat
 from django.utils.safestring import mark_safe
 
-from .models import HistoryAI, HistoryDALLE, HistoryWhisper
+from .models import (GptModels, HistoryAI, HistoryDALLE, HistoryWhisper,
+                     UserGptModels)
 
 User = get_user_model()
 
@@ -93,3 +94,18 @@ class HistoryWhisperAdmin(admin.ModelAdmin):
         return obj.user.get_full_name()
 
     full_name.short_description = 'Full Name'
+
+
+@admin.register(GptModels)
+class GptModelsAdmin(admin.ModelAdmin):
+    pass
+
+
+class GptModelsInline(admin.StackedInline):
+    model = GptModels.approved_users.through
+    extra = 0
+
+
+@admin.register(UserGptModels)
+class GptModelsAdmin(admin.ModelAdmin):
+    inlines = (GptModelsInline,)

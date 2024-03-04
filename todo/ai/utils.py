@@ -4,16 +4,18 @@ from datetime import datetime, timedelta, timezone
 
 import httpx
 import markdown
-import tiktoken
+import tiktoken_async
 from asgiref.sync import sync_to_async
 from channels.db import database_sync_to_async
 from channels.generic.websocket import AsyncWebsocketConsumer
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.core.exceptions import ObjectDoesNotExist
+from django.db.models import Model
 from httpx_socks import AsyncProxyTransport
 from openai import AsyncOpenAI
 from telbot.loader import bot
-from telbot.models import HistoryAI
+from telbot.models import GptModels, HistoryAI
 
 ADMIN_ID = settings.TELEGRAM_ADMIN_ID
 User = get_user_model()
@@ -25,13 +27,10 @@ class AnswerChatGPT():
         'Что-то пошло не так 🤷🏼\n'
         'Возможно большой наплыв запросов, которые я не успеваю обрабатывать 🤯'
     )
-    MODEL = 'gpt-3.5-turbo'
-    MAX_LONG_MESSAGE = 1024
-    MAX_LONG_REQUEST = 4096
     STORY_WINDOWS_TIME = 30
     MAX_TYPING_TIME = 3
 
-    def __init__(self, channel_layer: AsyncWebsocketConsumer, room_group_name: str, user: User, message: str, message_count: int) -> None:
+    def __init__(self, channel_layer: AsyncWebsocketConsumer, room_group_name: str, user: Model, message: str, message_count: int) -> None:
         self.channel_layer = channel_layer
         self.room_group_name = room_group_name
         self.message_text = message
@@ -41,6 +40,7 @@ class AnswerChatGPT():
         self.time_start = None
         self.answer_tokens = None
         self.answer_text = AnswerChatGPT.ERROR_TEXT
+        self.model = None
         self.prompt = [
             {
                 'role': 'system',
@@ -53,12 +53,11 @@ class AnswerChatGPT():
         self.message_tokens = None
         self.set_windows_time()
 
-    @classmethod
-    async def num_tokens_from_message(cls, message):
+    async def num_tokens_from_message(self, message):
         try:
-            encoding = tiktoken.encoding_for_model(AnswerChatGPT.MODEL)
+            encoding = await tiktoken_async.encoding_for_model(self.model.title)
         except KeyError:
-            encoding = tiktoken.get_encoding("cl100k_base")
+            encoding = await tiktoken_async.get_encoding("cl100k_base")
         return len(encoding.encode(message)) + 4
 
     async def get_answer_from_ai(self) -> dict:
@@ -66,6 +65,11 @@ class AnswerChatGPT():
 
         if await self.check_in_works():
             return None
+
+        try:
+            self.model = self.user.approved_models.active_model
+        except ObjectDoesNotExist:
+            self.model = GptModels.objects.filter(default=True).first()
 
         self.message_tokens = await self.num_tokens_from_message(self.message_text)
 
@@ -80,10 +84,8 @@ class AnswerChatGPT():
 
         except Exception as err:
             traceback_str = traceback.format_exc()
-            bot.send_message(
-                chat_id=ADMIN_ID,
-                text=f'Ошибка в получении ответа от ChatGPT to Chat: {str(err)[:1024]}\n\nТрассировка:\n{traceback_str[-1024:]}',
-            )
+            text = f'{str(err)[:1024]}\n\nТрассировка:\n{traceback_str[-1024:]}'
+            await self.handle_error(text)
         finally:
             if not self.user.is_authenticated and self.message_count == 1:
                 welcome_text = (
@@ -97,29 +99,30 @@ class AnswerChatGPT():
             await self.del_mess_in_redis()
 
     async def request_to_openai(self) -> None:
-        """Делает обычный запрос в OpenAI."""
+        """Делает запрос в OpenAI и выключает typing."""
         client = AsyncOpenAI(
-            api_key=settings.CHAT_GPT_TOKEN,
+            api_key=self.model.token,
             timeout=300,
         )
         completion = await client.chat.completions.create(
-            model=AnswerChatGPT.MODEL,
+            model=self.model.title,
             messages=self.prompt,
-            temperature=0.1,
+            temperature=0.1
         )
         self.answer_text = completion.choices[0].message.content
         self.answer_tokens = completion.usage.completion_tokens
         self.message_tokens = completion.usage.prompt_tokens
+        self.event.set()
 
     async def httpx_request_to_openai(self) -> None:
-        """Делает запрос в OpenAI через прокси."""
+        """Делает запрос в OpenAI и выключает typing."""
         transport = AsyncProxyTransport.from_url(settings.SOCKS5)
         headers = {
             "Content-Type": "application/json",
-            "Authorization": f"Bearer {settings.CHAT_GPT_TOKEN}"
+            "Authorization": f"Bearer {self.model.token}"
         }
         data = {
-            "model": self.MODEL,
+            "model": self.model.title,
             "messages": self.prompt,
             "temperature": 0.1
         }
@@ -131,9 +134,15 @@ class AnswerChatGPT():
                 timeout=60 * self.MAX_TYPING_TIME,
             )
             completion = json.loads(response.content)
-            self.answer_text = completion.get('choices')[0]['message']['content']
-            self.answer_tokens = completion.get('usage')['completion_tokens']
-            self.message_tokens = completion.get('usage')['prompt_tokens']
+            try:
+                self.answer_text = completion.get('choices')[0]['message']['content']
+                self.answer_tokens = completion.get('usage')['completion_tokens']
+                self.message_tokens = completion.get('usage')['prompt_tokens']
+            except Exception as error:
+                self.answer_text = 'Я отказываюсь отвечать на этот вопрос!'
+                raise error
+            finally:
+                self.event.set()
 
     async def send_chat_message(self, message):
         await self.channel_layer.group_send(
@@ -144,6 +153,11 @@ class AnswerChatGPT():
                 'username': 'Eva',
             }
         )
+
+    async def handle_error(self, err):
+        """Логирование ошибок."""
+        error_message = f"Ошибка при обращении к ChatGPT на сайте:\n{err}"
+        bot.send_message(ADMIN_ID, error_message)
 
     @database_sync_to_async
     def get_prompt(self) -> None:
@@ -159,7 +173,7 @@ class AnswerChatGPT():
             max_tokens = self.message_tokens + 120
             for item in history:
                 max_tokens += sum(item.get(key, 0) for key in ('question_tokens', 'answer_tokens') if item.get(key) is not None)
-                if max_tokens >= AnswerChatGPT.MAX_LONG_REQUEST:
+                if max_tokens >= self.model.context_window:
                     break
                 self.prompt.extend([
                     {
@@ -206,7 +220,7 @@ class AnswerChatGPT():
 
     @property
     def check_long_query(self) -> bool:
-        return self.message_tokens > AnswerChatGPT.MAX_LONG_MESSAGE
+        return self.message_tokens > self.model.max_request_token
 
 
 def convert_markdown(text: str) -> str:

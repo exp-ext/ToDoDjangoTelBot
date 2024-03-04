@@ -8,6 +8,46 @@ from django.utils.translation import gettext_lazy as _
 User = get_user_model()
 
 
+class GptModels(models.Model):
+    title = models.CharField(_('модель GPT'), max_length=28)
+    default = models.BooleanField(_('доступна всем по умолчанию'), default=False)
+    token = models.CharField(_('токен для запроса'), max_length=51)
+    context_window = models.IntegerField()
+    max_request_token = models.IntegerField()
+
+    class Meta:
+        verbose_name = _('Модель GPT OpenAi')
+        verbose_name_plural = _('Модели GPT OpenAi')
+
+    def __str__(self):
+        return self.title
+
+    def save(self, *args, **kwargs):
+        if self.default and GptModels.objects.filter(default=True).exists():
+            raise ValueError('По умолчанию может быть только одна модель.')
+        super(GptModels, self).save(*args, **kwargs)
+
+
+class UserGptModels(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='approved_models')
+    active_model = models.ForeignKey(GptModels, on_delete=models.CASCADE, null=True, blank=True, related_name='active_for_users', verbose_name=_('Активная модель'))
+    approved_models = models.ManyToManyField(to=GptModels, related_name='approved_users')
+
+    class Meta:
+        verbose_name = _('Модель GPT у юзера')
+        verbose_name_plural = _('Модели GPT у юзеров')
+
+    def __str__(self):
+        return f'User: {self.user}, Active model: {self.active_model}'
+
+    def save(self, *args, **kwargs):
+        if not self.active_model:
+            default_model = GptModels.objects.filter(default=True).first()
+            if default_model:
+                self.active_model = default_model
+        super(UserGptModels, self).save(*args, **kwargs)
+
+
 class AsyncManager(BaseManager.from_queryset(models.QuerySet)):
     """
     Менеджер модели, который добавляет поддержку асинхронных операций с базой данных.

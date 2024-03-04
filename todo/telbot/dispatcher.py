@@ -2,8 +2,8 @@ from telegram.ext import (CallbackQueryHandler, CommandHandler,
                           ConversationHandler, Dispatcher, Filters,
                           MessageHandler)
 
-from .external_api.chat_gpt import (get_answer_davinci_person,
-                                    get_answer_davinci_public)
+from .external_api.chat_distributor import (get_answer_davinci_person,
+                                            get_answer_davinci_public)
 from .external_api.image_gen import first_step_get_image, get_image_dall_e
 from .external_api.kudago import where_to_go
 from .external_api.translator import send_translation

@@ -7,7 +7,6 @@ document.addEventListener("DOMContentLoaded", function() {
     text: bannerData.getAttribute('data-text'),
     mobileText: bannerData.getAttribute('data-mobile-text')
   };
-  const isMobile = window.matchMedia("only screen and (max-width: 768px)").matches;
   const adContainer = document.getElementById('yandex_rtb_R-A-3403802-1');
   const adMobileContainer = document.getElementById('yandex_rtb_R-A-3403802-10');
   const cardContainer = document.getElementById('card-container');
@@ -111,16 +110,18 @@ function toggleList(event, toggleIcon) {
   }
 }
 document.addEventListener('DOMContentLoaded', (event) => {
-  const button = document.createElement('button');
-  button.id = 'scrollToTopBtn';
-  button.textContent = '↑ оглавление';
-  button.style.display = 'none';
-  document.body.appendChild(button);
-  setTimeout(() => {
-    button.style.display = 'block';
-  }, 30000);
-  function scrollToTop() {
-    window.scrollTo({top: 0, behavior: 'smooth'});
+  if (isMobile) {
+    const button = document.createElement('button');
+    button.id = 'scrollToTopBtn';
+    button.textContent = '↑ в начало';
+    button.style.display = 'none';
+    document.body.appendChild(button);
+    setTimeout(() => {
+      button.style.display = 'block';
+    }, 30000);
+    function scrollToTop() {
+      window.scrollTo({top: 0, behavior: 'smooth'});
+    }
+    button.addEventListener('click', scrollToTop);
   }
-  button.addEventListener('click', scrollToTop);
 });

@@ -576,7 +576,8 @@ class PostDetailView(DetailView):
             'tag_posts_present': tag_posts_present,
             'tag_posts_chunked': tag_posts_chunked,
             'my_banner': my_banner,
-            'group_public': not post.group or bool(post.group.link)
+            'group_public': not post.group or bool(post.group.link),
+            'is_mobile': self.user_agent.is_mobile,
         })
         return context
 

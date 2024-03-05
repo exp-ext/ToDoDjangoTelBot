@@ -42,15 +42,7 @@ class AnswerChatGPT():
         self.answer_tokens = None
         self.answer_text = AnswerChatGPT.ERROR_TEXT
         self.model = None
-        self.prompt = [
-            {
-                'role': 'system',
-                'content':
-                    'Your name is Eva and you are an Russian experienced senior software developer with extensive experience leading '
-                    'teams, mentoring junior developers, and delivering high-quality software solutions to customers.'
-                    'The primary language is Russian.'
-            }
-        ]
+        self.prompt = self.init_prompt()
         self.message_tokens = None
         self.set_windows_time()
 
@@ -172,17 +164,22 @@ class AnswerChatGPT():
         self.time_start = self.current_time - timedelta(minutes=AnswerChatGPT.STORY_WINDOWS_TIME)
 
     async def get_model_async(self):
-        if not self.user.is_authenticated:
-            self.model = await database_sync_to_async(lambda: GptModels.objects.filter(default=True).first())()
-        else:
+        if self.user.is_authenticated:
             self.model = await self._get_user_active_model()
+        else:
+            self.model = await self._get_default_model()
 
     @database_sync_to_async
     def _get_user_active_model(self):
         try:
             return self.user.approved_models.active_model
         except ObjectDoesNotExist:
-            return GptModels.objects.filter(default=True).first()
+            return self._get_default_model()
+
+    @staticmethod
+    @database_sync_to_async
+    def _get_default_model():
+        return GptModels.objects.filter(default=True).first()
 
     @database_sync_to_async
     def get_prompt(self) -> None:
@@ -228,7 +225,19 @@ class AnswerChatGPT():
 
     @property
     def check_long_query(self) -> bool:
-        return self.message_tokens > self.model.max_request_token
+        return self.message_tokens and self.model and self.message_tokens > self.model.max_request_token
+
+    def init_prompt(self):
+        return [
+            {
+                'role': 'system',
+                'content':
+                    'Your name is Eva and you are an Russian experienced senior software developer with extensive experience leading '
+                    'teams, mentoring junior developers, and delivering high-quality software solutions to customers.'
+                    'The primary language is Russian.'
+            },
+            {'role': 'user', 'content': self.message_text}
+        ]
 
 
 def convert_markdown(text: str) -> str:

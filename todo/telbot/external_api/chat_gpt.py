@@ -43,17 +43,7 @@ class GetAnswerGPT():
         self.request_massage = None
         self.model = None
         self.user_models = None
-        self.prompt = [
-            {
-                'role': 'system',
-                'content':
-                    'Your name is Eva and you are experienced senior software developer with extensive experience leading '
-                    'teams, mentoring all developers, and delivering high-quality software solutions to customers. '
-                    'The primary language is Russian. Only this Markdown format can be used in text formatting:'
-                    '*bold text* _italic text_ [inline URL](http://www.example.com/) '
-                    '`inline fixed-width code` ``` pre-formatted fixed-width code block ```'
-            }
-        ]
+        self.prompt = self.init_prompt()
 
     @property
     def check_long_query(self) -> bool:
@@ -239,3 +229,16 @@ class GetAnswerGPT():
     def del_mess_in_redis(self) -> bool:
         """Удаляет входящее сообщение из Redis."""
         redis_client.lrem(f'gpt_user:{self.user.id}', 1, self.message_text.encode('utf-8'))
+
+    def init_prompt(self):
+        return [
+            {
+                'role': 'system',
+                'content':
+                    'Your name is Eva and you are experienced senior software developer with extensive experience leading '
+                    'teams, mentoring all developers, and delivering high-quality software solutions to customers. '
+                    'The primary language is Russian. Only this Markdown format can be used in text formatting:'
+                    '*bold text* _italic text_ [inline URL](http://www.example.com/) '
+                    '`inline fixed-width code` ``` pre-formatted fixed-width code block ```'
+            }
+        ]

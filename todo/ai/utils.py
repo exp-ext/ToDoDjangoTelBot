@@ -1,3 +1,4 @@
+import asyncio
 import json
 import traceback
 from datetime import timedelta
@@ -10,7 +11,6 @@ from channels.db import database_sync_to_async
 from channels.generic.websocket import AsyncWebsocketConsumer
 from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Model
 from django.utils.timezone import now
 from httpx_socks import AsyncProxyTransport
@@ -78,8 +78,7 @@ class AnswerChatGPT():
                 await self.send_chat_message(welcome_text)
 
             await self.send_chat_message(self.answer_text)
-            await self.create_history_ai()
-            await self.del_mess_in_redis()
+            await asyncio.gather(self.create_history_ai(), self.del_mess_in_redis())
 
     async def request_to_openai(self) -> None:
         """Делает запрос в OpenAI и выключает typing."""
@@ -166,15 +165,15 @@ class AnswerChatGPT():
     async def get_model_async(self):
         if self.user.is_authenticated:
             self.model = await self._get_user_active_model()
-        else:
+        if not self.model:
             self.model = await self._get_default_model()
 
     @database_sync_to_async
     def _get_user_active_model(self):
         try:
             return self.user.approved_models.active_model
-        except ObjectDoesNotExist:
-            return self._get_default_model()
+        except Exception:
+            return None
 
     @staticmethod
     @database_sync_to_async

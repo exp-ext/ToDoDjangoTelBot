@@ -20,7 +20,6 @@ $(document).ready(function () {
             $('.typing-indicator').show();
         }
     }
-
     socket.onmessage = function(event) {
         var messages = $('.messages');
         const data = JSON.parse(event.data);
@@ -28,7 +27,6 @@ $(document).ready(function () {
         messages.scrollTop(messages.prop("scrollHeight"));
         updateTypingIndicator();
     };
-
     socket.onclose = function(event) {
         console.log('WebSocket connection closed:', event);
     };

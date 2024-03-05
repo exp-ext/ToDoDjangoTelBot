@@ -1,3 +1,4 @@
+import asyncio
 import json
 import traceback
 from datetime import timedelta
@@ -46,14 +47,13 @@ class AnswerChatGPT():
         self.message_tokens = None
         self.set_windows_time()
 
-    async def get_answer_from_ai(self) -> dict:
+    async def get_answer_from_ai(self):
         """Основная логика."""
 
         if await self.check_in_works():
             return None
 
         await self.get_model_async()
-
         await self.num_tokens_from_message()
 
         if self.check_long_query:
@@ -73,13 +73,53 @@ class AnswerChatGPT():
             if not self.user.is_authenticated and self.message_count == 1:
                 welcome_text = (
                     'Дорогой друг! '
-                    'После регистрации и авторизации для тебя будет доступен режим диалога с ИИ Ева, а не просто ответ на вопрос как ниже.'
+                    'После регистрации и авторизации для тебя будет доступен режим диалога с поддержкой истории.'
                 )
                 await self.send_chat_message(welcome_text)
 
-            await self.send_chat_message(self.answer_text)
-            await self.create_history_ai()
-            await self.del_mess_in_redis()
+            asyncio.create_task(self.create_history_ai())
+            asyncio.create_task(self.del_mess_in_redis())
+            await self.stream_answer()
+
+    async def stream_answer(self):
+        """Потоковая передача текста ответа."""
+        self.answer_text = """
+            <p>Конечно, вот простая функция на Python, которая принимает строку и выводит ее на экран:</p>
+            <pre><code class="language-python">def display_message(message):
+                print(message)
+
+            # Пример использования функции
+            display_message("Привет, мир!")
+            </code></pre>
+            <p>Эта функция принимает строку в качестве аргумента и выводит ее на экран с помощью функции <code>print()</code>. Вы можете вызвать эту функцию, передав ей любое сообщение в качестве аргумента.</p>
+        """
+        chunks = self.text_stream_generator(markdown.markdown(self.answer_text, extensions=['fenced_code']))
+        first_chunk = True
+        async for chunk in chunks:
+            await self.send_chunk_to_websocket(chunk, is_start=first_chunk, is_end=False)
+            if first_chunk:
+                first_chunk = False
+        await self.send_chunk_to_websocket("", is_end=True)
+
+    async def send_chunk_to_websocket(self, chunk, is_start=False, is_end=False):
+        """Отправка части текста ответа через веб-сокет с указанием на статус части потока."""
+        await self.channel_layer.group_send(
+            self.room_group_name,
+            {
+                'type': 'chat.message',
+                'message': chunk,
+                'username': 'Eva',
+                'is_stream': True,
+                'is_start': is_start,
+                'is_end': is_end,
+            }
+        )
+
+    async def text_stream_generator(self, text, chunk_size=5):
+        """Асинхронный генератор, разбивающий текст на части."""
+        for i in range(0, len(text), chunk_size):
+            yield text[i:i + chunk_size]
+            await asyncio.sleep(0.1)
 
     async def request_to_openai(self) -> None:
         """Делает запрос в OpenAI и выключает typing."""
@@ -124,16 +164,6 @@ class AnswerChatGPT():
                 self.answer_text = 'Я отказываюсь отвечать на этот вопрос!'
                 raise error
 
-    async def send_chat_message(self, message):
-        await self.channel_layer.group_send(
-            self.room_group_name,
-            {
-                'type': 'chat.message',
-                'message': markdown.markdown(message, extensions=['fenced_code']),
-                'username': 'Eva',
-            }
-        )
-
     async def handle_error(self, err):
         """Логирование ошибок."""
         error_message = f"Ошибка в блоке Сайт-ChatGPT:\n{err}"
@@ -166,15 +196,15 @@ class AnswerChatGPT():
     async def get_model_async(self):
         if self.user.is_authenticated:
             self.model = await self._get_user_active_model()
-        else:
+        if not self.model:
             self.model = await self._get_default_model()
 
     @database_sync_to_async
     def _get_user_active_model(self):
         try:
             return self.user.approved_models.active_model
-        except ObjectDoesNotExist:
-            return self._get_default_model()
+        except Exception:
+            return None
 
     @staticmethod
     @database_sync_to_async

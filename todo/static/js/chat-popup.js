@@ -11,8 +11,8 @@ $(document).ready(function () {
     };
 
     function updateTypingIndicator() {
-        var $messages = $('.messages');
-        var lastMessageIsOther = $messages.children().last().hasClass('other');
+        let $messages = $('.messages');
+        let lastMessageIsOther = $messages.children().last().hasClass('other');
 
         if (lastMessageIsOther) {
             $('.typing-indicator').hide();
@@ -20,15 +20,30 @@ $(document).ready(function () {
             $('.typing-indicator').show();
         }
     }
-
     socket.onmessage = function(event) {
-        var messages = $('.messages');
         const data = JSON.parse(event.data);
-        messages.append(data.message);
-        messages.scrollTop(messages.prop("scrollHeight"));
+        const messagesContainer = $('.messages');
+
+        let messageType = data.username === 'Eva' ? 'other' : 'self';
+        let messageElement = $(`<li class="${messageType}"></li>`);
+
+        if (data.is_stream) {
+            if (data.is_start) {
+                messageElement.addClass('stream-message').data('is_streaming', true);
+                messagesContainer.append(messageElement);
+            } else if (data.is_end) {
+                messageElement = messagesContainer.find('.stream-message').last().data('is_streaming', false);
+            } else {
+                messageElement = messagesContainer.find('.stream-message').last();
+            }
+            messageElement.append(data.message);
+        } else {
+            messageElement.html(data.message);
+            messagesContainer.append(messageElement);
+        }
+        messagesContainer.scrollTop(messagesContainer.prop("scrollHeight"));
         updateTypingIndicator();
     };
-
     socket.onclose = function(event) {
         console.log('WebSocket connection closed:', event);
     };
@@ -85,6 +100,7 @@ $(document).ready(function () {
     function sendNewMessage() {
         var userInput = $('.text-box');
         var newMessage = userInput.text().trim().replace(/\n/g, '<br>');
+        updateTypingIndicator();
 
         if (!newMessage) return;
 

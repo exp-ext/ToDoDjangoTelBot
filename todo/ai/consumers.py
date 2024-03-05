@@ -42,7 +42,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
         # Отправка запроса ИИ
         answer_gpt_instance = AnswerChatGPT(**send_eva)
-        asyncio.create_task(answer_gpt_instance.get_answer_from_ai())
+        asyncio.create_task(answer_gpt_instance.stream_answer())
 
         # Отправка сообщения в комнату
         await self.channel_layer.group_send(
@@ -55,13 +55,17 @@ class ChatConsumer(AsyncWebsocketConsumer):
         )
 
     async def chat_message(self, event):
-        # Отправка сообщения обратно на клиент
+        """Отправка сообщения на клиент"""
         message = event['message']
         username = event['username']
-
-        message = f'<li class="other">{message}</li>' if username == 'Eva' else f'<li class="self">{message}</li>'
+        is_stream = event.get('is_stream', False)
+        is_start = event.get('is_start', False)
+        is_end = event.get('is_end', False)
 
         await self.send(text_data=json.dumps({
             'message': message,
             'username': username,
+            'is_stream': is_stream,
+            'is_start': is_start,
+            'is_end': is_end,
         }))

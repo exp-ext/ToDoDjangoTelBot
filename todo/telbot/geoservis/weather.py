@@ -26,7 +26,7 @@ def current_weather(update: Update, context: CallbackContext):
                 'lang': 'ru',
                 'APPID': OW_API_TOKEN
             }
-        )
+        )  # TODO переделать на HTTPX для сокращения библиотек
         data = res.json()
 
         wind_directions = (
@@ -81,7 +81,7 @@ def weather_forecast(update: Update, context: CallbackContext):
                 'lang': 'ru',
                 'APPID': OW_API_TOKEN
             }
-        )
+        )  # TODO переделать на HTTPX для сокращения библиотек
         data = res.json()
 
         time_zone = int(data['city']['timezone'])

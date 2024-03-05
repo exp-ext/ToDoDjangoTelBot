@@ -179,7 +179,7 @@ class Authentication:
     def add_profile_picture(tg_user_id: int, user: OrderedDict):
         """Добавляет фотографию профиля пользователя из Telegram."""
         user = ModelDataSerializer.deserialize(user)
-        session = requests.Session()
+        session = requests.Session()  # TODO переделать на HTTPX для сокращения библиотек
 
         try:
             photos_url = f'https://api.telegram.org/bot{settings.TELEGRAM_TOKEN}/getUserProfilePhotos'
@@ -383,7 +383,7 @@ class LoginTgView(View):
         keys = {'tg_id': 'id', 'username': 'username', 'first_name': 'first_name', 'last_name': 'last_name'}
         user_info = {k: data.get(v) for k, v in keys.items() if data.get(v) is not None}
 
-        response = requests.get(photo_url, timeout=5)
+        response = requests.get(photo_url, timeout=5)  # TODO переделать на HTTPX для сокращения библиотек
         if response.status_code == 200:
             temp_file = NamedTemporaryFile(delete=True)
             temp_file.write(response.content)

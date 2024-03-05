@@ -27,8 +27,6 @@ TELEGRAM_BOT_NAME = os.getenv('TELEGRAM_BOT_NAME')
 OW_API_TOKEN = os.getenv('OW_API_TOKEN', default='some_token_to_pass_test')
 YANDEX_GEO_API_TOKEN = os.getenv('YANDEX_GEO_API_TOKEN', default='some_token_to_pass_test')
 
-CHAT_GPT_TOKEN = os.getenv('CHAT_GPT_TOKEN')
-ANOTHER_CHAT_GPT_TOKEN = os.getenv('ANOTHER_CHAT_GPT_TOKEN')
 TELEGRAM_ADMIN_ID = os.getenv('TELEGRAM_ADMIN_ID')
 SOCKS5 = os.getenv('SOCKS5')
 

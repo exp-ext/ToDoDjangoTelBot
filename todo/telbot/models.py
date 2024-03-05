@@ -1,8 +1,10 @@
 from asgiref.sync import sync_to_async
 from core.models import Create
 from django.contrib.auth import get_user_model
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models.manager import BaseManager
+from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
 
 User = get_user_model()
@@ -12,40 +14,55 @@ class GptModels(models.Model):
     title = models.CharField(_('модель GPT'), max_length=28)
     default = models.BooleanField(_('доступна всем по умолчанию'), default=False)
     token = models.CharField(_('токен для запроса'), max_length=51)
-    context_window = models.IntegerField()
-    max_request_token = models.IntegerField()
+    context_window = models.IntegerField(_('окно токенов для передачи истории в запросе'))
+    max_request_token = models.IntegerField(_('максимальное количество токенов в запросе пользователя'))
+    time_window = models.IntegerField(_('окно времени для передачи истории в запросе, мин'), default=30)
 
     class Meta:
-        verbose_name = _('Модель GPT OpenAi')
-        verbose_name_plural = _('Модели GPT OpenAi')
+        verbose_name = _('модель GPT OpenAi')
+        verbose_name_plural = _('модели GPT OpenAi')
 
     def __str__(self):
         return self.title
 
+    def clean(self, *args, **kwargs):
+        is_there_default_model = GptModels.objects.filter(default=True).exclude(pk=self.pk).exists()
+        if not self.default and not is_there_default_model:
+            raise ValidationError('Необходимо указать хотя бы одну модель по умолчанию для всех.')
+        if self.default and is_there_default_model:
+            raise ValidationError('По умолчанию может быть только одна модель.')
+
     def save(self, *args, **kwargs):
-        if self.default and GptModels.objects.filter(default=True).exists():
-            raise ValueError('По умолчанию может быть только одна модель.')
+        self.clean()
         super(GptModels, self).save(*args, **kwargs)
 
 
 class UserGptModels(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='approved_models')
-    active_model = models.ForeignKey(GptModels, on_delete=models.CASCADE, null=True, blank=True, related_name='active_for_users', verbose_name=_('Активная модель'))
+    active_model = models.ForeignKey(GptModels, on_delete=models.SET_NULL, null=True, blank=True, related_name='active_for_users', verbose_name=_('Активная модель'))
     approved_models = models.ManyToManyField(to=GptModels, related_name='approved_users')
+    time_start = models.DateTimeField(_('время начала окна для передачи истории'), default=now)
 
     class Meta:
-        verbose_name = _('Модель GPT у юзера')
-        verbose_name_plural = _('Модели GPT у юзеров')
+        verbose_name = _('разрешенная GPT модели юзера')
+        verbose_name_plural = _('разрешенные GPT модели юзера')
 
     def __str__(self):
         return f'User: {self.user}, Active model: {self.active_model}'
 
     def save(self, *args, **kwargs):
+        is_new = self._state.adding
+        super(UserGptModels, self).save(*args, **kwargs)
+
         if not self.active_model:
             default_model = GptModels.objects.filter(default=True).first()
             if default_model:
                 self.active_model = default_model
-        super(UserGptModels, self).save(*args, **kwargs)
+                self.save(update_fields=['active_model'])
+
+        if is_new and default_model:
+            if not self.approved_models.filter(id=default_model.id).exists():
+                self.approved_models.add(default_model)
 
 
 class AsyncManager(BaseManager.from_queryset(models.QuerySet)):

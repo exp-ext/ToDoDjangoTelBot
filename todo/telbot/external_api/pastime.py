@@ -10,7 +10,7 @@ def new_cat() -> str:
     url = 'https://api.thecatapi.com/v1/images/search'
     new_url = 'https://api.thedogapi.com/v1/images/search'
     try:
-        response = requests.get(url)
+        response = requests.get(url)  # TODO переделать на HTTPX для сокращения библиотек
     except Exception:
         response = requests.get(new_url)
     response = response.json()

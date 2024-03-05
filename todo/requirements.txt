@@ -50,6 +50,7 @@ langdetect~=1.0.9
 openai
 httpx
 httpx-socks
+requests
 
 # Distributed async tasks
 celery[redis]

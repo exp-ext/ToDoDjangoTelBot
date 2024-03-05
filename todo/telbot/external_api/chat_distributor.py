@@ -21,11 +21,11 @@ def get_answer_davinci_public(update: Update, context: CallbackContext):
     user = for_check(update, context)
     if user:
         get_answer = GetAnswerGPT(update, context, user)
-        asyncio.run(get_answer.get_answer_davinci())
+        asyncio.run(get_answer.get_answer_chat_gpt())
 
 
 def get_answer_davinci_person(update: Update, context: CallbackContext):
     user = for_check(update, context)
     if update.effective_chat.type == 'private' and user:
         get_answer = GetAnswerGPT(update, context, user)
-        asyncio.run(get_answer.get_answer_davinci())
+        asyncio.run(get_answer.get_answer_chat_gpt())

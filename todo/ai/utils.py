@@ -1,6 +1,6 @@
 import json
 import traceback
-from datetime import datetime, timedelta, timezone
+from datetime import timedelta
 
 import httpx
 import markdown
@@ -12,6 +12,7 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Model
+from django.utils.timezone import now
 from httpx_socks import AsyncProxyTransport
 from openai import AsyncOpenAI
 from telbot.loader import bot
@@ -36,7 +37,7 @@ class AnswerChatGPT():
         self.message_text = message
         self.user = user
         self.message_count = message_count
-        self.current_time = None
+        self.current_time = now()
         self.time_start = None
         self.answer_tokens = None
         self.answer_text = AnswerChatGPT.ERROR_TEXT
@@ -53,30 +54,20 @@ class AnswerChatGPT():
         self.message_tokens = None
         self.set_windows_time()
 
-    async def num_tokens_from_message(self, message):
-        try:
-            encoding = await tiktoken_async.encoding_for_model(self.model.title)
-        except KeyError:
-            encoding = await tiktoken_async.get_encoding("cl100k_base")
-        return len(encoding.encode(message)) + 4
-
     async def get_answer_from_ai(self) -> dict:
         """Основная логика."""
 
         if await self.check_in_works():
             return None
 
-        try:
-            self.model = self.user.approved_models.active_model
-        except ObjectDoesNotExist:
-            self.model = GptModels.objects.filter(default=True).first()
+        await self.get_model_async()
 
-        self.message_tokens = await self.num_tokens_from_message(self.message_text)
+        await self.num_tokens_from_message()
 
         if self.check_long_query:
             response_message = f'{self.user}, у Вас слишком большой текст запроса. Попробуйте сформулировать его короче.'
             await self.send_chat_message(response_message)
-            return 'Done'
+            return None
 
         try:
             await self.get_prompt()
@@ -112,7 +103,6 @@ class AnswerChatGPT():
         self.answer_text = completion.choices[0].message.content
         self.answer_tokens = completion.usage.completion_tokens
         self.message_tokens = completion.usage.prompt_tokens
-        self.event.set()
 
     async def httpx_request_to_openai(self) -> None:
         """Делает запрос в OpenAI и выключает typing."""
@@ -141,8 +131,6 @@ class AnswerChatGPT():
             except Exception as error:
                 self.answer_text = 'Я отказываюсь отвечать на этот вопрос!'
                 raise error
-            finally:
-                self.event.set()
 
     async def send_chat_message(self, message):
         await self.channel_layer.group_send(
@@ -156,8 +144,45 @@ class AnswerChatGPT():
 
     async def handle_error(self, err):
         """Логирование ошибок."""
-        error_message = f"Ошибка при обращении к ChatGPT на сайте:\n{err}"
+        error_message = f"Ошибка в блоке Сайт-ChatGPT:\n{err}"
         bot.send_message(ADMIN_ID, error_message)
+
+    async def num_tokens_from_message(self):
+        """Считает количество токенов в сообщении пользователя."""
+        try:
+            encoding = await tiktoken_async.encoding_for_model(self.model.title)
+        except KeyError:
+            encoding = await tiktoken_async.get_encoding("cl100k_base")
+        self.message_tokens = len(encoding.encode(self.message_text)) + 4
+
+    async def create_history_ai(self):
+        """Создаём запись в БД."""
+        instance = HistoryAI(
+            user=self.user if self.user.is_authenticated else None,
+            room_group_name=self.room_group_name if self.room_group_name else None,
+            question=self.message_text,
+            question_tokens=self.message_tokens,
+            answer=self.answer_text,
+            answer_tokens=self.answer_tokens
+        )
+        await instance.save()
+
+    async def set_windows_time(self) -> None:
+        """Определяем и назначаем атрибуты current_time и time_start."""
+        self.time_start = self.current_time - timedelta(minutes=AnswerChatGPT.STORY_WINDOWS_TIME)
+
+    async def get_model_async(self):
+        if not self.user.is_authenticated:
+            self.model = await database_sync_to_async(lambda: GptModels.objects.filter(default=True).first())()
+        else:
+            self.model = await self._get_user_active_model()
+
+    @database_sync_to_async
+    def _get_user_active_model(self):
+        try:
+            return self.user.approved_models.active_model
+        except ObjectDoesNotExist:
+            return GptModels.objects.filter(default=True).first()
 
     @database_sync_to_async
     def get_prompt(self) -> None:
@@ -200,23 +225,6 @@ class AnswerChatGPT():
     def del_mess_in_redis(self) -> bool:
         """Удаляет входящее сообщение из Redis."""
         redis_client.lrem(f'gpt_:{self.room_group_name}', 1, self.message_text.encode('utf-8'))
-
-    async def create_history_ai(self):
-        """Создаём запись в БД."""
-        instance = HistoryAI(
-            user=self.user if self.user.is_authenticated else None,
-            room_group_name=self.room_group_name if self.room_group_name else None,
-            question=self.message_text,
-            question_tokens=self.message_tokens,
-            answer=self.answer_text,
-            answer_tokens=self.answer_tokens
-        )
-        await instance.save()
-
-    async def set_windows_time(self) -> None:
-        """Определяем и назначаем атрибуты current_time и time_start."""
-        self.current_time = datetime.now(timezone.utc)
-        self.time_start = self.current_time - timedelta(minutes=AnswerChatGPT.STORY_WINDOWS_TIME)
 
     @property
     def check_long_query(self) -> bool:

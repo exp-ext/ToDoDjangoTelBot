@@ -69,7 +69,7 @@ class GetAnswerDallE():
             asyncio.create_task(self.send_typing_periodically())
             await self.request_to_openai()
             if self.media_group:
-                await self.reply_to_user_requests()
+                await self.reply_to_user_requests()  # TODO переделать на HTTPX для сокращения библиотек
                 self.event.set()
                 await self.save_request()
             else:

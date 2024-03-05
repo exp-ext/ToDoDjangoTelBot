@@ -127,7 +127,7 @@ def send_forismatic_quotes() -> str:
     for mailing_groups in mailing_list:
         if mailing_groups.mailing_type == 'forismatic_quotes':
             try:
-                response = requests.get(*request)
+                response = requests.get(*request)  # TODO переделать на HTTPX для сокращения библиотек
                 msg = '*Мысли великих людей:*\n' + response.text
                 bot.send_message(
                     chat_id=mailing_groups.group.chat_id,

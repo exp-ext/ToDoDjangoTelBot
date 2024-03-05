@@ -2,6 +2,8 @@ from typing import Any, Iterable
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.utils.timezone import now
+from telbot.models import UserGptModels
 from telegram import (InlineKeyboardButton, InlineKeyboardMarkup,
                       KeyboardButton, ReplyKeyboardMarkup, Update)
 from telegram.ext import CallbackContext
@@ -149,3 +151,16 @@ def ask_auth(update: Update, context: CallbackContext) -> None:
     user = check_registration(update, context, answers, return_user=True)
     if user and chat.type == 'private':
         Authentication(update, context, user).authorization()
+
+
+def reset_bot_history(update: Update, context: CallbackContext) -> None:
+    answers = {
+        '': 'Для начала необходимо пройти регистрацию. Для этого отправьте ему команду /start 🔆'
+    }
+    user = check_registration(update, context, answers, return_user=True)
+    current_time = now()
+    UserGptModels.objects.update_or_create(user=user, defaults={'time_start': current_time})
+    context.bot.send_message(
+        user.tg_id,
+        'История запросов успешно очищена 🗑'
+    )

@@ -2,7 +2,7 @@
 Django~=4.2.7
 django-defender~=0.9.7
 django-dbbackup~=4.0.2
-pillow~=10.1.0
+pillow~=10.2.0
 pytils~=0.4.1
 python-dotenv~=1.0.0
 sorl-thumbnail~=12.10.0
@@ -40,7 +40,7 @@ python-dateutil~=2.8.2
 python-telegram-bot~=13.15
 timezonefinder~=6.2.0
 tzlocal~=4.3
-tiktoken~=0.3.3
+tiktoken-async~=0.3.2
 markdown~=3.5.1
 
 # detect language
@@ -50,6 +50,7 @@ langdetect~=1.0.9
 openai
 httpx
 httpx-socks
+requests
 
 # Distributed async tasks
 celery[redis]

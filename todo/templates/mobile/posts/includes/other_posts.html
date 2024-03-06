@@ -1,11 +1,8 @@
 {% load static %}
 {% load thumbnail %}
-
 {% block head %}
   <link rel="stylesheet" href="{% static 'css/posts-carousel.css' %}">
 {% endblock %}
-
-<hr>
 <h2>Читайте также:</h2>
 <div id="carouselExample" class="carousel slide mb-3" data-bs-ride="carousel">
   <div class="carousel-inner">
@@ -15,13 +12,15 @@
           {% for post in post_group %}
             <div class="col-md-4">
               <div class="card shadow">
-                <a href="{% url 'posts:post_detail' post.slug %}">
+                <a href="{% url 'posts:post_detail' post.slug %}" aria-label="Читайте похожите темы: {{ post.title }}">
                   <div class="image-container">
                     <img class="card-img-top" src="{{ post.image_url }}" alt="{{ post.title }}" loading="lazy" />
                   </div>  
                 </a>           
                 <div class="card-body">
-                  <p class="card-text">{{ post.short_description }}</p>
+                  <a href="{% url 'posts:post_detail' post.slug %}" aria-label="Читайте похожите темы: {{ post.title }}">
+                    <p class="card-text">{{ post.short_description }}</p>
+                  </a>
                 </div>                
               </div>
             </div>

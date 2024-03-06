@@ -9,7 +9,7 @@ from telegram.ext import CallbackContext
 def joke_parsing(all: bool = False) -> str:
     """Парсинг сайта с анекдотами."""
     try:
-        resp = requests.get('https://anekdotbar.ru/')
+        resp = requests.get('https://anekdotbar.ru/')  # TODO переделать на HTTPX для сокращения библиотек
 
         bs_data = BeautifulSoup(resp.text, "html.parser")
         an_text = bs_data.select('.tecst')

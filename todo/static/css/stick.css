@@ -2,12 +2,10 @@
   font-family: 'BadScript-Regular';
   src: url('../fonts/BadScript-Regular.ttf') format("truetype");
 }
-
 .stick h3 {
   font-weight: bold;
   font-size: 1.5rem;
 }
-
 .stick p {
   font-family: 'BadScript-Regular';
   font-size: 1.5rem;

@@ -1,10 +1,8 @@
 {% load static %}
-
 {% block head %}  
   <link rel="stylesheet" href="{% static 'css/search.css' %}">
   <link rel="stylesheet" href="{% static 'css/hover-effects.css' %}">
 {% endblock %}
-
 <div class="hover-effects">
   <div class="card shadow mb-3 bg-secondary">
     <div class="card-body">
@@ -22,14 +20,13 @@
     </div>
   </div>
 </div>
-
 {% block javascript %}
   <script async src="{% static 'js/search-navbar.js' %}"></script>
   <script async src="{% static 'js/hover-effects.js' %}"></script>
   <script>
-    $(document).ready(function() {
+    window.onload = function() {
       var searchUrl = "{% url 'posts:search' %}";
       initAutocomplete(searchUrl);
-    });
+    };
   </script>
 {% endblock %}

@@ -9,24 +9,30 @@ from pytils.translit import slugify
 from storages.backends.s3boto3 import S3Boto3Storage, S3StaticStorage
 
 
-class StaticStorage(S3Boto3Storage):
+class StaticStorage(S3StaticStorage):
     bucket_name = settings.STATIC_BUCKET_NAME
-    default_acl = 'private'
+    default_acl = 'public-read'
+    file_overwrite = False
+    custom_domain = '{}.hb.ru-msk.vkcs.cloud'.format(bucket_name)
 
 
-class MediaStorage(S3Boto3Storage):
+class MediaStorage(S3StaticStorage):
     bucket_name = settings.MEDIA_BUCKET_NAME
-    default_acl = 'private'
+    default_acl = 'public-read'
+    file_overwrite = False
+    custom_domain = '{}.hb.ru-msk.vkcs.cloud'.format(bucket_name)
 
 
 class DataBaseStorage(S3Boto3Storage):
     default_acl = 'private'
     bucket_name = settings.DATABASE_BUCKET_NAME
+    file_overwrite = False
 
 
 class CkeditorStorage(S3StaticStorage):
     bucket_name = settings.CKEDITOR_BUCKET_NAME
     default_acl = 'public-read'
+    file_overwrite = False
 
 
 class CkeditorCustomStorage(CkeditorStorage):

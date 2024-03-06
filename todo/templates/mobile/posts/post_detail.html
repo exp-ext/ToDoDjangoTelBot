@@ -1,73 +1,63 @@
 {% extends "base.html" %}
 {% load thumbnail %}
 {% load static %}
-
 {% block head %}
-
   <meta name="description" content="{{ post.short_description }}"/>
   <meta name="keywords" content="{{ tags }}">
-
-  <meta name="robots" content="index, follow">
+  {% if post.moderation == 'PS' and group_public %}
+    <meta name="robots" content="index, follow">
+  {% else %}
+    <meta name="robots" content="noindex">
+  {% endif %}
   <link rel="canonical" href="https://www.yourtodo.ru{% url 'posts:post_detail' post.slug %}" />
-
   <meta property="og:site_name" content="YourToDo.ru"/>
   <meta property="og:title" content="{{ post.title }}"/>
   <meta property="og:type" content="article"/>
   <meta property="og:url" content="https://www.yourtodo.ru{% url 'posts:post_detail' post.slug %}"/>
   <meta property="og:description" content="{{ post.short_description }}"/>
-
   {% if post.image %}
     <meta property="og:image" content="{{ post.image.url }}"/>
     <meta property="og:image:alt" content="{{ post.title }}"/>
-
     <meta name="twitter:card" content="summary_large_image"/>
     <meta name="twitter:image" content="{{ post.image.url }}">
     <meta name="twitter:image:alt" content="{{ post.title }}"/>
   {% endif %}
-
   <link rel="stylesheet" href="{% static 'css/post-detail.css' %}">
-
 {% endblock %}
-
 {% block title %} {{ post.title }} {% endblock %}
-
 {% block content %}
-
-  <div id="banner-data" 
-    data-reference="{{ my_banner.reference }}" 
-    data-image="{{ my_banner.image.url }}" 
+  <div id="banner-data"
+    data-reference="{{ my_banner.reference }}"
+    data-image="{{ my_banner.image.url }}"
     data-text="{{ my_banner.text }}"
     data-mobile-text="{{ my_banner.mobile_text }}"
     style="display:none;">
   </div>
-  
   <div class="container-fluid my-5">
-    <div class="row py-1">
-      <aside class="bg-light rounded shadow mb-2">  
-        {% if contents %}          
-          <div class="py-1 bg-light mb-1">
-            <div class="text-center">
-              <h4><strong>Оглавление</strong></h4>
-            </div>
+    <div class="row pt-1">
+      <aside class="bg-light rounded shadow mb-2">
+        {% if contents %}
+        <div class="tree-content">
+          <div class="lobster text-center pt-1">
+            <h1>{{ post.title }}</h1>
+          </div> 
+          <hr>
+          <div class="bg-light">
             <ul class="list-unstyled">
               {%for content in contents %}
                 {%include 'mobile/posts/includes/tree_template.html' %}
               {%endfor%}
             </ul>
           </div>
+        </div>
         {% endif %}
       </aside>
-
-      <aside id="advertAside" class="d-flex justify-content-center align-items-center h-100 bg-light rounded shadow mb-2 py-2"> 
+      <aside id="advertAside" class="d-flex justify-content-center align-items-center bg-light rounded shadow mb-2 py-2"> 
         {% include 'includes/mobilyabodyadvertising.html' %}
         <div id="card-container" style="display:none;">
         </div>
       </aside>
-
-      <article class="bg-light rounded shadow">
-        <div class="lobster">
-          <h1>{{ post.title }}</h1>
-        </div>
+      <article class="bg-light rounded shadow pt-3">
         {% if post.image %}
           <div class="image-container">
             <img src="{{ post.image.url }}" alt="Картинка к публикации: {{ post.title }}" />
@@ -80,25 +70,25 @@
             </div>
           </div>
         </p>
-        {% if tag_posts_present %}
-          {% include 'mobile/posts/includes/other_posts.html' %}
-        {% endif %}
       </article>
-
+        {% if tag_posts_present %}
+        <aside class="bg-light rounded shadow my-3 py-2">
+          {% include 'mobile/posts/includes/other_posts.html' %}
+        </aside>
+        {% endif %}
     </div>
-
-    <div class="row py-1">
-      <aside class="bg-light rounded shadow mb-2">
+    <div class="row">
+      <aside class="bg-light rounded shadow mb-1">
         {% include 'mobile/posts/includes/comments.html' %}
       </aside>
     </div>
-
   </div>
-
 {% endblock %}
-
 {% block javascript %}
   <script async charset='utf-8' src='//cdn.embedly.com/widgets/platform.js'></script>
   <script defer src="{% static 'js/post_detail.js' %}"></script>
   <script async src="{% static 'js/ya-mob-floor-ad.js' %}"></script>
+  <script type="text/javascript">
+    const isMobile = "{{ is_mobile }}"  === "True";
+  </script>
 {% endblock %}

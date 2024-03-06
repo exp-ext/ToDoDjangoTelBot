@@ -19,7 +19,6 @@
       <div class="collapse navbar-collapse" id="navbarSupportedContent">
         {% with request.resolver_match.view_name as view_name %}
           <ul class="navbar-nav mr-auto nav-pills">
-
             {% if request.user.is_anonymous %}
               <li class="nav-item"> 
                 <a class="nav-link" href="{% url 'posts:index_posts' %}">
@@ -46,7 +45,6 @@
                 </ul>
               </li>
             {% endif %}
-
             {% if request.user.is_authenticated %}
               <li class="nav-item dropdown">
                 <a class="nav-link dropdown-toggle" href="#" id="tasksDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
@@ -64,18 +62,13 @@
                   <li><a class="dropdown-item" href="{% url 'tasks:birthdays' %}">Дни рождения</a></li>
                 </ul>
               </li>
-              <li class="nav-item dropdown">
-                <a class="nav-link dropdown-toggle" href="#" id="profileDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+              <li class="nav-item">
+                <a class="nav-link" href="{% url 'accounts_profile' request.user.username %}">
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-person-lines-fill" viewBox="0 0 16 16">
                     <path d="M6 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm-5 6s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1H1zM11 3.5a.5.5 0 0 1 .5-.5h4a.5.5 0 0 1 0 1h-4a.5.5 0 0 1-.5-.5zm.5 2.5a.5.5 0 0 0 0 1h4a.5.5 0 0 0 0-1h-4zm2 3a.5.5 0 0 0 0 1h2a.5.5 0 0 0 0-1h-2zm0 3a.5.5 0 0 0 0 1h2a.5.5 0 0 0 0-1h-2z"/>
                   </svg>
                   профиль
                 </a>
-                <ul class="dropdown-menu bg-light" aria-labelledby="profileDropdown">
-                  <li><a class="dropdown-item" href="{% url 'accounts_profile' request.user.username %}">Профиль</a></li>
-                  <li><hr class="dropdown-divider"></li>
-                  <li><a class="dropdown-item" href="{% url 'users:password_change_form' %}">Изменить пароль</a></li>
-                </ul>
               </li>
               <li class="nav-item">
                 <a class="nav-link"
@@ -104,21 +97,21 @@
                   </svg>
                   контакты</a>
               </li>
-              <li class="nav-item"> 
-                <a class="nav-link link-light" 
-                href="{% url 'users:login' %}">Войти </a>
+              <li class="nav-item">
+                  <a class="nav-link link-light" id="redirectLink" href="javascript:void(0);">Войти через Telegram</a>
               </li>
               <li class="nav-item d-flex align-items-center ml-auto">
                 <p>&#160<p/>
               </li>
-            {% endif %}            
+            {% endif %}
           </ul>
           <ul class="nav d-flex align-items-center ml-auto ms-auto">            
             <li class="nav-item px-5">
-              <a class="nav-link" href="https://t.me/BorFAsbot">
+              <a class="nav-link" href="https://t.me/BorFAsbot" aria-label="Авторизация на сайте">
                 <div class="eva">
                   <i class="bi-telegram"></i>
-                  <img width="30" height="30" src="https://img.icons8.com/external-tal-revivo-filled-tal-revivo/48/external-microprocessor-technology-with-artificial-intelligence-isolated-on-a-white-background-artificial-filled-tal-revivo.png" alt="external-microprocessor-technology-with-artificial-intelligence-isolated-on-a-white-background-artificial-filled-tal-revivo"/> Ева в Telegram
+                  <img width="30" height="30" src="https://img.icons8.com/external-tal-revivo-filled-tal-revivo/48/external-microprocessor-technology-with-artificial-intelligence-isolated-on-a-white-background-artificial-filled-tal-revivo.png" alt="external-microprocessor-technology-with-artificial-intelligence-isolated-on-a-white-background-artificial-filled-tal-revivo"/>
+                  Ева в Telegram
                 </div>
               </a>
             </li>

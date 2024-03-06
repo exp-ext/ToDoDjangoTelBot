@@ -25,7 +25,7 @@ FILE_WITH_IP_DIR = settings.BASE_DIR
 def get_current_ip() -> str:
     """Возвращает IP адрес соединения."""
     try:
-        ip = requests.get('https://api.ipify.org').content.decode('utf8')
+        ip = requests.get('https://api.ipify.org').content.decode('utf8')  # TODO переделать на HTTPX для сокращения библиотек
     except Exception:
         ip = urllib.request.urlopen('https://ident.me').read().decode('utf8')
     return ip
@@ -46,7 +46,7 @@ def set_ip_to_dns() -> str:
         raise Exception('No API-DNS connection variables')
 
     get_api_url = 'https://api.nic.ru/dyndns/checkip'
-    current_dns_ip = requests.get(get_api_url)
+    current_dns_ip = requests.get(get_api_url)  # TODO переделать на HTTPX для сокращения библиотек
 
     current_local_ip = get_current_ip()
 
@@ -63,7 +63,7 @@ def set_ip_to_dns() -> str:
     headers = {
         'Authorization': 'Basic %s' % b64val
     }
-    set_ip = requests.get(set_api_url, headers=headers, params=params)
+    set_ip = requests.get(set_api_url, headers=headers, params=params)  # TODO переделать на HTTPX для сокращения библиотек
 
     text = (
         f'На хост у DNS провайдера назначен новый IP: {current_local_ip}. '

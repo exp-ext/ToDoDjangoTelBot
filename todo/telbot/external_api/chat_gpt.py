@@ -1,22 +1,23 @@
 import asyncio
 import json
 import traceback
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 
 import httpx
 import telegram
-import tiktoken
+import tiktoken_async
 from asgiref.sync import sync_to_async
 from channels.db import database_sync_to_async
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.db.models import Model
+from django.utils.timezone import now
 from httpx_socks import AsyncProxyTransport
 from openai import AsyncOpenAI
 from telegram import ChatAction, ParseMode, Update
 from telegram.ext import CallbackContext
 
-from ..checking import check_registration
-from ..models import HistoryAI
+from ..models import HistoryAI, UserGptModels
 
 ADMIN_ID = settings.TELEGRAM_ADMIN_ID
 
@@ -25,65 +26,40 @@ redis_client = settings.REDIS_CLIENT
 
 
 class GetAnswerGPT():
-    ERROR_TEXT = (
-        'Что-то пошло не так 🤷🏼\n' 'Возможно большой наплыв запросов, которые я не успеваю обрабатывать 🤯'
-    )
-    MODEL = 'gpt-3.5-turbo-1106'
-    MAX_LONG_MESSAGE = 1024
-    MAX_LONG_REQUEST = 4096
-    STORY_WINDOWS_TIME = 30
+    ERROR_TEXT = 'Что-то пошло не так 🤷🏼\n' 'Возможно большой наплыв запросов, которые я не успеваю обрабатывать 🤯'
     MAX_TYPING_TIME = 3
 
-    def __init__(self, update: Update, context: CallbackContext, user: User) -> None:
+    def __init__(self, update: Update, context: CallbackContext, user: Model) -> None:
         self.update = update
         self.context = context
         self.user = user
-        self.message_text = None
+        self.message_text = update.effective_message.text
         self.message_tokens = None
-        self.current_time = None
+        self.current_time = now()
         self.time_start = None
         self.answer_text = GetAnswerGPT.ERROR_TEXT
         self.answer_tokens = None
         self.event = asyncio.Event()
         self.request_massage = None
-        self.prompt = [
-            {
-                'role': 'system',
-                'content':
-                    'Your name is Eva and you are experienced senior software developer with extensive experience leading '
-                    'teams, mentoring all developers, and delivering high-quality software solutions to customers. '
-                    'The primary language is Russian. Only this Markdown format can be used in text formatting:'
-                    '*bold text* _italic text_ [inline URL](http://www.example.com/) '
-                    '`inline fixed-width code` ``` pre-formatted fixed-width code block ```'
-            }
-        ]
-        self.set_windows_time()
-        self.set_message_text()
-
-    @classmethod
-    async def num_tokens_from_message(cls, message):
-        try:
-            encoding = tiktoken.encoding_for_model(GetAnswerGPT.MODEL)
-        except KeyError:
-            encoding = tiktoken.get_encoding("cl100k_base")
-        return len(encoding.encode(message)) + 4
+        self.model = None
+        self.user_models = None
+        self.prompt = self.init_prompt()
 
     @property
     def check_long_query(self) -> bool:
-        return self.message_tokens > GetAnswerGPT.MAX_LONG_MESSAGE
+        return self.message_tokens > self.model.max_request_token
 
-    async def get_answer_davinci(self) -> dict:
+    async def get_answer_chat_gpt(self) -> dict:
         """Основная логика."""
 
         if await self.check_in_works():
             return {'code': 423}
 
-        self.message_tokens = await self.num_tokens_from_message(self.message_text)
+        await self.init_user_model()
+        await self.num_tokens_from_message()
 
         if self.check_long_query:
-            self.answer_text = (
-                f'{self.user.first_name}, у Вас слишком большой текст запроса. Попробуйте сформулировать его короче.'
-            )
+            self.answer_text = f'{self.user.first_name}, слишком большой текст запроса. Попробуйте сформулировать его короче.'
             await self.reply_to_user()
             return {'code': 400}
 
@@ -94,10 +70,8 @@ class GetAnswerGPT():
 
         except Exception as err:
             traceback_str = traceback.format_exc()
-            self.context.bot.send_message(
-                chat_id=ADMIN_ID,
-                text=f'Ошибка в получении ответа от ChatGPT to Telegram: {str(err)[:1024]}\n\nТрассировка:\n{traceback_str[-1024:]}',
-            )
+            text = f'{str(err)[:1024]}\n\nТрассировка:\n{traceback_str[-1024:]}'
+            await self.handle_error(text)
         finally:
             asyncio.create_task(self.create_history_ai())
             await self.reply_to_user()
@@ -119,11 +93,11 @@ class GetAnswerGPT():
     async def request_to_openai(self) -> None:
         """Делает запрос в OpenAI и выключает typing."""
         client = AsyncOpenAI(
-            api_key=settings.CHAT_GPT_TOKEN,
+            api_key=self.model.token,
             timeout=300,
         )
         completion = await client.chat.completions.create(
-            model=self.MODEL,
+            model=self.model.title,
             messages=self.prompt,
             temperature=0.1
         )
@@ -137,12 +111,12 @@ class GetAnswerGPT():
         transport = AsyncProxyTransport.from_url(settings.SOCKS5)
         headers = {
             "Content-Type": "application/json",
-            "Authorization": f"Bearer {settings.CHAT_GPT_TOKEN}"
+            "Authorization": f"Bearer {self.model.token}"
         }
         data = {
-            "model": self.MODEL,
+            "model": self.model.title,
             "messages": self.prompt,
-            "temperature": 0.1
+            "temperature": 0.2
         }
         async with httpx.AsyncClient(transport=transport) as client:
             response = await client.post(
@@ -152,10 +126,15 @@ class GetAnswerGPT():
                 timeout=60 * self.MAX_TYPING_TIME,
             )
             completion = json.loads(response.content)
-            self.answer_text = completion.get('choices')[0]['message']['content']
-            self.answer_tokens = completion.get('usage')['completion_tokens']
-            self.message_tokens = completion.get('usage')['prompt_tokens']
-            self.event.set()
+            try:
+                self.answer_text = completion.get('choices')[0]['message']['content']
+                self.answer_tokens = completion.get('usage')['completion_tokens']
+                self.message_tokens = completion.get('usage')['prompt_tokens']
+            except Exception as error:
+                self.answer_text = 'Я отказываюсь отвечать на этот вопрос!'
+                raise error
+            finally:
+                self.event.set()
 
     async def create_history_ai(self):
         """Создаём запись истории в БД."""
@@ -167,6 +146,24 @@ class GetAnswerGPT():
             answer_tokens=self.answer_tokens
         )
         await self.request_massage.save()
+
+    async def num_tokens_from_message(self):
+        """Считает количество токенов в сообщении пользователя."""
+        try:
+            encoding = await tiktoken_async.encoding_for_model(self.model.title)
+        except KeyError:
+            encoding = await tiktoken_async.get_encoding("cl100k_base")
+        self.message_tokens = len(encoding.encode(self.message_text)) + 4
+
+    @database_sync_to_async
+    def init_user_model(self):
+        """Инициация активной модели юзера и начального времени истории в prompt для запроса."""
+        self.user_models, created = UserGptModels.objects.get_or_create(user=self.user, defaults={'time_start': self.current_time})
+        self.model = self.user_models.active_model
+        if not created:
+            self.time_start = max(self.current_time - timedelta(minutes=self.model.time_window if self.model else 0), self.user_models.time_start)
+        else:
+            self.time_start = self.current_time
 
     @database_sync_to_async
     def get_prompt(self) -> None:
@@ -181,7 +178,7 @@ class GetAnswerGPT():
         max_tokens = self.message_tokens + 120
         for item in history:
             max_tokens += sum(item.get(key, 0) for key in ('question_tokens', 'answer_tokens') if item.get(key) is not None)
-            if max_tokens >= GetAnswerGPT.MAX_LONG_REQUEST:
+            if max_tokens >= self.model.context_window:
                 break
             self.prompt.extend([
                 {
@@ -194,6 +191,11 @@ class GetAnswerGPT():
                 }
             ])
         self.prompt.append({'role': 'user', 'content': self.message_text})
+
+    async def handle_error(self, err):
+        """Логирование ошибок."""
+        error_message = f"Ошибка в блоке Telegram-ChatGPT:\n{err}"
+        self.context.bot.send_message(ADMIN_ID, error_message)
 
     @sync_to_async
     def reply_to_user(self) -> None:
@@ -211,11 +213,8 @@ class GetAnswerGPT():
                 text=self.answer_text,
                 reply_to_message_id=self.update.message.message_id,
             )
-        except Exception as err:
-            self.context.bot.send_message(
-                chat_id=ADMIN_ID,
-                text=f'Ошибка при отправке ответа ChatGPT: {str(err)[:1024]}',
-            )
+        except Exception as error:
+            self.handle_error(error)
 
     @sync_to_async
     def check_in_works(self) -> bool:
@@ -231,35 +230,15 @@ class GetAnswerGPT():
         """Удаляет входящее сообщение из Redis."""
         redis_client.lrem(f'gpt_user:{self.user.id}', 1, self.message_text.encode('utf-8'))
 
-    def set_message_text(self) -> str:
-        """Определяем и назначаем атрибут message_text."""
-        self.message_text = self.update.effective_message.text
-
-    def set_windows_time(self) -> None:
-        """Определяем и назначаем атрибуты current_time и time_start."""
-        self.current_time = datetime.now(timezone.utc)
-        self.time_start = self.current_time - timedelta(minutes=GetAnswerGPT.STORY_WINDOWS_TIME)
-
-
-def for_check(update: Update, context: CallbackContext):
-    answers_for_check = {
-        '?': (f'Я мог бы ответить Вам, если [зарегистрируетесь]({context.bot.link}) 🧐'),
-        '!': (f'Я обязательно поддержу Вашу дискуссию, если [зарегистрируетесь]({context.bot.link}) 🙃'),
-        '': (f'Какая интересная беседа, [зарегистрируетесь]({context.bot.link}) и я подключусь к ней 😇'),
-    }
-    allow_unregistered = True
-    return check_registration(update, context, answers_for_check, allow_unregistered, return_user=True)
-
-
-def get_answer_davinci_public(update: Update, context: CallbackContext):
-    user = for_check(update, context)
-    if user:
-        get_answer = GetAnswerGPT(update, context, user)
-        asyncio.run(get_answer.get_answer_davinci())
-
-
-def get_answer_davinci_person(update: Update, context: CallbackContext):
-    user = for_check(update, context)
-    if update.effective_chat.type == 'private' and user:
-        get_answer = GetAnswerGPT(update, context, user)
-        asyncio.run(get_answer.get_answer_davinci())
+    def init_prompt(self):
+        return [
+            {
+                'role': 'system',
+                'content':
+                    'Your name is Eva and you are experienced senior software developer with extensive experience leading '
+                    'teams, mentoring all developers, and delivering high-quality software solutions to customers. '
+                    'The primary language is Russian. Only this Markdown format can be used in text formatting:'
+                    '*bold text* _italic text_ [inline URL](http://www.example.com/) '
+                    '`inline fixed-width code` ``` pre-formatted fixed-width code block ```'
+            }
+        ]

@@ -37,7 +37,7 @@ def get_address_from_coords(coords: str) -> str:
         r = requests.get(
             url="https://geocode-maps.yandex.ru/1.x/",
             params=params
-        )
+        )  # TODO переделать на HTTPX для сокращения библиотек
         json_data = r.json()
 
         return (

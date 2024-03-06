@@ -5,7 +5,6 @@ body {
   margin: 0px;
   background: linear-gradient(90deg, #2f3640 23%, #181b20 100%);
 }
-
 .moon {
   background: linear-gradient(90deg, #d0d0d0 48%, #919191 100%);
   position: absolute;
@@ -17,7 +16,6 @@ body {
   border-radius: 100%;
   box-shadow: 0px 0px 30px -4px rgba(0, 0, 0, 0.5);
 }
-
 .moon__crater {
   position: absolute;
   content: "";
@@ -25,7 +23,6 @@ body {
   background: linear-gradient(90deg, #7a7a7a 38%, #c3c3c3 100%);
   opacity: 0.6;
 }
-
 .moon__crater1 {
   top: 250px;
   left: 500px;
@@ -40,7 +37,6 @@ body {
   height: 80px;
   transform: rotate(55deg);
 }
-
 .moon__crater3 {
   top: -20px;
   left: 40px;
@@ -48,7 +44,6 @@ body {
   height: 120px;
   transform: rotate(250deg);
 }
-
 .star {
   background: grey;
   position: absolute;
@@ -63,7 +58,6 @@ body {
   animation-iteration-count: infinite;
   animation-direction: alternate;
 }
-
 @keyframes shimmer {
   from {
     opacity: 0;
@@ -77,30 +71,25 @@ body {
   left: 50%;
   animation-delay: 1s;
 }
-
 .star2 {
   top: 60%;
   left: 90%;
   animation-delay: 3s;
 }
-
 .star3 {
   top: 10%;
   left: 70%;
   animation-delay: 2s;
 }
-
 .star4 {
   top: 90%;
   left: 40%;
 }
-
 .star5 {
   top: 20%;
   left: 30%;
   animation-delay: 0.5s;
 }
-
 .error {
   position: absolute;
   left: 100px;
@@ -109,19 +98,15 @@ body {
   font-family: "Righteous", cursive;
   color: #363e49;
 }
-
 .error__title {
   font-size: 10em;
 }
-
 .error__subtitle {
   font-size: 2em;
 }
-
 .error__description {
   opacity: 0.5;
 }
-
 .error__button {
   min-width: 7em;
   margin-top: 3em;
@@ -137,22 +122,18 @@ body {
   font-size: 0.75em;
   font-family: "Righteous", cursive;
 }
-
 .error__button:hover {
   color: #21252c;
 }
-
 .error__button--active {
   background-color: #e67e22;
   border: 2px solid #e67e22;
   color: white;
 }
-
 .error__button--active:hover {
   box-shadow: 0px 0px 8px 0px rgba(0, 0, 0, 0.5);
   color: white;
 }
-
 .astronaut {
   position: absolute;
   width: 185px;
@@ -161,7 +142,6 @@ body {
   top: 50%;
   transform: translate(-50%, -50%) rotate(20deg) scale(1.2);
 }
-
 .astronaut__head {
   background-color: white;
   position: absolute;
@@ -172,7 +152,6 @@ body {
   content: "";
   border-radius: 2em;
 }
-
 .astronaut__head-visor-flare1 {
   background-color: #7f8fa6;
   position: absolute;
@@ -184,7 +163,6 @@ body {
   border-radius: 2em;
   opacity: 0.5;
 }
-
 .astronaut__head-visor-flare2 {
   background-color: #718093;
   position: absolute;
@@ -196,7 +174,6 @@ body {
   border-radius: 2em;
   opacity: 0.3;
 }
-
 .astronaut__backpack {
   background-color: #bfbfbf;
   position: absolute;
@@ -207,7 +184,6 @@ body {
   content: "";
   border-radius: 8px;
 }
-
 .astronaut__body {
   background-color: #e6e6e6;
   position: absolute;
@@ -218,7 +194,6 @@ body {
   content: "";
   border-radius: 8px;
 }
-
 .astronaut__body__chest {
   background-color: #d9d9d9;
   position: absolute;
@@ -229,7 +204,6 @@ body {
   content: "";
   border-radius: 6px;
 }
-
 .astronaut__arm-left1 {
   background-color: #e6e6e6;
   position: absolute;
@@ -241,7 +215,6 @@ body {
   border-radius: 8px;
   transform: rotate(-30deg);
 }
-
 .astronaut__arm-left2 {
   background-color: #e6e6e6;
   position: absolute;
@@ -255,7 +228,6 @@ body {
   border-top-left-radius: 8em;
   border-top-right-radius: 8em;
 }
-
 .astronaut__arm-right1 {
   background-color: #e6e6e6;
   position: absolute;
@@ -267,7 +239,6 @@ body {
   border-radius: 8px;
   transform: rotate(-10deg);
 }
-
 .astronaut__arm-right2 {
   background-color: #e6e6e6;
   position: absolute;
@@ -281,7 +252,6 @@ body {
   border-top-left-radius: 8em;
   border-top-right-radius: 8em;
 }
-
 .astronaut__arm-thumb-left {
   background-color: #e6e6e6;
   position: absolute;
@@ -293,7 +263,6 @@ body {
   border-radius: 8em;
   transform: rotate(-35deg);
 }
-
 .astronaut__arm-thumb-right {
   background-color: #e6e6e6;
   position: absolute;
@@ -305,7 +274,6 @@ body {
   border-radius: 8em;
   transform: rotate(20deg);
 }
-
 .astronaut__wrist-left {
   background-color: #e67e22;
   position: absolute;
@@ -317,7 +285,6 @@ body {
   border-radius: 8em;
   transform: rotate(-15deg);
 }
-
 .astronaut__wrist-right {
   background-color: #e67e22;
   position: absolute;
@@ -329,7 +296,6 @@ body {
   border-radius: 8em;
   transform: rotate(-10deg);
 }
-
 .astronaut__leg-left {
   background-color: #e6e6e6;
   position: absolute;
@@ -340,7 +306,6 @@ body {
   content: "";
   transform: rotate(10deg);
 }
-
 .astronaut__leg-right {
   background-color: #e6e6e6;
   position: absolute;
@@ -351,7 +316,6 @@ body {
   content: "";
   transform: rotate(-10deg);
 }
-
 .astronaut__foot-left {
   background-color: white;
   position: absolute;
@@ -366,7 +330,6 @@ body {
   border-top-right-radius: 8em;
   border-bottom: 4px solid #e67e22;
 }
-
 .astronaut__foot-right {
   background-color: white;
   position: absolute;

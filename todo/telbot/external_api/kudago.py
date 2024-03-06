@@ -47,7 +47,7 @@ def where_to_go(update: Update, context: CallbackContext):
         response = requests.get(
             'https://kudago.com/public-api/v1.2/locations/?',
             params=params
-        )
+        )  # TODO переделать на HTTPX для сокращения библиотек
         city_list = response.json()
     except Exception as error:
         raise KeyError(error)
@@ -89,7 +89,7 @@ def where_to_go(update: Update, context: CallbackContext):
         response = requests.get(
             'https://kudago.com/public-api/v1.4/events/',
             params=params
-        )
+        )  # TODO переделать на HTTPX для сокращения библиотек
         next_data = response.json()
 
         text = (

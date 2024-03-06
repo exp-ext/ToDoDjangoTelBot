@@ -1,34 +1,26 @@
 {% extends "base.html" %}
 {% load thumbnail %}
 {% load static %}
-
 {% block head %}
   <meta name="description" content="Публикации автора: {{ author.get_full_name }}"/>
   <meta name="keywords" content="Автор, заметки, Telegram, {{ author.get_full_name }}">
-
   <meta name="robots" content="index, follow">
   <link rel="canonical" href="https://www.yourtodo.ru{% url 'posts:profile' author.username %}" />
-
   <meta property="og:site_name" content="YourToDo.ru"/>
   <meta property="og:title" content="Публикации автора: {{ author.get_full_name }}"/>
   <meta property="og:type" content="website"/>
   <meta property="og:url" content="https://www.yourtodo.ru{% url 'posts:profile' author.username %}"/>
   <meta property="og:description" content="Публикации автора: {{ author.get_full_name }}"/>
-
   {% if author.image %}
     <meta property="og:image" content="{{ author.image.url }}"/>
     <meta property="og:image:alt" content="Фотография {{ author.get_full_name }}"/>
-
     <meta name="twitter:card" content="summary_large_image"/>
     <meta name="twitter:image" content="{{ author.image.url }}"/>
     <meta name="twitter:image:alt" content="Фотография {{ author.get_full_name }}"/>
   {% endif %}
-
   <link rel="stylesheet" href="{% static 'css/moving_units.css' %}">
 {% endblock %}
-
 {% block title %} Публикации пользователя {{ author.get_full_name  }} {% endblock %}
-
 {% block headline %}
   <div class="container pt-5 my-2">
     <div class="card shadow bg-secondary rounded group-unit mt-3 _anim-items _anim-no-hide">
@@ -64,7 +56,6 @@
     </div>
   </div>
 {% endblock %}
-
 {% block content %}
   <div class="container">
     {% for post in page_obj %}
@@ -72,8 +63,7 @@
     {% endfor %}
     {% include 'mobile/posts/includes/paginator.html' %}
   </div>
-
-  <div class="container shadow my-3 p-1 rounded">
+  <div class="container my-3 px-2 rounded">
     {% include 'includes/yaribbonadvertising.html' %}
   </div>
   <br>

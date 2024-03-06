@@ -18,21 +18,6 @@ User = get_user_model()
 ADMIN_ID = settings.TELEGRAM_ADMIN_ID
 
 
-def first_step_add(update: Update, context: CallbackContext):
-    chat = update.effective_chat
-    message_thread_id = update.effective_message.message_thread_id
-    req_text = f'*{update.effective_user.first_name}*, введите текст заметки с датой и временем 🖌'
-    message_id = context.bot.send_message(
-        chat.id,
-        req_text,
-        parse_mode='Markdown',
-        message_thread_id=message_thread_id
-    ).message_id
-    context.user_data['del_message'] = message_id
-    remove_keyboard(update, context)
-    return 'add_note'
-
-
 class NoteManager:
     def __init__(self, update, context):
         self.update = update
@@ -109,8 +94,23 @@ class NoteManager:
         reply_text = f'Напоминание: *{pars.only_message}*\nСоздано\nна дату: *{pars.user_date.strftime("%d.%m.%Y")}*\n'
         if not task.it_birthday:
             new_date = pars.user_date - timedelta(minutes=self.delta_time_min)
-            reply_text += f'на время: *{new_date.strftime("%H:%M")}*\n'
+            reply_text += f'с оповещением в *{new_date.strftime("%H:%M")}*\n'
         send_service_message(self.chat.id, reply_text, 'Markdown', self.message_thread_id)
+
+
+def first_step_add(update: Update, context: CallbackContext):
+    chat = update.effective_chat
+    message_thread_id = update.effective_message.message_thread_id
+    req_text = f'*{update.effective_user.first_name}*, введите текст заметки с датой и временем 🖌'
+    message_id = context.bot.send_message(
+        chat.id,
+        req_text,
+        parse_mode='Markdown',
+        message_thread_id=message_thread_id
+    ).message_id
+    context.user_data['del_message'] = message_id
+    remove_keyboard(update, context)
+    return 'add_note'
 
 
 def add_notes(update: Update, context: CallbackContext) -> None:

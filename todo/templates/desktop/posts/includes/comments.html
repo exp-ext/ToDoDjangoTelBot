@@ -1,5 +1,4 @@
 {% load user_filters %}
-
 {% if user.is_authenticated %}
   <div class="card my-4 rounded shadow bg-light">
     <h5 class="card-header bg-secondary">Добавить комментарий:</h5>
@@ -16,8 +15,6 @@
     </div>
   </div>
 {% endif %}
-
-
 <h5 class="mt-3">Комментарии к заметке:</h5>
 <hr>
 {% if user.is_anonymous %}
@@ -25,7 +22,6 @@
     Регистрация доступна через <a href="https://t.me/BorFAsbot"> бота в Телеграмм</a>.</b>
   </div>  
 {% endif %}
-
 {% if comments %}
   {% for comment in comments %}
     <div class="media mb-4">

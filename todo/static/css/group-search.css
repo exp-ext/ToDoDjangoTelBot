@@ -1,18 +1,15 @@
 ul {
   list-style-type: none;
 }
-
 ul li a {
   text-decoration: none;
   font-weight: normal;
   color: black;
 }
-
 ul li a:hover {
   font-weight: bold;
   color: black;
 }
-
 .result_line {
   display: flex;
   align-items: center;
@@ -25,7 +22,6 @@ ul li a:hover {
 .result_line a {
   margin-right: 10px;
 }
-
 .resultCard {
     background-color: rgb(231, 223, 223);
     border: 1px solid #ddd;

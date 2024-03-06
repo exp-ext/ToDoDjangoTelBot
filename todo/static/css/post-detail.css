@@ -1,19 +1,18 @@
+*, *::before, *::after {
+    box-sizing: border-box;
+}
 .table-wrap {
   overflow-x: auto;
   display: block;
-}  
+}
 .table-wrap table {
   width: 100%;
-  max-width: none;
   table-layout: fixed;
 }
 pre {
   white-space: pre !important;
   overflow-x: auto !important;
   word-wrap: normal !important;
-}
-*, *::before, *::after {
-    box-sizing: border-box;
 }
 .scroll {
     position: sticky;
@@ -33,10 +32,54 @@ pre {
   height: 100%;
   object-fit: cover;
 }
-.hidden-content {
+.hidden-content, .hidden {
   display: none;
 }
 #advertAside {
   height: 300px;
-  max-height: 300px;
+}
+.visible {
+  display: block;
+}
+.toggle-icon i {
+  font-size: 1.5rem;
+  margin-right: 3px;
+  vertical-align: middle;
+}
+.tree-content hr{
+  margin-top: 4px;
+  margin-bottom: 12px;
+}
+.tree-content a {
+  color: black;
+}
+.carousel-item a {
+  text-decoration: none;
+}
+:root {
+  --scroll-btn-bg-color: #ddd;
+  --scroll-btn-bg-color-hover: #555;
+  --scroll-btn-color: black;
+  --scroll-btn-color-hover: white;
+  --scroll-btn-bottom: 20px;
+  --scroll-btn-right: 30px;
+  --scroll-btn-padding: 12px;
+  --scroll-btn-border-radius: 10px;
+}
+#scrollToTopBtn {
+  position: fixed;
+  bottom: var(--scroll-btn-bottom);
+  right: var(--scroll-btn-right);
+  z-index: 99;
+  border: none;
+  outline: none;
+  background-color: var(--scroll-btn-bg-color);
+  color: var(--scroll-btn-color);
+  cursor: pointer;
+  padding: var(--scroll-btn-padding);
+  border-radius: var(--scroll-btn-border-radius);
+}
+#scrollToTopBtn:hover {
+  background-color: var(--scroll-btn-bg-color-hover);
+  color: var(--scroll-btn-color-hover);
 }

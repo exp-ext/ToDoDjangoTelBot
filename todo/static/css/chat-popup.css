@@ -1,35 +1,38 @@
-.floating-chat {
+:root {
+  --background-color: #1f343d;
+  --text-color: #ffffff;
+  --hover-shadow: 0 10px 20px rgba(0, 0, 0, 0.19), 0 6px 6px rgba(0, 0, 0, 0.23);
+  --default-shadow: 0 2.1px 1.3px rgba(0, 0, 0, 0.044), 0 5.9px 4.2px rgba(0, 0, 0, 0.054), 0 12.6px 9.5px rgba(0, 0, 0, 0.061), 0 25px 20px rgba(0, 0, 0, 0.1);
+  --border-radius-large: 20px;
+  --border-radius-circle: 50%;
+  --transition-fast: 250ms ease-out;
+}
+.floating-chat, .floating-chat.enter, .floating-chat:focus {
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: white;
+  color: var(--text-color);
   position: fixed;
-  bottom: 56px;
-  right: 24px;
-  max-width: 56px;
-  max-height: 56px;
-  min-height: 56px;
-  min-width: 56px;
   width: 56px;
   height: 56px;
-  transform: translateY(70px);
-  transition: all 250ms ease-out;
-  border-radius: 50%;
-  opacity: 0;
-  background-repeat: no-repeat;
-  background-attachment: fixed;
-  background: #1f343d;
+  border-radius: var(--border-radius-circle);
+  background: var(--background-color) no-repeat fixed;
   z-index: 2;
+  bottom: 56px;
+  right: 24px;
+  transition: var(--transition-fast);
 }
-.floating-chat i {
+.floating-chat i, .floating-chat .chat .header i, .floating-chat .chat .chat_list i {
   font-size: 24px;
 }
 .floating-chat.enter {
   transform: translateY(0);
   opacity: 0.6;
-  border-radius: 50%;
   box-shadow: 0 2.1px 1.3px rgba(0, 0, 0, 0.044), 0 5.9px 4.2px rgba(0, 0, 0, 0.054), 0 12.6px 9.5px rgba(0, 0, 0, 0.061), 0 25px 20px rgba(0, 0, 0, 0.1);
+}
+.floating-chat:focus {
+  outline: 0;
 }
 .floating-chat.enter:hover {
   box-shadow: 0 10px 20px rgba(0, 0, 0, 0.19), 0 6px 6px rgba(0, 0, 0, 0.23);
@@ -49,9 +52,6 @@
   z-index: 9999;
   resize: both;
   overflow: auto;
-}
-.floating-chat:focus {
-  outline: 0;
 }
 .floating-chat button {
   background: transparent;
@@ -237,36 +237,12 @@
   border-left: 10px solid transparent;
   left: -10px;
 }
-@keyframes show-chat-even {
+@keyframes show-chat {
   0% {
     margin-left: -480px;
   }
   100% {
     margin-left: 0;
-  }
-}
-@-webkit-keyframes show-chat-even {
-  0% {
-    margin-left: -480px;
-  }
-  100% {
-    margin-left: 0;
-  }
-}
-@keyframes show-chat-odd {
-  0% {
-    margin-right: -480px;
-  }
-  100% {
-    margin-right: 0;
-  }
-}
-@-webkit-keyframes show-chat-odd {
-  0% {
-    margin-right: -480px;
-  }
-  100% {
-    margin-right: 0;
   }
 }
 .floating-chat .chat .chat_list {
@@ -383,7 +359,6 @@
 }
 @media screen and (max-width: 768px) {
   .floating-chat.expand {
-    position: fixed;
     top: 0;
     left: 0;
     width: 100%;
@@ -391,6 +366,5 @@
     max-width: 100vw;
     max-height: 100vh;
     overflow: hidden;
-    z-index: 9999;
   }
 }

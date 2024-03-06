@@ -2,7 +2,7 @@
 
 source .env
 
-domains=(www.$DOMAIN aws.$DOMAIN console.$DOMAIN $DOMAIN)
+domains=(www.$DOMAIN aws.$DOMAIN console.$DOMAIN www.$MY_DOMAIN $MY_DOMAIN)
 email=$EMAIL
 staging=$STAGING
 

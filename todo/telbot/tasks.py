@@ -30,10 +30,9 @@ EXTEND = {
 }
 
 
-def sending_messages(tasks: QuerySet[Task], this_datetime: datetime, event_text: str = '') -> str:
+def sending_messages(tasks: QuerySet, this_datetime: datetime, event_text: str = '') -> str:
     """Перебор записей и отправка их адресатам."""
     messages = dict()
-
     for task in tasks:
         recipient = task.group.chat_id if task.group else task.user.tg_id
         if recipient not in messages:
@@ -55,8 +54,7 @@ def sending_messages(tasks: QuerySet[Task], this_datetime: datetime, event_text:
             else:
                 header = f'📝 через {delta_min % 60 }мин'
         else:
-            utc_date = task.server_datetime
-            user_date = utc_date.astimezone(messages[recipient]['user_tz'])
+            user_date = task.server_datetime.astimezone(messages[recipient]['user_tz'])
             header = f'В {datetime.strftime(user_date, "%H:%M")}'
 
         header = '' if task.it_birthday else f'<b>-- {header} -></b>'
@@ -129,7 +127,7 @@ def send_forismatic_quotes() -> str:
     for mailing_groups in mailing_list:
         if mailing_groups.mailing_type == 'forismatic_quotes':
             try:
-                response = requests.get(*request)
+                response = requests.get(*request)  # TODO переделать на HTTPX для сокращения библиотек
                 msg = '*Мысли великих людей:*\n' + response.text
                 bot.send_message(
                     chat_id=mailing_groups.group.chat_id,

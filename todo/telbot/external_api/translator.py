@@ -129,7 +129,7 @@ class GetTranslation():
             url=url,
             headers=headers,
             json=payload
-        )
+        )  # TODO переделать на HTTPX для сокращения библиотек
         self.answer_text = response.json().get('data').get('translation')
 
     def deepl_translator(self):

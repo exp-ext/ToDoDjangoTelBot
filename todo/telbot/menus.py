@@ -2,6 +2,8 @@ from typing import Any, Iterable
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.utils.timezone import now
+from telbot.models import UserGptModels
 from telegram import (InlineKeyboardButton, InlineKeyboardMarkup,
                       KeyboardButton, ReplyKeyboardMarkup, Update)
 from telegram.ext import CallbackContext
@@ -35,7 +37,7 @@ def main_menu(update: Update, context: CallbackContext) -> None:
         '': (
             f'{update.effective_user.first_name}, пожалуйста пройдите по ссылке [для прохождения процедуры регистрации]({context.bot.link}) 🔆'
             if chat.type != 'private' else
-            f'{update.effective_user.first_name}, пожалуйста пройдите процедуру регистрации, выбрав соответствующий пункт в меню 🔆'
+            f'{update.effective_user.first_name}, пожалуйста пройдите процедуру регистрации. Для этого отправьте боту команду /start 🔆'
         )
     }
 
@@ -51,9 +53,8 @@ def main_menu(update: Update, context: CallbackContext) -> None:
         ]
         reply_markup = InlineKeyboardMarkup(build_menu(button_list, n_cols=2))
 
-        menu_text = (
-            "* 💡  ГЛАВНОЕ МЕНЮ  💡 *".center(25, " ") + "\n" + f"для пользователя {user_name}".center(25, " ")
-        )
+        menu_text = "* 💡  ГЛАВНОЕ МЕНЮ  💡 *".center(25, " ") + "\n" + f"для пользователя {user_name}".center(25, " ")
+
         context.bot.send_message(
             chat.id,
             menu_text,
@@ -68,7 +69,7 @@ def private_menu(update: Update, context: CallbackContext) -> None:
     chat = update.effective_chat
 
     answers = {
-        '': (f'{update.message.from_user.first_name}, функции геолокации доступны только после регистрации.')
+        '': f'{update.message.from_user.first_name}, функции геолокации доступны только после регистрации. Для этого отправьте боту команду /start 🔆'
     }
 
     user = check_registration(update, context, answers, return_user=True)
@@ -94,11 +95,11 @@ def private_menu(update: Update, context: CallbackContext) -> None:
 def ask_registration(update: Update, context: CallbackContext) -> None:
     """Регистрация пользователя."""
     chat = update.effective_chat
-    first_name = update.message.from_user.first_name
+    first_name = update.message.from_user.first_name or 'мой друг'
     if chat.type == 'private':
         button_list = [
             KeyboardButton('меню геофункций 📡', request_location=True),
-            KeyboardButton('авторизация на сайте 👩‍💻', request_contact=True),
+            KeyboardButton('авторизоваться на сайте 👩‍💻', request_contact=True),
         ]
         reply_markup = ReplyKeyboardMarkup(
             build_menu(button_list, n_cols=2),
@@ -107,10 +108,14 @@ def ask_registration(update: Update, context: CallbackContext) -> None:
         menu_text = (
             f'Приветствую Вас, {first_name}!\n'
         )
-        context.bot.send_message(
+        message_id = context.bot.send_message(
             chat.id,
             menu_text,
             reply_markup=reply_markup
+        ).message_id
+        delete_messages_by_time.apply_async(
+            args=[chat.id, message_id],
+            countdown=15
         )
         Authentication(update, context).register()
 
@@ -120,10 +125,8 @@ def show_my_links(update: Update, context: CallbackContext):
     chat = update.effective_chat
     message_thread_id = update.effective_message.message_thread_id
     button_list = [
-        InlineKeyboardButton(text='Телеграмм',
-                             url=context.bot.link),
-        InlineKeyboardButton(text='Вебсайт',
-                             url=f'https://www.{settings.DOMAIN}/')
+        InlineKeyboardButton(text='Телеграмм', url=context.bot.link),
+        InlineKeyboardButton(text='Вебсайт', url=f'https://www.{settings.DOMAIN}/')
     ]
     reply_markup = InlineKeyboardMarkup(build_menu(button_list, n_cols=1))
     menu_text = 'личный кабинет системы -->'
@@ -143,8 +146,21 @@ def ask_auth(update: Update, context: CallbackContext) -> None:
     """Получаем ссылку для авторизации на сайте."""
     chat = update.effective_chat
     answers = {
-        '': ('Для начала необходимо пройти регистрацию.')
+        '': 'Для начала необходимо пройти регистрацию. Для этого отправьте ему команду /start 🔆'
     }
     user = check_registration(update, context, answers, return_user=True)
     if user and chat.type == 'private':
         Authentication(update, context, user).authorization()
+
+
+def reset_bot_history(update: Update, context: CallbackContext) -> None:
+    answers = {
+        '': 'Для начала необходимо пройти регистрацию. Для этого отправьте ему команду /start 🔆'
+    }
+    user = check_registration(update, context, answers, return_user=True)
+    current_time = now()
+    UserGptModels.objects.update_or_create(user=user, defaults={'time_start': current_time})
+    context.bot.send_message(
+        user.tg_id,
+        'История запросов успешно очищена 🗑'
+    )

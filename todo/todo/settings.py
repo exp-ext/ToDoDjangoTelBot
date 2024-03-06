@@ -23,10 +23,10 @@ load_dotenv()
 # bots settings
 DOMAIN = os.getenv('DOMAIN')
 TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
+TELEGRAM_BOT_NAME = os.getenv('TELEGRAM_BOT_NAME')
 OW_API_TOKEN = os.getenv('OW_API_TOKEN', default='some_token_to_pass_test')
 YANDEX_GEO_API_TOKEN = os.getenv('YANDEX_GEO_API_TOKEN', default='some_token_to_pass_test')
 
-CHAT_GPT_TOKEN = os.getenv('CHAT_GPT_TOKEN')
 TELEGRAM_ADMIN_ID = os.getenv('TELEGRAM_ADMIN_ID')
 SOCKS5 = os.getenv('SOCKS5')
 
@@ -207,6 +207,8 @@ AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID')
 AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY')
 AWS_S3_ENDPOINT_URL = os.getenv('AWS_S3_ENDPOINT_URL')
 AWS_S3_USE_SSL = int(os.getenv('AWS_S3_USE_SSL', default=0))
+AWS_S3_REGION_NAME = os.getenv('AWS_S3_REGION_NAME')
+
 AWS_S3_OBJECT_PARAMETERS = {
     'CacheControl': 'max-age=86400',
 }
@@ -233,7 +235,6 @@ if USE_S3:
         'bucket_name': DATABASE_BUCKET_NAME,
         'default_acl': 'private',
     }
-    AWS_S3_REGION_NAME = os.getenv('AWS_S3_REGION_NAME')
 else:
     STATIC_URL = '/static/'
 

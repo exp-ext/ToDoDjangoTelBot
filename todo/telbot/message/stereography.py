@@ -8,6 +8,7 @@ from asgiref.sync import sync_to_async
 from channels.db import database_sync_to_async
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.db.models import Model
 from django.http import HttpResponseBadRequest
 from telbot.external_api.chat_gpt import GetAnswerGPT
 from telegram import ChatAction, Update
@@ -37,7 +38,7 @@ class AudioTranscription():
     }
     headers = {'accept': 'application/json'}
 
-    def __init__(self, update: Update, context: CallbackContext, user: User) -> None:
+    def __init__(self, update: Update, context: CallbackContext, user: Model) -> None:
         self.update = update
         self.context = context
         self.file_id = update.message.voice.file_id
@@ -71,7 +72,7 @@ class AudioTranscription():
                 self.update.effective_message.text = self.transcription_text
                 asyncio.create_task(self.send_reply())
                 get_answer = GetAnswerGPT(self.update, self.context, self.user)
-                await get_answer.get_answer_davinci()
+                await get_answer.get_answer_chat_gpt()
             else:
                 await self.send_reply()
 

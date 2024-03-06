@@ -79,6 +79,16 @@ services:
       - ASR_MODEL=small
       - ASR_ENGINE=openai_whisper
 
+  # pytorch:
+  #   image: pytorch/torchserve:latest
+  #   container_name: todo_pytorch
+  #   ports:
+  #     - "6080:8080"
+  #     - "6081:8081"
+  #     - "6082:8082"
+  #     - "7070:7070"
+  #     - "7071:7071"
+
   nginx:
     image: nginx:latest
     container_name: todo_nginx

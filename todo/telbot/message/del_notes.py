@@ -14,6 +14,83 @@ from .parse_message import TaskParse
 User = get_user_model()
 
 
+class TaskDeleter:
+    def __init__(self, update: Update, context: CallbackContext):
+        self.update = update
+        self.context = context
+        self.chat = update.effective_chat
+        self.message_thread_id = update.effective_message.message_thread_id
+        self.tg_username = update.message.from_user.username
+        self.text = " ".join(update.message.text.split()).replace('- ', '')
+        self.user = None
+        self.user_locally = None
+        self.pars = None
+
+    def get_user(self):
+        """Получение пользователя и его локации."""
+        self.user = get_object_or_404(User.objects.prefetch_related('locations'), username=self.tg_username)
+        self.user_locally = self.user.locations.first() if self.user.locations.exists() else 'UTC'
+
+    def parse_message(self):
+        """Парсинг сообщения и даты."""
+        self.pars = TaskParse(self.text, self.user_locally.timezone)
+        self.pars.parse_message()
+
+    def delete_messages(self):
+        """Удаление сообщений."""
+        del_id = (self.context.user_data.get('del_message'), self.update.message.message_id)
+        for id in filter(None, del_id):
+            self.context.bot.delete_message(self.chat.id, id)
+
+    def delete_tasks(self):
+        """Логика удаления задач."""
+        reply_text = f'*{self.update.message.from_user.first_name}*, не удалось разобрать дату 🧐. Попробуйте снова 🙄.'
+        if self.pars.server_date:
+            tasks = self.user.tasks.filter(text__icontains=self.pars.only_message)
+            tasks = self.filter_tasks(tasks)
+            count = tasks.count()
+            if count > 0:
+                tasks.delete()
+                single = count == 1
+                reply_text = self.format_success_reply(count, single)
+            else:
+                reply_text = f'Не удалось найти напоминание *<{self.pars.only_message}>* на дату: *{self.pars.user_date.strftime("%d.%m.%Y")}*. Попробуйте снова.'
+        self.send_service_message(reply_text)
+
+    def filter_tasks(self, tasks):
+        """Фильтрация задач по дате."""
+        if self.pars.user_date.hour == 0 and self.pars.user_date.minute == 0:
+            start_of_day = datetime.combine(self.pars.user_date, datetime.min.time())
+            end_of_day = datetime.combine(self.pars.user_date, datetime.max.time())
+            return tasks.filter(server_datetime__range=(start_of_day, end_of_day))
+        return tasks.annotate(
+            server_datetime_hour=Trunc('server_datetime', 'hour', output_field=DateTimeField())
+        ).filter(server_datetime_hour=self.pars.server_date.replace(minute=0, second=0, microsecond=0))
+
+    def format_success_reply(self, count, single):
+        """Форматирование ответа об успешном удалении."""
+        return (
+            f'Напоминани{"е" if single else "я"} с текстом *<{self.pars.only_message}>* на дату *{self.pars.user_date.strftime("%d.%m.%Y")}*, '
+            f'удален{"о" if single else "ы"} безвозвратно{"." if single else f" в количестве {count}шт."}'
+        )
+
+    def send_service_message(self, text):
+        """Отправка служебного сообщения."""
+        send_service_message(self.chat.id, text, 'Markdown', self.message_thread_id)
+
+    def run(self):
+        """Основной метод для запуска процесса удаления."""
+        try:
+            self.get_user()
+            self.parse_message()
+            self.delete_messages()
+            self.delete_tasks()
+        except Exception as error:
+            raise KeyError(error)
+        finally:
+            return ConversationHandler.END
+
+
 def first_step_dell(update: Update, context: CallbackContext):
     chat = update.effective_chat
     message_thread_id = update.effective_message.message_thread_id
@@ -33,50 +110,5 @@ def first_step_dell(update: Update, context: CallbackContext):
 
 
 def del_notes(update: Update, context: CallbackContext):
-    """Удаление записи в модели Task."""
-    chat = update.effective_chat
-    message_thread_id = update.effective_message.message_thread_id
-    tg_username = update.message.from_user.username
-    text = " ".join(update.message.text.split()).replace('- ', '')
-
-    user = get_object_or_404(User.objects.prefetch_related('locations'), username=tg_username)
-    user_locally = user.locations.first() if user.locations.exists() else 'UTC'
-
-    try:
-        pars = TaskParse(text, user_locally.timezone)
-        pars.parse_message()
-
-        del_id = (context.user_data.get('del_message'), update.message.message_id)
-        for id in filter(None, del_id):
-            context.bot.delete_message(chat.id, id)
-
-        reply_text = f'*{update.message.from_user.first_name}*, не удалось разобрать дату 🧐. Попробуйте снова 🙄.'
-
-        if pars.server_date:
-            tasks = user.tasks.filter(text__icontains=pars.only_message)
-
-            if pars.user_date.hour == 0 and pars.user_date.minute == 0:
-                start_of_day = datetime.combine(pars.user_date, datetime.min.time())
-                end_of_day = datetime.combine(pars.user_date, datetime.max.time())
-                tasks = tasks.filter(server_datetime__range=(start_of_day, end_of_day))
-            else:
-                tasks = tasks.annotate(
-                    server_datetime_hour=Trunc('server_datetime', 'hour', output_field=DateTimeField())
-                ).filter(server_datetime_hour=pars.server_date.replace(minute=0, second=0, microsecond=0))
-
-            count = tasks.count()
-            if count > 0:
-                tasks.delete()
-                single = count == 1
-                reply_text = (
-                    f'Напоминани{"е" if single else "я"} с текстом *<{pars.only_message}>* на дату *{pars.user_date.strftime("%d.%m.%Y")}*, '
-                    f'удален{"о" if single else "ы"} безвозвратно{"." if single else f" в количестве {count}шт."}'
-                )
-            else:
-                reply_text = f'Не удалось найти напоминание *<{pars.only_message}>* на дату: *{pars.user_date.strftime("%d.%m.%Y")}*. Попробуйте снова.'
-
-        send_service_message(chat.id, reply_text, 'Markdown', message_thread_id)
-    except Exception as error:
-        raise KeyError(error)
-    finally:
-        return ConversationHandler.END
+    deleter = TaskDeleter(update, context)
+    return deleter.run()

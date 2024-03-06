@@ -1,17 +1,14 @@
 {% load thumbnail %}
 {% load tag_filters %}
-
 <div class="card shadow p-4 mb-3 bg-light rounded">
   <div class="card-body">
     <div class="row align-items-start">
-
       <div class="col-md-5">
         <div class="lobster">
           <h2 class="card-title">{{ post.title }}</h2>
           <br>
         </div>
       </div>
-
       <div class="col-md-5">
         <h6 class="card-subtitle text-muted">
           <ul>
@@ -32,19 +29,15 @@
         </h6>
       </div>
   </div>
-
   {% thumbnail post.image "960x339" crop="center" upscale=True as im %}
     <a href="{% url 'posts:post_detail' post.slug %}">
       <img class="card-img my-2" src="{{ im.url }}" alt="Картинка к публикации: {{ post.title }}" loading="lazy" />
     </a>
-  {% endthumbnail %}  
-
+  {% endthumbnail %}
     {% with first_paragraph=post.text|extract_first_paragraph_tag %}
       {{ first_paragraph|safe }}
     {% endwith %}
-
     <div class="row align-items-start">
-
       <div class="col-md-5">      
         <div class="btn-group" role="group" aria-label="Transition management">      
           <a class="btn btn-outline-secondary btn-sm" href="{% url 'posts:post_detail' post.slug %}">подробная информация </a>
@@ -64,6 +57,5 @@
           {% endif %}
       </div>
     </div>
-
   </div>
 </div>

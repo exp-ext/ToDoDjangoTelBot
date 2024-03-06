@@ -72,7 +72,7 @@ class AudioTranscription():
                 self.update.effective_message.text = self.transcription_text
                 asyncio.create_task(self.send_reply())
                 get_answer = GetAnswerGPT(self.update, self.context, self.user)
-                await get_answer.get_answer_davinci()
+                await get_answer.get_answer_chat_gpt()
             else:
                 await self.send_reply()
 

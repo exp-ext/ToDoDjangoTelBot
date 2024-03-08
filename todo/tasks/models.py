@@ -4,6 +4,8 @@ from core.models import Create
 from django.contrib.auth import get_user_model
 from django.db import models
 from django.utils.translation import gettext_lazy as _
+from django_ckeditor_5.fields import CKEditor5Field
+from sorl.thumbnail import ImageField
 from users.models import Group
 
 User = get_user_model()
@@ -49,7 +51,8 @@ class Task(Create):
         max_length=200,
         blank=True
     )
-    text = models.TextField(_('Текст напоминания'), help_text=_('Введите текст напоминания.'))
+    image = ImageField(_('картинка'), upload_to='tasks/', blank=True, help_text=_('При выборе картинки, она считается в приоритете'))
+    text = CKEditor5Field(_('текст напоминания'), blank=True, config_name='tasks', help_text=_('Введите текст напоминания.'))
     remind_min = models.IntegerField(
         _('Оповестить за ... минут'),
         default=120,

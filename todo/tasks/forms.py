@@ -37,6 +37,7 @@ class TaskForm(forms.ModelForm):
             'group',
             'server_datetime',
             'picture_link',
+            'image',
             'text',
             'reminder_period',
             'it_birthday',

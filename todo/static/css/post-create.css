@@ -48,4 +48,9 @@ select {
 .grid-item {
   width: 960px;
   height: 339px;
+  overflow: hidden;
+}
+.grid-item img {
+  max-width: 100%;
+  height: auto;
 }

@@ -91,10 +91,10 @@ class TaskCreateView(LoginRequiredMixin, CreateView):
         return super().get(request, *args, **kwargs)
 
     def form_valid(self, form: TaskForm) -> HttpResponse:
-        text = form.cleaned_data.get('text')
+        # text = form.cleaned_data.get('text')
         form = form.save(commit=False)
         form.user = self.request.user
-        form.text = generating_correct_text(text)
+        # form.text = generating_correct_text(text)
         self.it_birthday = form.it_birthday
         return super().form_valid(form)
 
@@ -132,9 +132,9 @@ class TaskUpdateView(LoginRequiredMixin, UpdateView):
         return super().get(request, *args, **kwargs)
 
     def form_valid(self, form: TaskForm) -> HttpResponseRedirect:
-        text = form.cleaned_data.get('text')
+        # text = form.cleaned_data.get('text')
         form = form.save(commit=False)
-        form.text = generating_correct_text(text)
+        # form.text = generating_correct_text(text)
         self.it_birthday = form.it_birthday
         return super().form_valid(form)
 

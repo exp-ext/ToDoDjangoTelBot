@@ -1,4 +1,4 @@
-document.getElementById('file-input').addEventListener('change', function(event) {
+document.getElementById('id_image').addEventListener('change', function(event) {
   var imageGrid = document.getElementById('image-grid');
   imageGrid.innerHTML = '';
   var files = event.target.files;

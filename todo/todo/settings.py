@@ -291,9 +291,14 @@ CustomColorPalette = [
 ]
 
 CKEDITOR_5_CONFIGS = {
-    'default': {
-        'toolbar': ['heading', '|', 'bold', 'italic', 'link',
-                    'bulletedList', 'numberedList', 'blockQuote', 'imageUpload', ],
+    'tasks': {
+        'toolbar': ['heading', '|', 'bold', 'italic', 'link', 'numberedList'],
+        'heading': {
+            'options': [
+                {'model': 'paragraph', 'title': 'Paragraph', 'class': 'ck-heading_paragraph'},
+                {'model': 'heading2', 'view': 'h2', 'title': 'Heading 2', 'class': 'ck-heading_heading2'},
+            ]
+        },
     },
     'extends': {
         'blockToolbar': [

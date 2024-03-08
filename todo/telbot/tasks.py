@@ -9,6 +9,7 @@ from django.apps import apps as django_apps
 from django.contrib.auth import get_user_model
 from django.db.models.query import QuerySet
 from markdownify import markdownify as md
+from telbot.service_message import send_message_to_chat
 from telegram import ParseMode
 
 from .loader import bot
@@ -58,7 +59,7 @@ def sending_messages(tasks: QuerySet, this_datetime: datetime, event_text: str =
             header = f'В {datetime.strftime(user_date, "%H:%M")}'
 
         header = '' if task.it_birthday else f'<b>-- {header} -></b>'
-        picture = f'<a href="{task.picture_link}">​​​​​​</a>'
+        picture = f'<a href="{ task.image.url if task.image else task.picture_link }">​​​​​​</a>'
         messages[recipient]['reply_text'] += f'{header}{picture}\n{task.text}\n\n'
 
         if not task.it_birthday:
@@ -70,14 +71,9 @@ def sending_messages(tasks: QuerySet, this_datetime: datetime, event_text: str =
 
     for recipient, body in messages.items():
         reply_text = event_text + body['reply_text']
-        try:
-            bot.send_message(
-                chat_id=recipient,
-                text=reply_text,
-                parse_mode=ParseMode.HTML
-            )
-        except Exception:
-            continue
+        print(md(reply_text))
+        send_message_to_chat(tg_id=recipient, message=md(reply_text, strong_em_symbol='_'), parse_mode_markdown=True)
+
     return f'Send {len(messages)} messages'
 
 

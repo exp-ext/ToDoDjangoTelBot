@@ -7,12 +7,12 @@ from .loader import bot
 COMMANDS: Mapping[str, Mapping[str, str]] = {
     'en': {
         'main_menu': '📲 Main bot menu',
-        'reset_bot_history': '✂️ Reset request history',
+        'reset_bot_history': '💫 Start a new topic',
         'show_my_links': '📥 Show my links'
     },
     'ru': {
         'main_menu': '📲 Общее меню бота',
-        'reset_bot_history': '✂️ Сбросить историю запросов',
+        'reset_bot_history': '💫 Задать новую тему',
         'show_my_links': '📥 Показать основные ссылки'
     }
 }

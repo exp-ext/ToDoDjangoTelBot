@@ -24,7 +24,7 @@
           <form id="createForm" class="py-2" method="post" enctype="multipart/form-data"
           action="{% if form.initial.is_edit %}
                     {% url 'posts:post_edit' post_identifier_pk=form.instance.id %}
-                  {% else %} 
+                  {% else %}
                     {% url 'posts:post_create' %} 
                   {% endif %}">
             {% csrf_token %}
@@ -49,7 +49,7 @@
                 {{ form.short_description }}
             </div>            
             <div id="add-image">
-                <input type="file" name="image" accept="image/*" id="file-input" />
+                <input type="file" name="image" accept="image/*" id="id_image" />
                 <div class="image-grid" id="image-grid">
                 </div>
             </div>

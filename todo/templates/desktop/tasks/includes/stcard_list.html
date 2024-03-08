@@ -12,26 +12,27 @@
 
             <div class="stcard-title">{{ note.server_datetime|timezone:timezone|date:"d M Y D" }}</div>
 
-            {% if note.picture_link %}
+            {% if note.image %}
+              <img alt="image" src="{{ note.image.url }}"/>
+            {% elif note.picture_link %}
               <img alt="image" src="{{ note.picture_link }}"/>
-            {% endif %}           
-            
+            {% endif %}            
 
-            <p>{{ note.text|safe|truncatechars_html:400  }}</p>
+            {{ note.text|safe|truncatechars_html:400  }}
 
         {% else %}
 
           <div class="stcard-title">{{ note.server_datetime|timezone:timezone|date:"d M Y D в H:iч" }}</div>
-          {% if note.picture_link %}
-            <img alt="image" src="{{ note.picture_link }}"/>
-          {% endif %}
 
-          <p>
-            {{ note.text|safe|truncatechars_html:400  }}
-            <br>
-            <br>
-            - напомню в {{ note.remind_at|timezone:timezone|time:"H:iч" }}
-          </p>
+            {% if note.image %}
+              <img alt="image" src="{{ note.image.url }}"/>
+            {% elif note.picture_link %}
+              <img alt="image" src="{{ note.picture_link }}"/>
+            {% endif %}    
+
+          {{ note.text|safe|truncatechars_html:400  }}
+        
+          <p> - напомню в {{ note.remind_at|timezone:timezone|time:"H:iч" }} </p>
 
         {% endif %}     
 

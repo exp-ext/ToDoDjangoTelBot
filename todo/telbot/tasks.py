@@ -6,9 +6,9 @@ import requests
 from celery import Celery
 from dateutil.relativedelta import relativedelta
 from django.apps import apps as django_apps
-from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db.models.query import QuerySet
+from markdownify import markdownify as md
 from telegram import ParseMode
 
 from .loader import bot
@@ -153,16 +153,16 @@ def send_telegram_mailing() -> str:
         if item.target == 'u':
             recipients = User.objects.all().exclude(tg_id=None)
         else:
-            recipients = Group.objects.all().exclude(tg_id=None)
+            recipients = Group.objects.all()
 
-        link = item.reference if item.reference else f'https://www.{settings.DOMAIN}/{item.image.url}'
+        link = item.reference if item.reference else item.image.url
+        message_text = md(f'<a href="{link}">​​​​​​</a>\n{item.text}')
 
         for recipient in recipients:
-            message_text = f'<a href="{link}">​​​​​​</a>\n{item.text}'
             bot.send_message(
                 chat_id=recipient.tg_id if item.target == 'u' else recipient.chat_id,
                 text=message_text,
-                parse_mode=ParseMode.HTML
+                parse_mode=ParseMode.MARKDOWN
             )
             count += 1
 

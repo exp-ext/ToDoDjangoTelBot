@@ -10,6 +10,7 @@ from django.http import HttpRequest, HttpResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse_lazy
 from django.views.generic import CreateView, ListView, UpdateView, View
+from django_user_agents.utils import get_user_agent
 
 from .forms import TaskForm
 from .models import Task
@@ -73,6 +74,12 @@ class TaskCreateView(LoginRequiredMixin, CreateView):
         super().__init__()
         self.it_birthday = False
 
+    def get_template_names(self):
+        user_agent = get_user_agent(self.request)
+        if user_agent.is_mobile:
+            return ['mobile/tasks/create_task.html']
+        return [self.template_name]
+
     def get_queryset(self):
         queryset = super().get_queryset()
         queryset = queryset.select_related('group')
@@ -91,10 +98,8 @@ class TaskCreateView(LoginRequiredMixin, CreateView):
         return super().get(request, *args, **kwargs)
 
     def form_valid(self, form: TaskForm) -> HttpResponse:
-        # text = form.cleaned_data.get('text')
         form = form.save(commit=False)
         form.user = self.request.user
-        # form.text = generating_correct_text(text)
         self.it_birthday = form.it_birthday
         return super().form_valid(form)
 
@@ -114,6 +119,12 @@ class TaskUpdateView(LoginRequiredMixin, UpdateView):
         super().__init__()
         self.it_birthday = False
 
+    def get_template_names(self):
+        user_agent = get_user_agent(self.request)
+        if user_agent.is_mobile:
+            return ['mobile/tasks/create_task.html']
+        return [self.template_name]
+
     def get_queryset(self):
         queryset = super().get_queryset()
         queryset = queryset.select_related('group')
@@ -132,9 +143,7 @@ class TaskUpdateView(LoginRequiredMixin, UpdateView):
         return super().get(request, *args, **kwargs)
 
     def form_valid(self, form: TaskForm) -> HttpResponseRedirect:
-        # text = form.cleaned_data.get('text')
         form = form.save(commit=False)
-        # form.text = generating_correct_text(text)
         self.it_birthday = form.it_birthday
         return super().form_valid(form)
 

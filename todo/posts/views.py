@@ -25,6 +25,7 @@ from django.views.generic.edit import FormView
 from django_user_agents.utils import get_user_agent
 from sorl.thumbnail import get_thumbnail
 from telbot.service_message import send_message_to_chat
+from telegram import ParseMode
 from users.models import Group, GroupConnections, GroupMailing
 
 from .forms import CommentForm, GroupMailingForm, PostForm
@@ -674,7 +675,7 @@ class AddCommentView(LoginRequiredMixin, FormView):
             f'_{comment.text.replace("_", " ")}_\n'
         )
         if post.author.tg_id != 'test_id':
-            send_message_to_chat.delay(post.author.tg_id, message, parse_mode_markdown=True)
+            send_message_to_chat.delay(post.author.tg_id, message, parse_mode=ParseMode.MARKDOWN)
         return redirect('posts:post_detail', post_identifier_slug=post.slug)
 
     def form_invalid(self, form: CommentForm) -> HttpResponseRedirect:

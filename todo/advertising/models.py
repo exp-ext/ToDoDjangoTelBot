@@ -18,7 +18,7 @@ class Banner(Create):
 
     image = ImageField(_('картинка'), upload_to='advertising/')
     reference = models.CharField(_('партнерская ссылка'), max_length=200)
-    text = CKEditor5Field(_('слоган банера'), config_name='extends')
+    text = CKEditor5Field(_('слоган банера'), config_name='tasks')
 
     class Meta:
         ordering = ('-created_at',)

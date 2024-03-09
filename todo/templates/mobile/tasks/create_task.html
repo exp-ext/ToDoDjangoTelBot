@@ -2,97 +2,96 @@
 {% load static %}
 {% load user_filters %}
 {% load tz %}
-
 {% block head %}
   <meta name="description" content="Создание записи о напоминании."/>
   <meta name="robots" content="noindex, nofollow">
+  <link rel="stylesheet" href="{% static 'css/task-create.css' %}">
 {% endblock %}
-
 {% block title %} Редактор напоминаний {% endblock %}
-
-{% block content %} 
-
-  <div class="container py-5"> 
-    <div class="row justify-content-center">
-      <div class="col-md-8 p-5"> 
-        <div class="card">
-
-          <div class="card-header"> 
-            <div class="lobster">
-              <h1>
-                {% if form.initial.is_edit %}
-                  Редактировать запись
-                {% else %}
-                  Новая запись
-                {% endif %}  
-              </h1>
-            </div class="lobster">
-          </div>
-            
-          <form method="post" enctype="multipart/form-data"
-          action="{% if form.initial.is_edit %}
-                    {% url 'tasks:task_edit' task_id=form.instance.id %}
-                  {% else %} 
-                    {% url 'tasks:task_create' %} 
-                  {% endif %}">
-          
-          {% csrf_token %}
-
-          <div class="form-error">{{ form.non_field_errors }}</div>
-
-            <div class="card-body">    
-
-              {% for field in form %}
-                <div class="form-group row my-3 p-3">
-
-                  <label for="{{ field.text.id_for_label }}">                  
-                    {{ field.label }}
-                    {% if field.field.required %}
-                      <span class="reqired text-danger">*</span>
-                    {% endif %}
-
-                    {% if field.name == 'it_birthday' %}  
-                    
-                      {{ field }} 
-
-                    {% elif field.name == 'server_datetime' %}  
-
-                      {% timezone form.initial.tz %}
-                        {{ field|addclass:"form-control"  }} 
-                      {% endtimezone %}
-
-                    {% else %}
-
-                      {{ field|addclass:"form-control" }}
-                     
-                    {% endif %}
-                    
-                    {% if field.help_text %}
-                      <small id="{{ field.text.id_for_label }}-help" class="form-text text-muted"> 
-                        {{ field.help_text|safe }}
-                      </small>
-                    {% endif %}                 
-
-                    <div class="form-error">{{ field.errors }}</div>  
-                    
-                  </label>
-                </div>
-              {% endfor %}
-
-              <div class="d-flex justify-content-end">              
-                <button type="submit" class="btn btn-primary">
-                  {% if form.initial.is_edit %}
-                    Сохранить изменения
-                  {% else %}
-                    Добавить
-                  {% endif %}
-                </button>
-              </div>
-            </div>
-          </form>
-        </div>
+{% block content %}
+  <div class="container-fluid px-0 py-5">
+    <div class="card w-100">
+      <div class="card-header">
+        <div class="lobster">
+          <h1>
+            {% if form.initial.is_edit %}
+              Редактировать запись
+            {% else %}
+              Новая запись
+            {% endif %}
+          </h1>
+        </div class="lobster">
       </div>
+      <form method="post" enctype="multipart/form-data"
+      action="{% if form.initial.is_edit %}
+                {% url 'tasks:task_edit' task_id=form.instance.id %}
+              {% else %}
+                {% url 'tasks:task_create' %}
+              {% endif %}">
+        {% csrf_token %}
+        {{ form.media }}
+        <div class="card-body">
+          {% for field in form %}
+            <div class="form-group row py-3">
+              <label for="{{ field.text.id_for_label }}">
+                {{ field.label }}
+                {% if field.field.required %}
+                  <span class="reqired text-danger">*</span>
+                {% endif %}
+                {% if field.name == 'it_birthday' or field.name == 'text' %}
+                  {{ field }}
+                {% elif field.name == 'picture_link' %}
+                  <div id="add-image">
+                    {{ field|addclass:"form-control" }}
+                    <div class="image">
+                      <div class="image-grid" id="image-grid-link">
+                        {% if field.initial %}
+                          <img alt="image" src="{{ field.initial }}"/>
+                        {% endif %}
+                      </div>
+                    </div>
+                  </div>
+                {% elif field.name == 'image' %}
+                  <div id="add-image">
+                    {{ field|addclass:"form-control" }}
+                    <div class="image">
+                      <div class="image-grid" id="image-grid">
+                        {% if field.initial %}
+                          <img alt="image" src="{{ field.initial.url }}"/>
+                        {% endif %}
+                      </div>
+                    </div>
+                  </div>
+                {% elif field.name == 'server_datetime' %}
+                  {% timezone form.initial.tz %}
+                    {{ field|addclass:"form-control" }}
+                  {% endtimezone %}
+                {% else %}
+                  {{ field|addclass:"form-control" }}   
+                {% endif %}
+                {% if field.help_text %}
+                  <small id="{{ field.text.id_for_label }}-help" class="form-text text-muted">
+                    {{ field.help_text|safe }}
+                  </small>
+                {% endif %}
+                <div class="form-error">{{ field.errors }}</div>
+              </label>
+            </div>
+          {% endfor %}
+          <div class="d-flex justify-content-end">
+            <button type="submit" class="btn btn-primary">
+              {% if form.initial.is_edit %}
+                Сохранить изменения
+              {% else %}
+                Добавить
+              {% endif %}
+            </button>
+          </div>
+        </div>
+      </form>
     </div>
   </div>
-
+{% endblock %}
+{% block javascript %}
+  <script src="{% static 'js/create-item.js' %}"></script>
 {% endblock %}

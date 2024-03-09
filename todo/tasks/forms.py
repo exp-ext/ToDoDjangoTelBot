@@ -12,7 +12,7 @@ from .models import Task
 
 class TaskForm(forms.ModelForm):
     server_datetime = forms.DateTimeField(
-        label='Дата и время мероприятия',
+        label='Дата и время срабатывания',
         widget=MinimalSplitDateTimeMultiWidget()
     )
     it_birthday = forms.BooleanField(
@@ -54,10 +54,8 @@ class TaskForm(forms.ModelForm):
         self.fields['group'].required = False
         self.fields['group'].label = 'Место вывода сообщений о напоминании.'
         self.fields['group'].help_text = (
-            '<p style="color: #82818a;"> Оповещение придёт в личный чат, '
-            'если оставить поле пустым.<br>'
-            'Для появление Вашей группы в выпадающем списке, необходимо '
-            'в её чате хотя бы один раз вызвать меню.</p>'
+            '<p style="color: #82818a;"> Оповещение придёт в личный чат, если оставить поле пустым.<br>'
+            'Для появление группы в выпадающем списке, необходимо в ней проявить активность.</p>'
         )
 
     def clean_server_datetime(self):

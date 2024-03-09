@@ -1,8 +1,10 @@
 from bs4 import BeautifulSoup
 from core.models import Create, CreateUpdater
+from core.tasks import delete_image_in_bucket, delete_image_in_local
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db import models
-from django.db.models.signals import post_save, pre_save
+from django.db.models.signals import post_save, pre_delete, pre_save
 from django.dispatch import receiver
 from django.template.loader import render_to_string
 from django.urls import reverse
@@ -14,6 +16,7 @@ from treebeard.mp_tree import MP_Node
 from users.models import Group
 
 User = get_user_model()
+USE_S3 = settings.USE_S3
 
 
 class PostTags(models.Model):
@@ -108,7 +111,7 @@ class Post(CreateUpdater):
 
 
 @receiver(pre_save, sender=Post)
-def pre_save_group(sender, instance, *args, **kwargs):
+def pre_save_post(sender, instance, *args, **kwargs):
     """Пре-обработка текста поста перед сохранением.
 
     ### Args:
@@ -117,6 +120,14 @@ def pre_save_group(sender, instance, *args, **kwargs):
     - *args: Дополнительные аргументы.
     - **kwargs: Дополнительные именованные аргументы.
     """
+    if instance.pk:
+        old_instance = Post.objects.filter(pk=instance.pk).first()
+        if old_instance.image != instance.image:
+            if USE_S3:
+                delete_image_in_bucket.delay(old_instance.image.url)
+            else:
+                delete_image_in_local.delay(old_instance.image.path)
+
     text = instance.text
     soup = BeautifulSoup(text, features="html.parser")
 
@@ -154,6 +165,19 @@ def after_product_creation(sender, instance, created, **kwargs):
             current_node.add_child(post=instance, anchor=anchor)
         else:
             base_node.add_child(post=instance, anchor=anchor)
+
+
+@receiver(pre_delete, sender=Post)
+def delete_post_image(sender, instance, **kwargs):
+    """
+    Удаление связанной картинки перед удалением экземпляра Post.
+    В случае использования S3 создается задача для удаления с бакета.
+    """
+    if instance.image:
+        if USE_S3:
+            delete_image_in_bucket.delay(instance.image.url)
+        else:
+            delete_image_in_local.delay(instance.image.path)
 
 
 class PostContents(MP_Node):

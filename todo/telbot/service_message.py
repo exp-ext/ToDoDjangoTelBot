@@ -41,7 +41,7 @@ def cancel(update: Update, _: CallbackContext):
 
 
 @app.task(ignore_result=True)
-def send_message_to_chat(tg_id: int, message: str, reply_to_message_id: int = None, parse_mode_markdown: bool = False) -> None:
+def send_message_to_chat(tg_id: int, message: str, reply_to_message_id: int = None, parse_mode: ParseMode = None) -> None:
     """Отправляет сообщение через Telegram бота.
 
     Эта функция отправляет сообщение пользователю или группе в Telegram. В случае, если отправка
@@ -52,12 +52,11 @@ def send_message_to_chat(tg_id: int, message: str, reply_to_message_id: int = No
     - tg_id (`int`): Telegram ID пользователя или группы для отправки сообщения.
     - message (`str`): Текст сообщения для отправки.
     - reply_to_message_id (`int`, optional): ID сообщения, на которое должен быть дан ответ. По умолчанию None.
-    - parse_mode_markdown (`bool`, optional): Указывает, использовать ли Markdown форматирование. По умолчанию False.
+    - parse_mode (`ParseMode`, optional): Указывает, какое форматирование использовать. По умолчанию None.
 
     ### Returns:
     - None: Функция не возвращает значение.
     """
-    parse_mode = ParseMode.MARKDOWN if parse_mode_markdown else None
     try:
         bot.send_message(
             chat_id=tg_id,
@@ -65,11 +64,15 @@ def send_message_to_chat(tg_id: int, message: str, reply_to_message_id: int = No
             parse_mode=parse_mode,
             reply_to_message_id=reply_to_message_id,
         )
-    except telegram.error.BadRequest:
+    except telegram.error.BadRequest as err:
         bot.send_message(
             chat_id=tg_id,
             text=message,
             reply_to_message_id=reply_to_message_id,
+        )
+        bot.send_message(
+            chat_id=ADMIN_ID,
+            text=f'Ошибка TGB BadRequest: {str(err)[:1024]}',
         )
     except Exception as err:
         bot.send_message(

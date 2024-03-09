@@ -1,56 +1,40 @@
 {% load static %}
 {% load tz %}
-
 {% block head %}
   <link rel="stylesheet" href="{% static 'css/stcard.css' %}">
 {% endblock %}
-
 <div class="stcard-container">
-    <div class="stcard">
-
-        {% if note.it_birthday %}
-
-            <div class="stcard-title">{{ note.server_datetime|timezone:timezone|date:"d M Y D" }}</div>
-
-            {% if note.image %}
-              <img alt="image" src="{{ note.image.url }}"/>
-            {% elif note.picture_link %}
-              <img alt="image" src="{{ note.picture_link }}"/>
-            {% endif %}            
-
-            {{ note.text|safe|truncatechars_html:400  }}
-
-        {% else %}
-
-          <div class="stcard-title">{{ note.server_datetime|timezone:timezone|date:"d M Y D в H:iч" }}</div>
-
-            {% if note.image %}
-              <img alt="image" src="{{ note.image.url }}"/>
-            {% elif note.picture_link %}
-              <img alt="image" src="{{ note.picture_link }}"/>
-            {% endif %}    
-
-          {{ note.text|safe|truncatechars_html:400  }}
-        
-          <p> - напомню в {{ note.remind_at|timezone:timezone|time:"H:iч" }} </p>
-
-        {% endif %}     
-
-        {% if note.user == request.user %}
-
-            <form method="patch" action="{% url 'tasks:task_edit' note.pk %}">
-              {% csrf_token %}
-                <button type="submit" class="btn btn-outline-secondary shadow w-100">изменить</button>
-            </form>
-
-            <form method="post" action="{% url 'tasks:task_delete' note.pk %}">
-              {% csrf_token %}
-                <button type="submit" class="btn btn-outline-dark shadow w-100">удалить</button>
-            </form>
-
-        {% else %}
-          <a class=" shadow" href="{% url 'posts:profile' note.user %}" class="card-link">Создано: {{ note.user.get_full_name }}</a>
-        {% endif %} 
-
+  <div class="stcard">
+    {% if note.it_birthday %}
+      <div class="stcard-title">{{ note.server_datetime|timezone:timezone|date:"d M Y D" }}</div>
+      {% if note.image %}
+        <img alt="image" src="{{ note.image.url }}"/>
+      {% elif note.picture_link %}
+        <img alt="image" src="{{ note.picture_link }}"/>
+      {% endif %}
+      {{ note.text|safe|truncatechars_html:400  }}
+    {% else %}
+      <div class="stcard-title">{{ note.server_datetime|timezone:timezone|date:"d M Y D в H:iч" }}</div>
+        {% if note.image %}
+          <img alt="image" src="{{ note.image.url }}"/>
+        {% elif note.picture_link %}
+          <img alt="image" src="{{ note.picture_link }}"/>
+        {% endif %}
+      {{ note.text|safe|truncatechars_html:400  }}
+      <hr>
+      <p><strong> - напомню в {{ note.remind_at|timezone:timezone|time:"H:iч" }}</strong></p>
+    {% endif %}
+    {% if note.user == request.user %}
+      <form method="patch" action="{% url 'tasks:task_edit' note.pk %}">
+        {% csrf_token %}
+          <button type="submit" class="btn btn-outline-secondary shadow w-100"><strong>изменить</strong></button>
+      </form>
+      <form method="post" action="{% url 'tasks:task_delete' note.pk %}">
+        {% csrf_token %}
+          <button type="submit" class="btn btn-outline-dark shadow w-100"><strong>удалить</strong></button>
+      </form>
+    {% else %}
+      <a class=" shadow" href="{% url 'posts:profile' note.user %}" class="card-link">Создано: {{ note.user.get_full_name }}</a>
+    {% endif %}
   </div>
 </div>

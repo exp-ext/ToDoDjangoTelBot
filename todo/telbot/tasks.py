@@ -8,11 +8,9 @@ from dateutil.relativedelta import relativedelta
 from django.apps import apps as django_apps
 from django.contrib.auth import get_user_model
 from django.db.models.query import QuerySet
-from markdownify import markdownify as md
+from telbot.loader import bot
 from telbot.service_message import send_message_to_chat
 from telegram import ParseMode
-
-from .loader import bot
 
 User = get_user_model()
 Group = django_apps.get_model(app_label='users', model_name='Group')
@@ -28,6 +26,12 @@ EXTEND = {
     'W': timedelta(days=7),
     'M': relativedelta(months=1),
     'Y': relativedelta(years=1),
+}
+
+STYLING_HTML = {
+    '<p>': '',
+    '</p>': '\n',
+    '</blockquote>': '</blockquote>\n',
 }
 
 
@@ -60,7 +64,7 @@ def sending_messages(tasks: QuerySet, this_datetime: datetime, event_text: str =
 
         header = '' if task.it_birthday else f'<b>-- {header} -></b>'
         picture = f'<a href="{ task.image.url if task.image else task.picture_link }">​​​​​​</a>'
-        messages[recipient]['reply_text'] += f'{header}{picture}\n{task.text}\n\n'
+        messages[recipient]['reply_text'] += f'{header}{picture}\n\n{task.text}\n\n'
 
         if not task.it_birthday:
             if task.reminder_period == 'N':
@@ -71,8 +75,9 @@ def sending_messages(tasks: QuerySet, this_datetime: datetime, event_text: str =
 
     for recipient, body in messages.items():
         reply_text = event_text + body['reply_text']
-        print(md(reply_text))
-        send_message_to_chat(tg_id=recipient, message=md(reply_text, strong_em_symbol='_'), parse_mode_markdown=True)
+        for old, new in STYLING_HTML.items():
+            reply_text = reply_text.replace(old, new)
+        send_message_to_chat(tg_id=recipient, message=reply_text, parse_mode=ParseMode.HTML)
 
     return f'Send {len(messages)} messages'
 
@@ -152,14 +157,15 @@ def send_telegram_mailing() -> str:
             recipients = Group.objects.all()
 
         link = item.reference if item.reference else item.image.url
-        message_text = md(f'<a href="{link}">​​​​​​</a>\n{item.text}')
+        message_text = f'<a href="{link}">​​​​​​</a>\n{item.text}'
+        for old, new in STYLING_HTML.items():
+            message_text = message_text.replace(old, new)
 
         for recipient in recipients:
-            bot.send_message(
-                chat_id=recipient.tg_id if item.target == 'u' else recipient.chat_id,
-                text=message_text,
-                parse_mode=ParseMode.MARKDOWN
+            send_message_to_chat(
+                tg_id=recipient.tg_id if item.target == 'u' else recipient.chat_id,
+                message=message_text,
+                parse_mode=ParseMode.HTML
             )
             count += 1
-
     return f'Telegram Mailing sent to {count} objects'

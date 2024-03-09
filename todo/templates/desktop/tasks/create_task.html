@@ -42,10 +42,26 @@
                     {% endif %}
                     {% if field.name == 'it_birthday' or field.name == 'text' %}
                       {{ field }}
+                    {% elif field.name == 'picture_link' %}
+                      <div id="add-image">
+                        {{ field|addclass:"form-control" }}
+                        <div class="image">
+                          <div class="image-grid" id="image-grid-link">
+                            {% if field.initial %}
+                              <img alt="image" src="{{ field.initial }}"/>
+                            {% endif %}
+                          </div>
+                        </div>
+                      </div>
                     {% elif field.name == 'image' %}
                       <div id="add-image">
                         {{ field|addclass:"form-control" }}
-                        <div class="image-grid" id="image-grid">
+                        <div class="image">
+                          <div class="image-grid" id="image-grid">
+                            {% if field.initial %}
+                              <img alt="image" src="{{ field.initial.url }}"/>
+                            {% endif %}
+                          </div>
                         </div>
                       </div>
                     {% elif field.name == 'server_datetime' %}
@@ -81,5 +97,5 @@
   </div>
 {% endblock %}
 {% block javascript %}
-  <script src="{% static 'js/create-post.js' %}"></script>
+  <script src="{% static 'js/create-item.js' %}"></script>
 {% endblock %}

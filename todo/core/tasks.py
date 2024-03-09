@@ -11,8 +11,15 @@ BUCKET_NAME = settings.MEDIA_BUCKET_NAME
 
 
 @shared_task
-def delete_image_in_bucket(url: str, bucket: str = BUCKET_NAME):
-    """Удаление картинки из бакета в облаке."""
+def delete_image_in_bucket(url: str, bucket: str = BUCKET_NAME) -> str:
+    """
+    Задача на удаление картинки из бакета в облаке.
+
+    ### Args:
+    - url (`str`): Полный url к картинке на бакете.
+    - bucket (`str`, optional): Имя бакета. По умолчанию `settings.MEDIA_BUCKET_NAME`.
+
+    """
     key = '/'.join(url.split('/')[-2:])
     try:
         client.delete_object(Bucket=bucket, Key=key)
@@ -22,9 +29,17 @@ def delete_image_in_bucket(url: str, bucket: str = BUCKET_NAME):
 
 
 @shared_task
-def delete_image_in_local(path):
+def delete_image_in_local(path) -> str:
+    """
+    Задача на удаление картинки хранящейся локально.
+
+    ### Args:
+    - path (`str`): Полный путь к локальной картинке.
+
+    """
     try:
         os.remove(path)
+        return f"Картинка по адресу {path} удалена успешно."
     except OSError as e:
         return f"Ошибка при удалении объекта из локального каталога: {e}"
 

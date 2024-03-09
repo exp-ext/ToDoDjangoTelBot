@@ -48,9 +48,7 @@ class TaskForm(forms.ModelForm):
         super(TaskForm, self).__init__(*args, **kwargs)
         user = kwargs.pop('initial').get('user')
         user_groups = user.groups_connections.values_list('group', flat=True)
-        self.fields['group'] = forms.ModelChoiceField(
-            queryset=Group.objects.filter(id__in=user_groups)
-        )
+        self.fields['group'] = forms.ModelChoiceField(queryset=Group.objects.filter(id__in=user_groups))
         self.fields['group'].required = False
         self.fields['group'].label = 'Место вывода сообщений о напоминании.'
         self.fields['group'].help_text = (
@@ -58,13 +56,16 @@ class TaskForm(forms.ModelForm):
             'Для появление группы в выпадающем списке, необходимо в ней проявить активность.</p>'
         )
 
-    def clean_server_datetime(self):
-        server_datetime = self.cleaned_data['server_datetime']
+    def clean(self):
+        cleaned_data = super().clean()
+        server_datetime = cleaned_data.get('server_datetime')
         user_tz = self.initial.get('tz')
         tz = pytz.timezone(user_tz)
-        if server_datetime <= datetime.now(tz):
+        remind_min = self.cleaned_data['remind_min']
+        if server_datetime - timedelta(minutes=remind_min) <= datetime.now(tz):
+            self.add_error('server_datetime', 'Разница назначенного времени и минут для срабатывания не может быть меньше текущего.')
             raise ValidationError('Назначенное время не может быть меньше текущего.')
-        return server_datetime
+        return cleaned_data
 
     def clean_text(self):
         text = self.cleaned_data['text']

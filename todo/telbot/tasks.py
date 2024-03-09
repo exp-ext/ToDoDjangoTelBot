@@ -32,12 +32,14 @@ STYLING_HTML = {
     '<p>': '',
     '</p>': '\n',
     '</blockquote>': '</blockquote>\n',
+    '&nbsp;': '',
 }
 
 
 def sending_messages(tasks: QuerySet, this_datetime: datetime, event_text: str = '') -> str:
     """Перебор записей и отправка их адресатам."""
     messages = dict()
+    delete_tasks = []
     for task in tasks:
         recipient = task.group.chat_id if task.group else task.user.tg_id
         if recipient not in messages:
@@ -68,7 +70,7 @@ def sending_messages(tasks: QuerySet, this_datetime: datetime, event_text: str =
 
         if not task.it_birthday:
             if task.reminder_period == 'N':
-                task.delete()
+                delete_tasks.append(task.id)
             else:
                 task.server_datetime += EXTEND[task.reminder_period]
                 task.save()
@@ -78,6 +80,9 @@ def sending_messages(tasks: QuerySet, this_datetime: datetime, event_text: str =
         for old, new in STYLING_HTML.items():
             reply_text = reply_text.replace(old, new)
         send_message_to_chat(tg_id=recipient, message=reply_text, parse_mode=ParseMode.HTML)
+
+    if len(delete_tasks):
+        Task.objects.filter(id__in=delete_tasks).delete()
 
     return f'Send {len(messages)} messages'
 

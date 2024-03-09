@@ -1,3 +1,5 @@
+import os
+import uuid
 from datetime import timedelta
 
 from core.models import Create
@@ -14,6 +16,12 @@ from users.models import Group
 
 User = get_user_model()
 USE_S3 = settings.USE_S3
+
+
+def custom_uuid_filename(instance, filename):
+    ext = filename.split('.')[-1]
+    filename = f'{uuid.uuid4()}.{ext}'
+    return os.path.join('tasks/', filename)
 
 
 class Task(Create):
@@ -57,7 +65,7 @@ class Task(Create):
         max_length=200,
         blank=True
     )
-    image = ImageField(_('ваша картинка'), upload_to='tasks/', blank=True, help_text=_('приоритетной для напоминания считается именно эта картинка'))
+    image = ImageField(_('ваша картинка'), upload_to=custom_uuid_filename, blank=True, help_text=_('приоритетной для напоминания считается именно эта картинка'))
     text = CKEditor5Field(_('текст напоминания'), blank=True, config_name='tasks', help_text=_('введите текст напоминания'))
     remind_min = models.IntegerField(
         _('оповестить за ... минут'),
@@ -95,7 +103,8 @@ def delete_task_image(sender, instance, **kwargs):
     """
     if instance.image:
         if USE_S3:
-            delete_image_in_bucket.delay(instance.image.url)
+            if hasattr(instance.image, 'url'):
+                delete_image_in_bucket.apply_async(args=(instance.image.url,), countdown=120)
         else:
             delete_image_in_local.delay(instance.image.path)
 
@@ -108,8 +117,9 @@ def delete_old_task_image(sender, instance, **kwargs):
     """
     if instance.pk:
         old_instance = Task.objects.filter(pk=instance.pk).first()
-        if old_instance.image != instance.image:
+        if old_instance.image and old_instance.image != instance.image:
             if USE_S3:
-                delete_image_in_bucket.delay(old_instance.image.url)
+                if hasattr(old_instance.image, 'url'):
+                    delete_image_in_bucket.delay(old_instance.image.url)
             else:
                 delete_image_in_local.delay(old_instance.image.path)

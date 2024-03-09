@@ -122,9 +122,10 @@ def pre_save_post(sender, instance, *args, **kwargs):
     """
     if instance.pk:
         old_instance = Post.objects.filter(pk=instance.pk).first()
-        if old_instance.image != instance.image:
+        if old_instance.image and old_instance.image != instance.image:
             if USE_S3:
-                delete_image_in_bucket.delay(old_instance.image.url)
+                if hasattr(instance.image, 'url'):
+                    delete_image_in_bucket.delay(old_instance.image.url)
             else:
                 delete_image_in_local.delay(old_instance.image.path)
 
@@ -175,7 +176,8 @@ def delete_post_image(sender, instance, **kwargs):
     """
     if instance.image:
         if USE_S3:
-            delete_image_in_bucket.delay(instance.image.url)
+            if hasattr(instance.image, 'url'):
+                delete_image_in_bucket.delay(instance.image.url)
         else:
             delete_image_in_local.delay(instance.image.path)
 

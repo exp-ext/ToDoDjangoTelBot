@@ -3,7 +3,6 @@ import uuid
 from datetime import timedelta
 
 from core.models import Create
-from core.tasks import delete_image_in_bucket, delete_image_in_local
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db import models
@@ -13,6 +12,8 @@ from django.utils.translation import gettext_lazy as _
 from django_ckeditor_5.fields import CKEditor5Field
 from sorl.thumbnail import ImageField
 from users.models import Group
+
+from .tasks import delete_image_in_bucket, delete_image_in_local
 
 User = get_user_model()
 USE_S3 = settings.USE_S3
@@ -116,7 +117,7 @@ def delete_old_task_image(sender, instance, **kwargs):
     """
     if instance.pk:
         old_instance = Task.objects.only('image').filter(pk=instance.pk).first()
-        if old_instance and old_instance.image and old_instance.image != instance.image:
+        if old_instance and old_instance.image and old_instance.image.name.split('/')[-1] != instance.image.name:
             if USE_S3:
                 delete_image_in_bucket.delay(old_instance.image.url)
             else:

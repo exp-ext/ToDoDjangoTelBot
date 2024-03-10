@@ -121,11 +121,10 @@ def pre_save_post(sender, instance, *args, **kwargs):
     - **kwargs: Дополнительные именованные аргументы.
     """
     if instance.pk:
-        old_instance = Post.objects.filter(pk=instance.pk).first()
-        if old_instance.image and old_instance.image != instance.image:
+        old_instance = Post.objects.only('image').filter(pk=instance.pk).first()
+        if old_instance and old_instance.image and old_instance.image != instance.image:
             if USE_S3:
-                if hasattr(instance.image, 'url'):
-                    delete_image_in_bucket.delay(old_instance.image.url)
+                delete_image_in_bucket.delay(old_instance.image.url)
             else:
                 delete_image_in_local.delay(old_instance.image.path)
 
@@ -176,8 +175,7 @@ def delete_post_image(sender, instance, **kwargs):
     """
     if instance.image:
         if USE_S3:
-            if hasattr(instance.image, 'url'):
-                delete_image_in_bucket.delay(instance.image.url)
+            delete_image_in_bucket.delay(instance.image.url)
         else:
             delete_image_in_local.delay(instance.image.path)
 

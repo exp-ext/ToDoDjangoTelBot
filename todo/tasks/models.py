@@ -103,8 +103,7 @@ def delete_task_image(sender, instance, **kwargs):
     """
     if instance.image:
         if USE_S3:
-            if hasattr(instance.image, 'url'):
-                delete_image_in_bucket.apply_async(args=(instance.image.url,), countdown=120)
+            delete_image_in_bucket.apply_async(args=(instance.image.url,), countdown=120)
         else:
             delete_image_in_local.delay(instance.image.path)
 
@@ -116,10 +115,9 @@ def delete_old_task_image(sender, instance, **kwargs):
     В случае использования S3 создается задача для удаления с бакета.
     """
     if instance.pk:
-        old_instance = Task.objects.filter(pk=instance.pk).first()
-        if old_instance.image and old_instance.image != instance.image:
+        old_instance = Task.objects.only('image').filter(pk=instance.pk).first()
+        if old_instance and old_instance.image and old_instance.image != instance.image:
             if USE_S3:
-                if hasattr(old_instance.image, 'url'):
-                    delete_image_in_bucket.delay(old_instance.image.url)
+                delete_image_in_bucket.delay(old_instance.image.url)
             else:
                 delete_image_in_local.delay(old_instance.image.path)

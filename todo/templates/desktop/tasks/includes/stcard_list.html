@@ -23,6 +23,7 @@
       {{ note.text|safe|truncatechars_html:400  }}
       <hr>
       <p><strong> - напомню в {{ note.remind_at|timezone:timezone|time:"H:iч" }}</strong></p>
+      <hr>
     {% endif %}
     {% if note.user == request.user %}
       <form method="patch" action="{% url 'tasks:task_edit' note.pk %}">

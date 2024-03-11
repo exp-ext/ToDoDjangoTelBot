@@ -41,10 +41,13 @@ pre {
 .visible {
   display: block;
 }
-.toggle-icon i {
-  font-size: 1.5rem;
-  margin-right: 3px;
+.tree-content li {
+  margin-top: 5px;
+  margin-bottom: 10px;
   vertical-align: middle;
+}
+.tree-content span {
+  margin-right: 3px;
 }
 .tree-content hr{
   margin-top: 4px;

@@ -4,7 +4,6 @@ import traceback
 from datetime import datetime, timedelta
 
 import httpx
-import telegram
 import tiktoken_async
 from asgiref.sync import sync_to_async
 from channels.db import database_sync_to_async
@@ -14,6 +13,7 @@ from django.db.models import Model
 from django.utils.timezone import now
 from httpx_socks import AsyncProxyTransport
 from openai import AsyncOpenAI
+from telbot.service_message import send_message_to_chat
 from telegram import ChatAction, ParseMode, Update
 from telegram.ext import CallbackContext
 
@@ -79,7 +79,7 @@ class GetAnswerGPT():
 
     async def send_typing_periodically(self) -> None:
         """"Передаёт TYPING в чат Телеграм откуда пришёл запрос."""
-        time_stop = datetime.now() + timedelta(minutes=GetAnswerGPT.MAX_TYPING_TIME)
+        time_stop = datetime.now() + timedelta(minutes=self.MAX_TYPING_TIME)
 
         while not self.event.is_set():
             self.context.bot.send_chat_action(
@@ -130,9 +130,15 @@ class GetAnswerGPT():
                 self.answer_text = completion.get('choices')[0]['message']['content']
                 self.answer_tokens = completion.get('usage')['completion_tokens']
                 self.message_tokens = completion.get('usage')['prompt_tokens']
-            except Exception as error:
+            except httpx.HTTPStatusError as http_err:
+                raise RuntimeError(f'Ответ сервера был получен, но код состояния указывает на ошибку: {http_err}') from http_err
+            except httpx.RequestError as req_err:
+                raise RuntimeError(f'Проблемы соединения: {req_err}') from req_err
+            except KeyError as key_err:
                 self.answer_text = 'Я отказываюсь отвечать на этот вопрос!'
-                raise error
+                raise ValueError(f'Отсутствие ожидаемых ключей в ответе: {key_err}') from key_err
+            except Exception as error:
+                raise RuntimeError(f'Необработанная ошибка в `GetAnswerGPT.httpx_request_to_openai()`: {error}') from error
             finally:
                 self.event.set()
 
@@ -195,26 +201,12 @@ class GetAnswerGPT():
     async def handle_error(self, err):
         """Логирование ошибок."""
         error_message = f"Ошибка в блоке Telegram-ChatGPT:\n{err}"
-        self.context.bot.send_message(ADMIN_ID, error_message)
+        send_message_to_chat(ADMIN_ID, error_message)
 
     @sync_to_async
     def reply_to_user(self) -> None:
         """Отправляет ответ пользователю."""
-        try:
-            self.context.bot.send_message(
-                chat_id=self.update.effective_chat.id,
-                text=self.answer_text,
-                reply_to_message_id=self.update.message.message_id,
-                parse_mode=ParseMode.MARKDOWN
-            )
-        except telegram.error.BadRequest:
-            self.context.bot.send_message(
-                chat_id=self.update.effective_chat.id,
-                text=self.answer_text,
-                reply_to_message_id=self.update.message.message_id,
-            )
-        except Exception as error:
-            self.handle_error(error)
+        send_message_to_chat(self.update.effective_chat.id, self.answer_text, self.update.message.message_id, ParseMode.MARKDOWN)
 
     @sync_to_async
     def check_in_works(self) -> bool:
@@ -236,11 +228,9 @@ class GetAnswerGPT():
                 'role': 'system',
                 'content':
                     """
-                    You are named Eva, an experienced senior software developer with a strong background in team leadership,
-                    mentoring all developers, and delivering high-quality software solutions to clients.
+                    You are named Eva, an experienced senior software developer with a strong background in team leadership, mentoring all developers, and delivering high-quality software solutions to clients.
                     Your primary language is Russian. When formatting the text, please only use this Markdown format:
-                    **bold text** _italic text_ [inline URL](http://www.example.com/)
-                    `inline fixed-width code` ```preformatted block code with fixed width```
+                    **bold text** _italic text_ [inline URL](http://www.example.com/) `inline fixed-width code` ```preformatted block code with fixed width```
                     """
             }
         ]

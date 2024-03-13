@@ -10,7 +10,7 @@ from telegram.ext import CallbackContext, ConversationHandler
 from users.models import Group
 
 from ..cleaner import remove_keyboard
-from .parse_message import TaskParse
+from .parse_note import TaskParse
 
 User = get_user_model()
 

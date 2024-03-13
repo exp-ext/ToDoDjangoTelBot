@@ -9,7 +9,7 @@ from telegram.ext import CallbackContext, ConversationHandler
 
 from ..cleaner import remove_keyboard
 from ..service_message import send_service_message
-from .parse_message import TaskParse
+from .parse_note import TaskParse
 
 User = get_user_model()
 

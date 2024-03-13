@@ -1,13 +1,14 @@
 import asyncio
 import json
-import traceback
+from datetime import datetime, timedelta
 
 import httpx
 from channels.db import database_sync_to_async
 from django.conf import settings
 from httpx_socks import AsyncProxyTransport
+from telbot.loader import bot
 from telbot.models import GptModels, ReminderAI
-from telbot.service_message import send_message_to_chat
+from telegram import ChatAction
 
 ADMIN_ID = settings.TELEGRAM_ADMIN_ID
 
@@ -15,36 +16,40 @@ ADMIN_ID = settings.TELEGRAM_ADMIN_ID
 class ReminderGPT():
     MAX_TYPING_TIME = 3
 
-    def __init__(self, text, user) -> None:
+    def __init__(self, text, user, chat_id) -> None:
         self.user = user
         self.text = text
+        self.chat_id = chat_id
         self.model = None
         self.prompt = None
+        self.answer_text = None
+        self.event = asyncio.Event()
 
     async def transform(self) -> None:
         try:
+            asyncio.create_task(self.send_typing_periodically())
             await asyncio.gather(
                 self.get_default_model(),
                 self.init_prompt()
             )
             await self.reminder_conversion_request()
             await self.create_reminder_history_ai()
-        except Exception as err:
-            await self.handle_user_error()
-            traceback_str = traceback.format_exc()
-            text = f'{str(err)[:1024]}\n\nТрассировка:\n{traceback_str[-1024:]}'
-            await self.handle_error(text)
+        except Exception as error:
+            raise RuntimeError(f'Ошибка в процессе трансформации `ReminderGPT`: {error}') from error
         return self.answer_text
 
-    async def handle_error(self, err):
-        """Логирование ошибок."""
-        error_message = f"Ошибка в блоке ReminderGPT:\n{err}"
-        send_message_to_chat(tg_id=ADMIN_ID, message=error_message)
+    async def send_typing_periodically(self) -> None:
+        """"Передаёт TYPING в чат Телеграм откуда пришёл запрос."""
+        time_stop = datetime.now() + timedelta(minutes=self.MAX_TYPING_TIME)
 
-    async def handle_user_error(self):
-        """Логирование ошибок."""
-        error_message = "Произошла ошибка, попробуйте позже."
-        send_message_to_chat(tg_id=self.user.tg_id, message=error_message)
+        while not self.event.is_set():
+            bot.send_chat_action(
+                chat_id=self.chat_id,
+                action=ChatAction.TYPING
+            )
+            await asyncio.sleep(2)
+            if datetime.now() > time_stop:
+                break
 
     async def reminder_conversion_request(self) -> None:
         """Делает запрос в OpenAI для преобразования текста напоминания."""
@@ -65,14 +70,22 @@ class ReminderGPT():
                 json=data,
                 timeout=60 * self.MAX_TYPING_TIME,
             )
+            response.raise_for_status()
             completion = json.loads(response.content)
             try:
                 self.answer_text = completion.get('choices')[0]['message']['content']
                 self.answer_tokens = completion.get('usage')['completion_tokens']
                 self.message_tokens = completion.get('usage')['prompt_tokens']
+            except httpx.HTTPStatusError as http_err:
+                raise RuntimeError(f'Ответ сервера был получен, но код состояния указывает на ошибку: {http_err}') from http_err
+            except httpx.RequestError as req_err:
+                raise RuntimeError(f'Проблемы соединения: {req_err}') from req_err
+            except KeyError as key_err:
+                raise ValueError(f'Отсутствие ожидаемых ключей в ответе: {key_err}') from key_err
             except Exception as error:
-                self.answer_text = 'Я отказываюсь отвечать на этот вопрос!'
-                raise error
+                raise RuntimeError(f'Необработанная ошибка в `ReminderGPT.reminder_conversion_request()`: {error}') from error
+            finally:
+                self.event.set()
 
     async def create_reminder_history_ai(self):
         """Создаём запись истории в БД."""
@@ -89,18 +102,17 @@ class ReminderGPT():
     def get_default_model(self) -> None:
         self.model = GptModels.objects.filter(default=True).first()
 
-    async def init_prompt(self) -> None:
+    @database_sync_to_async
+    def init_prompt(self) -> None:
+        prompt_content = """
+        ЧатGPT, я прошу Вас преобразовать следующий текст в формат:
+        «дата {числовой формат} время {числовой формат}
+        | количество минут за сколько оповестить до наступления дата+время {по умолчанию: 120}
+        | повтор напоминания {по умолчанию: N, каждый день: D, каждую неделю: W, каждый месяц: M, каждый год: Y}
+        | тело напоминания {исправить ошибки}».
+        Ответ для примера: «20.11.2025 17:35|30|N|Запись к врачу»
+        """
         self.prompt = [
-            {
-                'role': 'system',
-                'content':
-                    """
-                    ЧатGPT, я прошу вас преобразовать следующий текст в формат
-                    «дата время тело напоминания | количество минут за сколько оповестить до события {'по умолчанию': 120} & повтор напоминания
-                    {по умолчанию': 'N', 'каждый день': 'D', 'каждую неделю': 'W', 'каждый месяц': 'M', 'каждый год': 'Y'}»,
-                    используя язык на котором пришёл текст запроса.
-                    Ответ для примера: «20.11.2025 17:35 Запись к врачу | 30 & N»
-                    """
-            },
+            {'role': 'system', 'content': prompt_content},
             {'role': 'user', 'content': self.text}
         ]

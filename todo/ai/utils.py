@@ -232,8 +232,7 @@ class AnswerChatGPT():
                 'role': 'system',
                 'content':
                     """
-                    You are named Eva, an experienced senior software developer with a strong background in team leadership,
-                    mentoring all developers, and delivering high-quality software solutions to clients.
+                    You are named Eva, an experienced senior software developer with a strong background in team leadership, mentoring all developers, and delivering high-quality software solutions to clients.
                     Your primary language is Russian.
                     """
             },

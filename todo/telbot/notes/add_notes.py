@@ -9,13 +9,13 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from tasks.models import Task
 from telbot.checking import check_registration
+from telbot.cleaner import remove_keyboard
+from telbot.service_message import send_message_to_chat, send_service_message
 from telegram import Update
 from telegram.ext import CallbackContext, ConversationHandler
 from users.models import Group
 
-from ..cleaner import remove_keyboard
-from ..service_message import send_service_message
-from .parse_message import TaskParse
+from .parse_note import TaskParse
 
 User = get_user_model()
 ADMIN_ID = settings.TELEGRAM_ADMIN_ID
@@ -39,12 +39,12 @@ class NoteManager:
 
             self.user_locally = await self.get_locations()
             timezone = self.user_locally.timezone if self.user_locally else 'UTC'
-            self.pars_params = TaskParse(self.user_text, timezone)
+            self.pars_params = TaskParse(self.user_text, timezone, self.user, self.chat.id)
             await self.pars_params.parse_message()
 
             group = None if self.chat.type == 'private' else await self.get_group()
 
-            if not self.pars_params.server_date:
+            if not self.pars_params.server_datetime:
                 await self.send_failure_message()
                 return None
 
@@ -56,11 +56,10 @@ class NoteManager:
             await self.send_success_message(task)
 
         except Exception as err:
+            await self.send_failure_message()
             traceback_str = traceback.format_exc()
-            self.context.bot.send_message(
-                chat_id=ADMIN_ID,
-                text=f'Ошибка при добавлении напоминания: {str(err)[:1024]}\n\nТрассировка:\n{traceback_str[-1024:]}',
-            )
+            text = f'Ошибка при добавлении напоминания в `NoteManager`:\n{str(err)[:1024]}\n\nТрассировка:\n{traceback_str[-1024:]}'
+            send_message_to_chat(ADMIN_ID, text)
 
     async def delete_messages(self):
         del_id = (self.context.user_data.get('del_message'), self.update.message.message_id)
@@ -79,30 +78,33 @@ class NoteManager:
 
     @sync_to_async
     def send_success_message(self, task):
-        reply_text = f'Напоминание: *{self.pars_params.only_message}*\nСоздано\nна дату: *{self.pars_params.user_date.strftime("%d.%m.%Y")}*\n'
+        reply_text = (
+            f'Напоминание: *{self.pars_params.only_message}*\n'
+            f'Создано на *{self.pars_params.user_datetime.strftime("%d.%m.%Y %H:%M")}*\n'
+        )
         if not task.it_birthday:
-            new_date = self.pars_params.user_date - timedelta(minutes=self.delta_time_min)
+            new_date = self.pars_params.user_datetime - timedelta(minutes=self.delta_time_min)
             reply_text += f'с оповещением в *{new_date.strftime("%H:%M")}*\n'
         send_service_message(self.chat.id, reply_text, 'Markdown', self.message_thread_id)
 
     @database_sync_to_async
     def is_similar_task_exists(self, group):
-        start_datetime = self.pars_params.server_date - timedelta(minutes=60)
-        end_datetime = self.pars_params.server_date + timedelta(minutes=60)
+        start_datetime = self.pars_params.server_datetime - timedelta(minutes=60)
+        end_datetime = self.pars_params.server_datetime + timedelta(minutes=60)
         tasks = self.user.tasks.filter(server_datetime__range=[start_datetime, end_datetime], user=self.user, group=group)
         return any(similarity(task.text, self.pars_params.only_message) > 0.62 for task in tasks)
 
     @database_sync_to_async
     def create_task(self, group):
-        remind_min = 480 if self.pars_params.user_date.hour == 0 and self.pars_params.user_date.minute == 0 else self.delta_time_min
+        self.delta_time_min = self.pars_params.delta_time_min or self.delta_time_min
         return Task.objects.create(
             user=self.user,
             group=group,
-            server_datetime=self.pars_params.server_date,
+            server_datetime=self.pars_params.server_datetime,
             text=self.pars_params.only_message,
-            remind_min=remind_min,
-            reminder_period='Y' if self.pars_params.birthday else self.pars_params.period_repeat,
-            it_birthday=self.pars_params.birthday
+            remind_min=self.delta_time_min,
+            reminder_period=self.pars_params.period_repeat,
+            it_birthday=False
         )
 
     @database_sync_to_async

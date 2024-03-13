@@ -4,7 +4,6 @@ from functools import partial
 
 import httpx
 from django.conf import settings
-from telbot.gpt.reminder_gpt import ReminderGPT
 from telbot.notes.add_notes import NoteManager
 from telegram import Update
 from telegram.ext import CallbackContext
@@ -26,7 +25,7 @@ async def async_check_registration(update, context):
     )
 
 
-async def check_request(update, context):
+async def check_request_in_distributor(update, context):
     url = 'http://127.0.0.1:8100/tasks/check/' if settings.DEBUG else 'http://predict:8100/tasks/check/'
     text = update.effective_message.text
     data = {'text': text}
@@ -39,11 +38,6 @@ async def check_request(update, context):
     completion = json.loads(response.content)
 
     if completion['predicted_class'] == 'task':
-        reminder_gpt = ReminderGPT(text, user)
-        transformed_response = await reminder_gpt.transform()
-        if not transformed_response:
-            return None
-        update.effective_message.text = transformed_response
         note_manager = NoteManager(update, context, user)
         await note_manager.add_notes()
     else:
@@ -52,8 +46,8 @@ async def check_request(update, context):
 
 
 def get_answer_chat_gpt_public(update: Update, context: CallbackContext):
-    asyncio.run(check_request(update, context))
+    asyncio.run(check_request_in_distributor(update, context))
 
 
 def get_answer_chat_gpt_person(update: Update, context: CallbackContext):
-    asyncio.run(check_request(update, context))
+    asyncio.run(check_request_in_distributor(update, context))

@@ -6,6 +6,7 @@ from urllib.parse import quote
 
 from advertising.models import MyBanner, PartnerBanner
 from bs4 import BeautifulSoup
+from core.re_compile import WORD_PATTERN
 from core.views import get_status_in_group, linkages_check, paginator_handler
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -83,7 +84,7 @@ class SearchListView(ListView):
         word_counts = Counter()
 
         for item in qs[:5]:
-            words = re.findall(r'\b\w+\b', item.lower())
+            words = WORD_PATTERN.findall(item.lower())
             for word in words:
                 if self.keyword in word:
                     word_counts[word] += 1

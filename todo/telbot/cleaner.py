@@ -1,5 +1,4 @@
-import re
-
+from core.re_compile import COMMAND_PATTERN
 from django.conf import settings
 from telegram import Update
 from telegram.ext import CallbackContext
@@ -8,8 +7,6 @@ from todo.celery import app
 
 from .commands import COMMANDS
 from .loader import bot
-
-COMMAND_PATTERN = re.compile(r'(.*?)(?=\@)')
 
 
 def clear_commands(update: Update) -> None:

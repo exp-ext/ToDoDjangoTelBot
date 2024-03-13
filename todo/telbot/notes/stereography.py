@@ -10,7 +10,7 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db.models import Model
 from django.http import HttpResponseBadRequest
-from telbot.external_api.chat_gpt import GetAnswerGPT
+from telbot.gpt.chat_gpt import GetAnswerGPT
 from telegram import ChatAction, Update
 from telegram.ext import CallbackContext
 

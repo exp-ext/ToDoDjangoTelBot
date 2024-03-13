@@ -9,6 +9,8 @@ from todo.celery import app
 from .commands import COMMANDS
 from .loader import bot
 
+COMMAND_PATTERN = re.compile(r'(.*?)(?=\@)')
+
 
 def clear_commands(update: Update) -> None:
     """Удаление команд бота из чата."""
@@ -24,7 +26,7 @@ def clear_commands(update: Update) -> None:
         else:
             if update.message.text:
                 text = update.message.text.replace('/', '')
-                command = re.findall(r'(.*?)(?=\@)', text)
+                command = COMMAND_PATTERN.findall(text)
                 if command:
                     text = command[0]
 

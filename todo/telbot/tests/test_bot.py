@@ -6,7 +6,7 @@ from django.test import Client, TestCase
 from django.urls import reverse
 
 from ..dispatcher import setup_dispatcher
-from ..message.add_notes import first_step_add
+from ..notes.add_notes import first_step_add
 
 
 class ViewsTestCase(TestCase):

@@ -106,6 +106,40 @@ class HistoryAI(Create):
         return super().save(*args, **kwargs)
 
 
+class ReminderAI(Create):
+    """
+    Модель для хранения истории вопросов и ответов AI.
+
+    ### Fields:
+    - user (`ForeignKey`): Пользователь, связанный с историей.
+    - question (`TextField`): Вопрос, заданный пользователем.
+    - question_tokens (`PositiveIntegerField`): Количество токенов в вопросе (может быть null).
+    - answer (`TextField`): Ответ, сгенерированный AI.
+    - answer_tokens (`PositiveIntegerField`): Количество токенов в ответе (может быть null).
+
+    """
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='reminder_history_ai', null=True, blank=True)
+    question = models.TextField(_('Вопрос'))
+    question_tokens = models.PositiveIntegerField(null=True)
+    answer = models.TextField(_('Ответ'))
+    answer_tokens = models.PositiveIntegerField(null=True)
+
+    class Meta:
+        verbose_name = _('История запросов на преобразования напоминания к ИИ')
+        verbose_name_plural = _('История запросов на преобразования напоминания к ИИ')
+        ordering = ('created_at',)
+
+    def __str__(self):
+        return f'User: {self.user}, Question: {self.question}'
+
+    @sync_to_async
+    def save(self, *args, **kwargs):
+        """
+        Переопределение метода save() для поддержки асинхронного сохранения объекта в базе данных.
+        """
+        return super().save(*args, **kwargs)
+
+
 class HistoryDALLE(Create):
     """
     Модель для хранения истории запросов и ответов от DALL·E.

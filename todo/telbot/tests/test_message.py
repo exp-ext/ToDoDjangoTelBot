@@ -5,7 +5,7 @@ from unittest.mock import MagicMock, patch
 from telegram import Chat, Update, User
 from telegram.ext import CallbackContext
 
-from ..message.add_notes import NoteManager
+from ..notes.add_notes import NoteManager
 
 
 class TestNoteManager(unittest.TestCase):

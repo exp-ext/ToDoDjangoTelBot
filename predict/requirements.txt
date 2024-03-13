@@ -1,0 +1,10 @@
+fastapi~=0.109.2
+pydantic-settings~=2.2.1
+uvicorn~=0.28.0
+
+--find-links https://download.pytorch.org/whl/torch_stable.html
+torch==2.2.1+cpu
+# torchvision==0.17.1
+# torchaudio==2.2.1+cpu
+
+transformers[torch]

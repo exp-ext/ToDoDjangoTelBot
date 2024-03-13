@@ -29,7 +29,7 @@ class UserRedisManager:
         redis_client.set(f"user:{tg_user.id}", json.dumps(red_user))
         return red_user
 
-    def get_or_create_user(self, tg_user, return_user) -> Tuple[dict, Optional[Model]]:
+    def get_or_create_user(self, tg_user, return_user, select_related=None, prefetch_related=None) -> Tuple[dict, Optional[Model]]:
         """Возвращает User."""
         redis_key = f"user:{tg_user.id}"
         red_user = redis_client.get(redis_key)
@@ -38,7 +38,16 @@ class UserRedisManager:
         if red_user and not red_user.get('is_blocked_bot') and not return_user:
             return red_user, None
 
-        user, created = User.objects.get_or_create(tg_id=tg_user.id)
+        queryset = User.objects.all()
+        if select_related:
+            for related_field in select_related:
+                queryset = queryset.select_related(related_field)
+
+        if prefetch_related:
+            for related_field in prefetch_related:
+                queryset = queryset.prefetch_related(related_field)
+
+        user, created = queryset.get_or_create(tg_id=tg_user.id)
         if created:
             self._update_new_user(user, tg_user)
 
@@ -57,7 +66,9 @@ def check_registration(update: Update,
                        context: CallbackContext,
                        answers: dict,
                        allow_unregistered: bool = False,
-                       return_user: bool = False) -> bool | Model:
+                       return_user: bool = False,
+                       select_related: list = None,
+                       prefetch_related: list = None) -> bool | Model:
     """Проверяет регистрацию пользователя. Регистрирует пользователя если он не был зарегистрирован, но с ограничениями.
     Если чат не является приватным, функция также обновляет информацию о связанных группах.
 
@@ -67,6 +78,7 @@ def check_registration(update: Update,
     - answers ('dict'): Словарь с возможными ответами для пользователя.
     - allow_unregistered ('bool', optional): Флаг, указывающий, разрешено ли не зарегистрированным пользователям использовать вызвавшую функцию. По умолчанию False.
     - return_user ('bool', optional): Флаг, указывающий, следует ли возвращать объект пользователя. По умолчанию False, и возвращает None.
+    - select_related ('list', optional): select_related для модели User.
 
     ## Returns:
     - 'bool': Если регистрация проверена успешно возвращает или user('User') если return_user=True или None, иначе False.
@@ -77,7 +89,7 @@ def check_registration(update: Update,
     chat = update.effective_chat
     tg_user = update.effective_user
     user_manager = UserRedisManager()
-    red_user, user = user_manager.get_or_create_user(tg_user, return_user)
+    red_user, user = user_manager.get_or_create_user(tg_user, return_user, select_related, prefetch_related)
     text = None
     message_text = update.effective_message.text or ''
     if red_user.get('is_blocked_bot') and allow_unregistered is False:
@@ -88,10 +100,7 @@ def check_registration(update: Update,
             text=text,
             parse_mode=ParseMode.MARKDOWN
         ).message_id
-        delete_messages_by_time.apply_async(
-            args=[chat.id, message_id],
-            countdown=20
-        )
+        delete_messages_by_time.apply_async(args=[chat.id, message_id], countdown=20)
         return False
 
     if chat.type != 'private':

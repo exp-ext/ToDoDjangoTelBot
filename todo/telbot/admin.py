@@ -5,7 +5,7 @@ from django.db.models.functions import Concat
 from django.utils.safestring import mark_safe
 
 from .models import (GptModels, HistoryAI, HistoryDALLE, HistoryWhisper,
-                     UserGptModels)
+                     ReminderAI, UserGptModels)
 
 User = get_user_model()
 
@@ -15,6 +15,32 @@ class HistoryAIAdmin(admin.ModelAdmin):
     list_display = ('user', 'room_group_name', 'created_at', 'question_tokens', 'answer_tokens')
     fieldsets = (
         ('Основные данные', {'fields': ('user', 'room_group_name', 'question_tokens', 'answer_tokens')}),
+        ('Диалог', {'fields': ('question', 'answer')}),
+    )
+    search_fields = ('answer',)
+    list_filter = (
+        ('created_at', admin.DateFieldListFilter),
+        ('user__first_name', admin.AllValuesFieldListFilter),
+    )
+
+    def get_queryset(self, request):
+        queryset = super().get_queryset(request)
+        queryset = queryset.annotate(
+            full_name=Concat('user__first_name', Value(' '), 'user__last_name')
+        )
+        return queryset
+
+    def full_name(self, obj):
+        return obj.user.get_full_name()
+
+    full_name.short_description = 'Full Name'
+
+
+@admin.register(ReminderAI)
+class ReminderAIAdmin(admin.ModelAdmin):
+    list_display = ('user', 'created_at', 'question_tokens', 'answer_tokens')
+    fieldsets = (
+        ('Основные данные', {'fields': ('user', 'question_tokens', 'answer_tokens')}),
         ('Диалог', {'fields': ('question', 'answer')}),
     )
     search_fields = ('answer',)

@@ -1,3 +1,4 @@
+import asyncio
 from datetime import datetime
 
 from django.contrib.auth import get_user_model
@@ -33,8 +34,8 @@ class TaskDeleter:
 
     def parse_message(self):
         """Парсинг сообщения и даты."""
-        self.pars = TaskParse(self.text, self.user_locally.timezone)
-        self.pars.parse_message()
+        self.pars = TaskParse(self.text, self.user_locally.timezone, self.user, self.chat.id, True)
+        asyncio.run(self.pars.parse_message())
 
     def delete_messages(self):
         """Удаление сообщений."""
@@ -45,7 +46,7 @@ class TaskDeleter:
     def delete_tasks(self):
         """Логика удаления задач."""
         reply_text = f'*{self.update.message.from_user.first_name}*, не удалось разобрать дату 🧐. Попробуйте снова 🙄.'
-        if self.pars.server_date:
+        if self.pars.server_datetime:
             tasks = self.user.tasks.filter(text__icontains=self.pars.only_message)
             tasks = self.filter_tasks(tasks)
             count = tasks.count()
@@ -54,23 +55,23 @@ class TaskDeleter:
                 single = count == 1
                 reply_text = self.format_success_reply(count, single)
             else:
-                reply_text = f'Не удалось найти напоминание *<{self.pars.only_message}>* на дату: *{self.pars.user_date.strftime("%d.%m.%Y")}*. Попробуйте снова.'
+                reply_text = f'Не удалось найти напоминание *<{self.pars.only_message}>* на дату: *{self.pars.user_datetime.strftime("%d.%m.%Y")}*. Попробуйте снова.'
         self.send_service_message(reply_text)
 
     def filter_tasks(self, tasks):
         """Фильтрация задач по дате."""
-        if self.pars.user_date.hour == 0 and self.pars.user_date.minute == 0:
-            start_of_day = datetime.combine(self.pars.user_date, datetime.min.time())
-            end_of_day = datetime.combine(self.pars.user_date, datetime.max.time())
+        if self.pars.user_datetime.hour == 0 and self.pars.user_datetime.minute == 0:
+            start_of_day = datetime.combine(self.pars.user_datetime, datetime.min.time())
+            end_of_day = datetime.combine(self.pars.user_datetime, datetime.max.time())
             return tasks.filter(server_datetime__range=(start_of_day, end_of_day))
         return tasks.annotate(
             server_datetime_hour=Trunc('server_datetime', 'hour', output_field=DateTimeField())
-        ).filter(server_datetime_hour=self.pars.server_date.replace(minute=0, second=0, microsecond=0))
+        ).filter(server_datetime_hour=self.pars.server_datetime.replace(minute=0, second=0, microsecond=0))
 
     def format_success_reply(self, count, single):
         """Форматирование ответа об успешном удалении."""
         return (
-            f'Напоминани{"е" if single else "я"} с текстом *<{self.pars.only_message}>* на дату *{self.pars.user_date.strftime("%d.%m.%Y")}*, '
+            f'Напоминани{"е" if single else "я"} с текстом *<{self.pars.only_message}>* на дату *{self.pars.user_datetime.strftime("%d.%m.%Y")}*, '
             f'удален{"о" if single else "ы"} безвозвратно{"." if single else f" в количестве {count}шт."}'
         )
 

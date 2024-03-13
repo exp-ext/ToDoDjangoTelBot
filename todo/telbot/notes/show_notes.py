@@ -1,3 +1,4 @@
+import asyncio
 from datetime import datetime
 
 import pytz
@@ -13,21 +14,12 @@ from ..cleaner import remove_keyboard
 from .parse_note import TaskParse
 
 User = get_user_model()
-
-
-def first_step_show(update: Update, context: CallbackContext):
-    chat = update.effective_chat
-    message_thread_id = update.effective_message.message_thread_id
-    req_text = f'*{update.effective_user.first_name}*, введите дату, на которую хотите вывести заметки 📆'
-    message_id = context.bot.send_message(
-        chat.id,
-        req_text,
-        parse_mode='Markdown',
-        message_thread_id=message_thread_id
-    ).message_id
-    context.user_data['del_message'] = message_id
-    remove_keyboard(update, context)
-    return 'show_note'
+STYLING_HTML = {
+    '<p>': '',
+    '</p>': '\n',
+    '</blockquote>': '</blockquote>\n',
+    '&nbsp;': '',
+}
 
 
 class ShowEvents:
@@ -100,6 +92,8 @@ class ShowEvents:
         if item.remind_at and not item.it_birthday:
             remind_time = item.remind_at.astimezone(self.user_tz) if self.user_tz else item.remind_at
             note += f'<b><i>\n- напомню в {remind_time.strftime("%H:%M")}ч</i></b>'
+        for old, new in STYLING_HTML.items():
+            note = note.replace(old, new)
         note += '\n'
         return note
 
@@ -125,6 +119,21 @@ class ShowEvents:
         self.send_message()
 
 
+def first_step_show(update: Update, context: CallbackContext):
+    chat = update.effective_chat
+    message_thread_id = update.effective_message.message_thread_id
+    req_text = f'*{update.effective_user.first_name}*, введите дату, на которую хотите вывести заметки 📆'
+    message_id = context.bot.send_message(
+        chat.id,
+        req_text,
+        parse_mode='Markdown',
+        message_thread_id=message_thread_id
+    ).message_id
+    context.user_data['del_message'] = message_id
+    remove_keyboard(update, context)
+    return 'show_note'
+
+
 def show_all_notes(update: Update, context: CallbackContext):
     """Выводит весь список записей в чат в зависимости от private или group."""
     remove_keyboard(update, context)
@@ -145,14 +154,13 @@ def show_at_date(update: Update, context: CallbackContext):
     user = get_object_or_404(User, username=update.effective_user.username)
     user_locally = user.locations.first()
 
-    pars = TaskParse(update.message.text, user_locally.timezone)
-    pars.parse_message()
-
     try:
+        task_parse = TaskParse(update.message.text, user_locally.timezone, user, chat.id, True)
+        asyncio.run(task_parse.parse_message())
         del_id = (context.user_data['del_message'], update.message.message_id)
         for id in del_id:
             context.bot.delete_message(chat.id, id)
-        show_events = ShowEvents(update, context, pars.user_date)
+        show_events = ShowEvents(update, context, task_parse.user_datetime)
         show_events.run()
     except Exception as error:
         raise KeyError(error)

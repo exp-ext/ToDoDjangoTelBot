@@ -15,20 +15,22 @@ class TaskParse:
     """
     Парсинг сообщения для работы с моделью Task.
 
-    Принимает сообщение: str и часовой пояс: str.
-
-    Имеет атрибуты:
-    - message (:obj:`str`)
-    - time_zone: (:obj:`str`)
-    - server_date: (:obj:`datetime` with pytz | `None`)
-    - user_date: (:obj:`datetime` with pytz | `None`)
-    - period_repeat: str (default = N)
-    - get_parameters(): получает параметры в сообщении
+    ### Args:
+    - inbox_message (`str`): Входное сообщение для парсинга.
+    - time_zone (`str`): Часовой пояс пользователя.
+    - user (`Model`): Объект пользователя.
+    - chat_id (`int`): Идентификатор чата.
+    - only_datetime_and_message (`bool`, optional): Флаг для определения, нужно ли парсить только дату и сообщение.
 
     """
+
     PERIOD_DIC = ['N', 'D', 'W', 'M', 'Y']
 
     def __init__(self, inbox_message: str, time_zone: str, user: Model, chat_id: int, only_datetime_and_message: bool = False):
+        """
+        Инициализация объекта TaskParse.
+
+        """
         self.inbox_message = inbox_message
         self.time_zone = time_zone
         self.server_datetime = None
@@ -42,7 +44,13 @@ class TaskParse:
         self.only_datetime_and_message = only_datetime_and_message
 
     async def parse_message(self) -> None:
-        """Дифференцирует текст определяя значения атрибутов класса."""
+        """
+        Дифференцирует текст определяя значения атрибутов класса.
+
+        ### Raises:
+        - ValueError: Если возникает ошибка при получении даты.
+
+        """
         try:
             match = DATE_PATTERN.search(self.inbox_message)
             if match:
@@ -95,11 +103,24 @@ class TaskParse:
             raise RuntimeError(f'Ошибка в процессе `TaskParse`: {error}') from error
 
     async def replace_date_in_message(self, string_date: str, parse_date: datetime):
-        """Заменяет дату в тексте сообщения на цифровой формат."""
+        """
+        Заменяет дату в тексте сообщения на цифровой формат.
+
+        ### Args:
+        - string_date (`str`): Строка с датой для замены.
+        - parse_date (`datetime`): Дата для замены.
+
+        """
         self.transform_message = self.inbox_message.replace(string_date, parse_date.strftime('%d.%m.%Y %H:%M')).strip()
 
     async def set_only_message(self, string_date: str):
-        """Удаляет дату из текста сообщения и назначает only_message."""
+        """
+        Назначает datetime user_date относительно его ТЗ и datetime server_date по UTC.
+
+        ### Args:
+        - parse_date (`datetime`): Дата для преобразования.
+
+        """
         self.only_message = self.inbox_message.replace(string_date, '').strip()
 
     async def set_user_server_date(self, parse_date: datetime):
@@ -111,6 +132,10 @@ class TaskParse:
     async def set_params(self, transform_message_from_ai: str) -> None:
         """
         Разделяет строку на сообщение и параметры и назначает соответствующие атрибуты.
+
+        ### Args:
+        - transform_message_from_ai (`str`): Преобразованное сообщение.
+
         """
         _, *params = transform_message_from_ai.split('|')
         for param in params:

@@ -23,7 +23,21 @@ STYLING_HTML = {
 
 
 class ShowEvents:
+    """
+    Класс для отображения событий.
+
+    ### Args:
+    - update (`Update`): Обновление Telegram.
+    - context (`CallbackContext`): Контекст колбэка.
+    - at_date (`datetime`, optional): Дата для отображения событий.
+    - it_birthday (`bool`, optional): Флаг для отображения дней рождений.
+
+    """
     def __init__(self, update: Update, context: CallbackContext, at_date: datetime = None, it_birthday: bool = False):
+        """
+        Инициализация объекта ShowEvents.
+
+        """
         self.update = update
         self.context = context
         self.at_date = at_date

@@ -119,9 +119,15 @@ class AnswerChatGPT():
                 self.answer_text = completion.get('choices')[0]['message']['content']
                 self.answer_tokens = completion.get('usage')['completion_tokens']
                 self.message_tokens = completion.get('usage')['prompt_tokens']
+            except httpx.HTTPStatusError as http_err:
+                raise RuntimeError(f'Ответ сервера был получен, но код состояния указывает на ошибку: {http_err}') from http_err
+            except httpx.RequestError as req_err:
+                raise RuntimeError(f'Проблемы соединения: {req_err}') from req_err
+            except KeyError as key_err:
+                self.answer_text = 'Я отказываюсь отвечать на этот вопрос...'
+                raise ValueError(f'Отсутствие ожидаемых ключей в ответе: {key_err}') from key_err
             except Exception as error:
-                self.answer_text = 'Я отказываюсь отвечать на этот вопрос!'
-                raise error
+                raise RuntimeError(f'Необработанная ошибка в `GetAnswerGPT.httpx_request_to_openai()`: {error}') from error
 
     async def send_chat_message(self, message):
         await self.channel_layer.group_send(

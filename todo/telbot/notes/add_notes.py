@@ -22,7 +22,20 @@ ADMIN_ID = settings.TELEGRAM_ADMIN_ID
 
 
 class NoteManager:
+    """
+    Менеджер для добавления записей.
+
+    ### Args:
+    - update: Обновление Telegram.
+    - context: Контекст.
+    - user: Пользователь.
+
+    """
     def __init__(self, update, context, user):
+        """
+        Инициализация объекта NoteManager.
+
+        """
         self.update = update
         self.context = context
         self.chat = update.effective_chat
@@ -62,22 +75,26 @@ class NoteManager:
             send_message_to_chat(ADMIN_ID, text)
 
     async def delete_messages(self):
+        """Удаление сообщений."""
         del_id = (self.context.user_data.get('del_message'), self.update.message.message_id)
         for id in filter(None, del_id):
             self.context.bot.delete_message(self.chat.id, id)
 
     @sync_to_async
     def send_failure_message(self):
+        """Отправка сообщения при ошибке."""
         reply_text = f'*{self.update.message.from_user.first_name}*, не удалось разобрать дату 🧐. Попробуйте снова 🙄.'
         send_service_message(self.chat.id, reply_text, 'Markdown', self.message_thread_id)
 
     @sync_to_async
     def send_similarity_message(self):
+        """Отправка сообщения о схожем напоминании."""
         reply_text = 'Очень похожее напоминание присутствует в задачах.\nЗапись отклонена.'
         send_service_message(self.chat.id, reply_text, self.message_thread_id)
 
     @sync_to_async
     def send_success_message(self, task):
+        """Отправка сообщения об успешном добавлении записи."""
         reply_text = (
             f'Напоминание: *{self.pars_params.only_message}*\n'
             f'Создано на *{self.pars_params.user_datetime.strftime("%d.%m.%Y %H:%M")}*\n'
@@ -89,6 +106,7 @@ class NoteManager:
 
     @database_sync_to_async
     def is_similar_task_exists(self, group):
+        """Проверка наличия схожего напоминания."""
         start_datetime = self.pars_params.server_datetime - timedelta(minutes=60)
         end_datetime = self.pars_params.server_datetime + timedelta(minutes=60)
         tasks = self.user.tasks.filter(server_datetime__range=[start_datetime, end_datetime], user=self.user, group=group)
@@ -96,6 +114,7 @@ class NoteManager:
 
     @database_sync_to_async
     def create_task(self, group):
+        """Создание заметки."""
         self.delta_time_min = self.pars_params.delta_time_min or self.delta_time_min
         return Task.objects.create(
             user=self.user,
@@ -109,10 +128,12 @@ class NoteManager:
 
     @database_sync_to_async
     def get_group(self):
+        """Получение группы."""
         return Group.objects.filter(chat_id=self.chat.id).first()
 
     @database_sync_to_async
     def get_locations(self):
+        """Получение локации."""
         return self.user.locations.first()
 
 

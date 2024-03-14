@@ -2,12 +2,11 @@ from telegram.ext import (CallbackQueryHandler, CommandHandler,
                           ConversationHandler, Dispatcher, Filters,
                           MessageHandler)
 
-from .gpt.chat_distributor import (get_answer_chat_gpt_person,
-                                            get_answer_chat_gpt_public)
-from .gpt.image_gen import first_step_get_image, get_image_dall_e
-from .parse.kudago import where_to_go
 from .geoservis.positions import my_current_geoposition
 from .geoservis.weather import current_weather, weather_forecast
+from .gpt.chat_distributor import (get_answer_chat_gpt_person,
+                                   get_answer_chat_gpt_public)
+from .gpt.image_gen import first_step_get_image, get_image_dall_e
 from .loader import bot
 from .menus import (ask_auth, ask_registration, main_menu, private_menu,
                     reset_bot_history, show_my_links)
@@ -17,6 +16,7 @@ from .notes.show_notes import (first_step_show, show_all_notes, show_at_date,
                                show_birthday)
 from .notes.stereography import send_audio_transcription
 from .parse.jokes import show_joke
+from .parse.kudago import where_to_go
 from .service_message import cancel
 
 

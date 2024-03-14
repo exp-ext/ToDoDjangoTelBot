@@ -2,7 +2,7 @@
 
 ![статус](https://github.com/exp-ext/ToDoDjangoTelBot/actions/workflows/main.yml/badge.svg?event=push)
 
-<p align="center"><img src="https://github.com/exp-ext/ToDoDjangoTelBot/blob/master/todo/static/git/background.jpg" width="700" /></p>
+<p align="center"><img src="https://github.com/exp-ext/ToDoDjangoTelBot/blob/main/todo/static/git/background.jpg" width="700" /></p>
 
 <hr />
 <div><h3>The project is a task and note manager integrated with Telegram. Its goals include:</h3>

@@ -123,9 +123,10 @@ def pre_save_post(sender, instance, *args, **kwargs):
     """
     if instance.pk:
         old_instance = Post.objects.only('image').filter(pk=instance.pk).first()
-        if old_instance and old_instance.image and old_instance.image.name.split('/')[-1] != instance.image.name:
+        if getattr(old_instance, 'image', None) and getattr(instance, 'image', None) and old_instance.image.name.split('/')[-1] != instance.image.name.split('/')[-1]:
             if USE_S3:
-                delete_image_in_bucket.delay(old_instance.image.url)
+                if hasattr(old_instance.image, 'url'):
+                    delete_image_in_bucket.delay(old_instance.image.url)
             else:
                 delete_image_in_local.delay(old_instance.image.path)
 

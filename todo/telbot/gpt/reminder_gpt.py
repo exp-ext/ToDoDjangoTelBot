@@ -63,29 +63,35 @@ class ReminderGPT():
             "messages": self.prompt,
             "temperature": 0.1
         }
-        async with httpx.AsyncClient(transport=transport) as client:
-            response = await client.post(
-                "https://api.openai.com/v1/chat/completions",
-                headers=headers,
-                json=data,
-                timeout=60 * self.MAX_TYPING_TIME,
-            )
-            response.raise_for_status()
-            completion = json.loads(response.content)
-            try:
-                self.answer_text = completion.get('choices')[0]['message']['content']
-                self.answer_tokens = completion.get('usage')['completion_tokens']
-                self.message_tokens = completion.get('usage')['prompt_tokens']
-            except httpx.HTTPStatusError as http_err:
-                raise RuntimeError(f'Ответ сервера был получен, но код состояния указывает на ошибку: {http_err}') from http_err
-            except httpx.RequestError as req_err:
-                raise RuntimeError(f'Проблемы соединения: {req_err}') from req_err
-            except KeyError as key_err:
-                raise ValueError(f'Отсутствие ожидаемых ключей в ответе: {key_err}') from key_err
-            except Exception as error:
-                raise RuntimeError(f'Необработанная ошибка в `ReminderGPT.reminder_conversion_request()`: {error}') from error
-            finally:
-                self.event.set()
+        try:
+            async with httpx.AsyncClient(transport=transport) as client:
+                response = await client.post(
+                    "https://api.openai.com/v1/chat/completions",
+                    headers=headers,
+                    json=data,
+                    timeout=60 * self.MAX_TYPING_TIME,
+                )
+                response.raise_for_status()
+                completion = response.json()
+                choices = completion.get('choices')
+                if choices and len(choices) > 0:
+                    first_choice = choices[0]
+                    self.answer_text = first_choice['message']['content']
+                    self.answer_tokens = completion.get('usage', {}).get('completion_tokens')
+                    self.message_tokens = completion.get('usage', {}).get('prompt_tokens')
+                else:
+                    raise ValueError("`ReminderGPT`, ответ не содержит полей 'choices'")
+
+        except httpx.HTTPStatusError as http_err:
+            raise RuntimeError(f'`ReminderGPT`, ответ сервера был получен, но код состояния указывает на ошибку: {http_err}') from http_err
+        except httpx.RequestError as req_err:
+            raise RuntimeError(f'`ReminderGPT`, проблемы соединения: {req_err}') from req_err
+        except json.JSONDecodeError:
+            raise RuntimeError('`ReminderGPT`, ошибка при десериализации JSON.')
+        except Exception as error:
+            raise RuntimeError(f'Необработанная ошибка в `ReminderGPT.httpx_request_to_openai()`: {error}') from error
+        finally:
+            self.event.set()
 
     async def create_reminder_history_ai(self):
         """Создаём запись истории в БД."""

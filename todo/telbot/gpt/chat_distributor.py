@@ -50,4 +50,5 @@ def get_answer_chat_gpt_public(update: Update, context: CallbackContext):
 
 
 def get_answer_chat_gpt_person(update: Update, context: CallbackContext):
-    asyncio.run(check_request_in_distributor(update, context))
+    if update.effective_chat.type == 'private':
+        asyncio.run(check_request_in_distributor(update, context))

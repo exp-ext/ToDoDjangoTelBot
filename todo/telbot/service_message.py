@@ -72,10 +72,10 @@ def send_message_to_chat(tg_id: int, message: str, reply_to_message_id: int = No
         )
         bot.send_message(
             chat_id=ADMIN_ID,
-            text=f'Ошибка TGB BadRequest: {str(err)[:1024]}',
+            text=f'Ошибка в `send_message_to_chat` BadRequest: {str(err)[:1024]}',
         )
     except Exception as err:
         bot.send_message(
             chat_id=ADMIN_ID,
-            text=f'Ошибка TGB при отправке ответа: {str(err)[:1024]}',
+            text=f'Ошибка в `send_message_to_chat` при отправке ответа: {str(err)[:1024]}',
         )

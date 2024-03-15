@@ -14,7 +14,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db.models import Case, Count, IntegerField, Q, Value, When
 from django.db.models.query import QuerySet
-from django.http import (HttpRequest, HttpResponse,
+from django.http import (Http404, HttpRequest, HttpResponse,
                          HttpResponsePermanentRedirect, HttpResponseRedirect,
                          JsonResponse)
 from django.shortcuts import get_object_or_404, redirect, render
@@ -101,9 +101,7 @@ class SearchListView(ListView):
 
     def get_context_data(self, **kwargs) -> Dict[str, Any]:
         context = super().get_context_data(**kwargs)
-        context.update({
-            'keyword': self.keyword,
-        })
+        context.update({'keyword': self.keyword})
         return context
 
     def get_queryset(self) -> QuerySet[Post]:
@@ -168,7 +166,7 @@ class IndexPostsListView(ListView):
             user_groups = user.groups_connections.values_list('group', flat=True)
             post_list = (
                 Post.objects
-                .filter(Q(group__isnull=True) | Q(group__link__isnull=False) | Q(group__in=user_groups), moderation='PS')
+                .filter(Q(group__isnull=True) | Q(group__link__isnull=False) | Q(group__in=user_groups), moderation__in=('PS', 'WT'))
                 .select_related('author', 'group')
             )
         if tag and tag != 'vse':
@@ -225,12 +223,12 @@ class GroupPostsListView(ListView):
 
     def dispatch(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpResponse:
         self.group = get_object_or_404(Group, slug=self.kwargs['slug'])
-        if not self.group.link:
-            return redirect('posts:index_posts')
         status = (
             'is_anonymous' if request.user.is_anonymous or not request.user.tg_id
             else get_status_in_group(self.group, request.user.tg_id)
         )
+        if not self.group.link and (status == 'is_anonymous' or not self.group.groups_connections.filter(user=request.user).exists()):
+            return redirect('posts:index_posts')
         self.is_admin = False
         admin_status = ['creator', 'administrator']
         self.is_admin = status in admin_status
@@ -239,7 +237,20 @@ class GroupPostsListView(ListView):
         return super().dispatch(request, *args, **kwargs)
 
     def get_queryset(self) -> QuerySet:
-        return self.group.posts.select_related('author', 'group').filter(moderation='PS')
+        user = self.request.user
+        post_list = (
+            self.group.posts
+            .filter(Q(group__isnull=True) | Q(group__link__isnull=False), moderation='PS')
+            .select_related('author', 'group')
+        )
+        if user.is_authenticated:
+            user_groups = user.groups_connections.values_list('group', flat=True)
+            post_list = (
+                self.group.posts
+                .filter(Q(group__isnull=True) | Q(group__link__isnull=False) | Q(group__in=user_groups), moderation__in=('PS', 'WT'))
+                .select_related('author', 'group')
+            )
+        return post_list
 
     def get_context_data(self, **kwargs: Any) -> Dict[str, Any]:
         context = super().get_context_data(**kwargs)
@@ -248,6 +259,7 @@ class GroupPostsListView(ListView):
             'is_admin': self.is_admin,
             'form': self.form,
             'forism_check': self.forism_check,
+            'group_public': not self.group or bool(self.group.link),
         })
         return context
 
@@ -284,15 +296,12 @@ class ProfileDetailView(DetailView):
         return [self.template_name]
 
     def get_object(self, queryset: QuerySet = None) -> QuerySet:
-        queryset = (
-            super().get_queryset()
-            .prefetch_related('posts__author', 'posts__group')
-        )
+        queryset = super().get_queryset().prefetch_related('posts__author', 'posts__group')
         return queryset.get(username=self.kwargs['username'])
 
     def get_context_data(self, **kwargs: Any) -> Dict[str, Any]:
         context = super().get_context_data(**kwargs)
-        post_list = self.get_user_posts().select_related('author', 'group')
+        post_list = self.get_user_posts()
         page_obj = paginator_handler(self.request, post_list, PAGINATE_BY)
         user = self.request.user
         context.update({
@@ -303,19 +312,20 @@ class ProfileDetailView(DetailView):
         return context
 
     def get_user_posts(self) -> QuerySet:
-        groups = self.get_user_groups()
-        moderation = ('PS', 'WT') if self.request.user == self.object else ('PS',)
-        return (
+        user = self.request.user
+        post_list = (
             self.object.posts
-            .filter(Q(group=None) | Q(group__in=groups) | Q(group__link__isnull=False), moderation__in=moderation)
+            .filter(Q(group__isnull=True) | Q(group__link__isnull=False), moderation='PS')
             .select_related('author', 'group')
         )
-
-    def get_user_groups(self) -> QuerySet:
-        if self.request.user.is_authenticated:
-            groups = self.request.user.groups_connections.values_list('group_id', flat=True)
-            return Group.objects.filter(id__in=groups)
-        return Group.objects.none()
+        if user.is_authenticated:
+            user_groups = user.groups_connections.values_list('group', flat=True)
+            post_list = (
+                self.object.posts
+                .filter(Q(group__isnull=True) | Q(group__link__isnull=False) | Q(group__in=user_groups), moderation__in=('PS', 'WT'))
+                .select_related('author', 'group')
+            )
+        return post_list
 
 
 class AutosaveView(View):
@@ -490,8 +500,12 @@ class PostDetailView(DetailView):
             if post_slug:
                 return HttpResponsePermanentRedirect(reverse('posts:post_detail', args=(post_slug,)))
             return redirect('posts:index_posts')
-
-        self.object = self.get_object()
+        try:
+            self.object = self.get_object()
+        except Http404:
+            get_object_or_404(Post, slug=self.kwargs.get(self.slug_url_kwarg))
+            full_url = request.build_absolute_uri()
+            return render(request, 'core/403.html', {'full_url': full_url}, status=403)
 
         if self.object.group:
             redirect_response = self.handle_group_access(self.object.group)
@@ -507,7 +521,8 @@ class PostDetailView(DetailView):
         if user.is_anonymous:
             queryset = queryset.filter(moderation='PS')
         else:
-            queryset = queryset.filter(Q(moderation='PS') | Q(author=user))
+            user_groups = user.groups_connections.values_list('group', flat=True)
+            queryset = queryset.filter(Q(group__isnull=True) | Q(group__link__isnull=False) | Q(group__in=user_groups), moderation__in=('PS', 'WT'))
         self.tag_queryset = queryset
         return queryset
 

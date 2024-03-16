@@ -1,15 +1,15 @@
 document.getElementById('id_image').addEventListener('change', function(event) {
-  var imageGrid = document.getElementById('image-grid');
+  const imageGrid = document.getElementById('image-grid');
   imageGrid.innerHTML = '';
-  var files = event.target.files;
-  for (var i = 0; i < files.length; i++) {
-    var file = files[i];
+  const files = event.target.files;
+  for (let i = 0; i < files.length; i++) {
+    let file = files[i];
     if (file.type.startsWith('image/')) {
-      var img = document.createElement('img');
+      let img = document.createElement('img');
       img.classList.add('preview', 'grid-item');
       img.file = file;
       imageGrid.appendChild(img);
-      var reader = new FileReader();
+      let reader = new FileReader();
       reader.onload = (function(aImg) { 
         return function(e) { 
           aImg.src = e.target.result; 
@@ -20,11 +20,11 @@ document.getElementById('id_image').addEventListener('change', function(event) {
   }
 });
 document.getElementById('id_picture_link').addEventListener('change', function(event) {
-  var imageGridLine = document.getElementById('image-grid-link');
+  const imageGridLine = document.getElementById('image-grid-link');
   imageGridLine.innerHTML = '';
-  var imageUrl = event.target.value;
+  const imageUrl = event.target.value;
   if (imageUrl && imageUrl.startsWith('http')) {
-    var img = document.createElement('img');
+    let img = document.createElement('img');
     img.classList.add('preview', 'grid-item');
     img.src = imageUrl;
     imageGridLine.appendChild(img);

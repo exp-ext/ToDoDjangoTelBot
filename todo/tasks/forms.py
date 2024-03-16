@@ -58,11 +58,11 @@ class TaskForm(forms.ModelForm):
 
     def clean(self):
         cleaned_data = super().clean()
-        server_datetime = cleaned_data.get('server_datetime')
+        user_datetime = cleaned_data.get('server_datetime')
         user_tz = self.initial.get('tz')
         tz = pytz.timezone(user_tz)
         remind_min = self.cleaned_data['remind_min']
-        if server_datetime - timedelta(minutes=remind_min) <= datetime.now(tz):
+        if user_datetime - timedelta(minutes=remind_min) <= datetime.now(tz):
             self.add_error('server_datetime', 'Разница назначенного времени и минут для срабатывания не может быть меньше текущего.')
             raise ValidationError('Назначенное время не может быть меньше текущего.')
         return cleaned_data

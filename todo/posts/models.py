@@ -24,9 +24,10 @@ class PostTags(models.Model):
     """Модель для хранения тегов постов.
 
     ### Attributes:
-    - title (str): Название тега поста (максимум 80 символов).
-    - description (str, optional): Краткое описание тега поста.
-    - slug (str): Уникальный идентификатор тега, используемый в URL.
+    - title (`str`): Название тега поста (максимум 80 символов).
+    - description (`str`, optional): Краткое описание тега поста.
+    - slug (`SlugField`): Уникальный идентификатор тега, используемый в URL.
+    - image (`ImageField`): Картинка тэга.
 
     """
     title = models.CharField(_('тэг поста'), max_length=80, unique=True)
@@ -61,6 +62,9 @@ class Post(CreateUpdater):
     - author (`ForeignKey`): Автор поста.
     - group (`ForeignKey`, optional): Группа, к которой будет относиться пост.
     - image (`ImageField`): Картинка, прикрепленная к посту.
+    - tags (`ManyToManyField`, optional): Тэги у поста.
+    - moderation (`TextChoices`): Статус модерации.
+    - short_description (`CharField`): Короткое описание для HTML тега `description`.
 
     """
     class Moderation(models.TextChoices):

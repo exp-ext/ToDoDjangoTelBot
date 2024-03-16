@@ -12,7 +12,8 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.serializers.json import DjangoJSONEncoder
-from django.db.models import Case, Count, IntegerField, Q, Value, When
+from django.db.models import (Case, Count, IntegerField, Prefetch, Q, Value,
+                              When)
 from django.db.models.query import QuerySet
 from django.http import (Http404, HttpRequest, HttpResponse,
                          HttpResponsePermanentRedirect, HttpResponseRedirect,
@@ -47,6 +48,7 @@ class SearchListView(ListView):
     - (:obj:`Paginator`) с результатом поиска в постах;
     - (:obj:`str`) поисковое слово keyword.
     """
+    model = Post
     template_name = 'desktop/posts/search_result.html'
     paginate_by = PAGINATE_BY
 
@@ -94,7 +96,7 @@ class SearchListView(ListView):
         for item in queryset[:3]:
             results.append({
                 'label': item.title,
-                'link': f'https://www.{settings.DOMAIN}/posts/{item.slug}/',
+                'link': f'https://{settings.DOMAINPREFIX}.{settings.DOMAIN}/posts/{item.slug}/',
                 'image': item.image.url,
             })
         return JsonResponse(results, safe=False)
@@ -105,16 +107,17 @@ class SearchListView(ListView):
         return context
 
     def get_queryset(self) -> QuerySet[Post]:
+        queryset = super().get_queryset().select_related('author', 'group')
         user = self.request.user
         post_list = (
-            Post.objects
+            queryset
             .select_related('author', 'group')
             .filter(Q(group__isnull=True) | Q(group__link__isnull=False), text__icontains=self.keyword, moderation='PS')
             .order_by('group')
         )
         if user.is_authenticated:
             user_groups = user.groups_connections.values_list('group', flat=True)
-            post_list = Post.objects.filter(
+            post_list = queryset.filter(
                 Q(group__in=user_groups, moderation__in=('PS', 'WT'))
                 | Q(author=user, moderation__in=('PS', 'WT'))
                 | Q(group__isnull=True, moderation='PS')
@@ -146,6 +149,7 @@ class IndexPostsListView(ListView):
     """
     Возвращает :obj:`Paginator` с заметками для общей ленты.
     """
+    model = Post
     template_name = 'desktop/posts/index_posts.html'
     paginate_by = PAGINATE_BY
 
@@ -156,16 +160,17 @@ class IndexPostsListView(ListView):
         return [self.template_name]
 
     def get_queryset(self) -> QuerySet:
+        queryset = super().get_queryset().select_related('author', 'group')
         tag = self.request.GET.get('q', '')
         user = self.request.user
         post_list = (
-            Post.objects
+            queryset
             .filter(Q(group__isnull=True) | Q(group__link__isnull=False), moderation='PS')
             .select_related('author', 'group')
         )
         if user.is_authenticated:
             user_groups = user.groups_connections.values_list('group', flat=True)
-            post_list = Post.objects.filter(
+            post_list = queryset.filter(
                 Q(group__in=user_groups, moderation__in=('PS', 'WT'))
                 | Q(author=user, moderation__in=('PS', 'WT'))
                 | Q(group__isnull=True, moderation='PS')
@@ -298,15 +303,20 @@ class ProfileDetailView(DetailView):
             return ['mobile/posts/profile.html']
         return [self.template_name]
 
-    def get_object(self, queryset: QuerySet = None) -> QuerySet:
-        queryset = super().get_queryset().prefetch_related('posts__author', 'posts__group')
+    def get_object(self, queryset=None):
+        queryset = User.objects.prefetch_related(
+            Prefetch('posts', queryset=Post.objects.select_related('author', 'group').filter(Q(group__isnull=True) | Q(group__link__isnull=False), moderation='PS'))
+        )
         return queryset.get(username=self.kwargs['username'])
 
     def get_context_data(self, **kwargs: Any) -> Dict[str, Any]:
         context = super().get_context_data(**kwargs)
-        post_list = self.get_user_posts()
-        page_obj = paginator_handler(self.request, post_list, PAGINATE_BY)
         user = self.request.user
+        if not hasattr(self.object, '_prefetched_objects_cache'):
+            self.object._prefetched_objects_cache = {}
+
+        post_list = self.get_user_posts(user)
+        page_obj = paginator_handler(self.request, post_list, PAGINATE_BY)
         context.update({
             'page_obj': page_obj,
             'posts_count': page_obj.paginator.count,
@@ -314,22 +324,16 @@ class ProfileDetailView(DetailView):
         })
         return context
 
-    def get_user_posts(self) -> QuerySet:
-        user = self.request.user
-        post_list = (
-            self.object.posts
-            .filter(Q(group__isnull=True) | Q(group__link__isnull=False), moderation='PS')
-            .select_related('author', 'group')
-        )
+    def get_user_posts(self, user):
         if user.is_authenticated:
             user_groups = user.groups_connections.values_list('group', flat=True)
-            post_list = self.object.posts.filter(
+            return self.object.posts.filter(
                 Q(group__in=user_groups, moderation__in=('PS', 'WT'))
                 | Q(author=user, moderation__in=('PS', 'WT'))
                 | Q(group__isnull=True, moderation='PS')
                 | Q(group__link__isnull=False, moderation='PS')
-            )
-        return post_list
+            ).distinct()
+        return self.object.posts.filter(Q(group__isnull=True) | Q(group__link__isnull=False), moderation='PS').distinct()
 
 
 class AutosaveView(View):
@@ -705,7 +709,7 @@ class AddCommentView(LoginRequiredMixin, FormView):
         comment.post = post
         comment.save()
         message = (
-            f'Написан новый комментарий к Вашей заметке [{post.title}](https://www.{settings.DOMAIN}/posts/{post.slug}/):\n\n'
+            f'Написан новый комментарий к Вашей заметке [{post.title}](https://{settings.DOMAINPREFIX}.{settings.DOMAIN}/posts/{post.slug}/):\n\n'
             f'_{comment.text.replace("_", " ")}_\n'
         )
         if post.author.tg_id != 'test_id':

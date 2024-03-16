@@ -126,7 +126,7 @@ def show_my_links(update: Update, context: CallbackContext):
     message_thread_id = update.effective_message.message_thread_id
     button_list = [
         InlineKeyboardButton(text='Телеграмм', url=context.bot.link),
-        InlineKeyboardButton(text='Вебсайт', url=f'https://www.{settings.DOMAIN}/')
+        InlineKeyboardButton(text='Вебсайт', url=f'https://{settings.DOMAINPREFIX}.{settings.DOMAIN}/')
     ]
     reply_markup = InlineKeyboardMarkup(build_menu(button_list, n_cols=1))
     menu_text = 'личный кабинет системы -->'

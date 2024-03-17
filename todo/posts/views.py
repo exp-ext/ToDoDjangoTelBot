@@ -12,8 +12,7 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.serializers.json import DjangoJSONEncoder
-from django.db.models import (Case, Count, IntegerField, Prefetch, Q, Value,
-                              When)
+from django.db.models import Case, Count, IntegerField, Q, Value, When
 from django.db.models.query import QuerySet
 from django.http import (Http404, HttpRequest, HttpResponse,
                          HttpResponsePermanentRedirect, HttpResponseRedirect,
@@ -303,37 +302,32 @@ class ProfileDetailView(DetailView):
             return ['mobile/posts/profile.html']
         return [self.template_name]
 
-    def get_object(self, queryset=None):
-        queryset = User.objects.prefetch_related(
-            Prefetch('posts', queryset=Post.objects.select_related('author', 'group').filter(Q(group__isnull=True) | Q(group__link__isnull=False), moderation='PS'))
-        )
-        return queryset.get(username=self.kwargs['username'])
+    def get_object(self):
+        return get_object_or_404(User, username=self.kwargs['username'])
 
-    def get_context_data(self, **kwargs: Any) -> Dict[str, Any]:
+    def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         user = self.request.user
-        if not hasattr(self.object, '_prefetched_objects_cache'):
-            self.object._prefetched_objects_cache = {}
+        posts_queryset = Post.objects.select_related('author', 'group').filter(author=self.object)
+        if user.is_authenticated:
+            user_groups = user.groups_connections.values_list('group', flat=True)
+            posts_queryset = posts_queryset.filter(
+                Q(group__in=user_groups, moderation__in=('PS', 'WT'))
+                | Q(group__isnull=True, moderation='PS')
+                | Q(group__link__isnull=False, moderation='PS')
+                | Q(author=user, moderation__in=('PS', 'WT'))
+            )
+        else:
+            posts_queryset = posts_queryset.filter(Q(group__isnull=True) | Q(group__link__isnull=False), moderation='PS')
 
-        post_list = self.get_user_posts(user)
-        page_obj = paginator_handler(self.request, post_list, PAGINATE_BY)
+        page_obj = paginator_handler(self.request, posts_queryset.distinct(), PAGINATE_BY)
+
         context.update({
             'page_obj': page_obj,
             'posts_count': page_obj.paginator.count,
             'following': False if user.is_anonymous else user.follower.filter(author=self.object).exists(),
         })
         return context
-
-    def get_user_posts(self, user):
-        if user.is_authenticated:
-            user_groups = user.groups_connections.values_list('group', flat=True)
-            return self.object.posts.filter(
-                Q(group__in=user_groups, moderation__in=('PS', 'WT'))
-                | Q(author=user, moderation__in=('PS', 'WT'))
-                | Q(group__isnull=True, moderation='PS')
-                | Q(group__link__isnull=False, moderation='PS')
-            ).distinct()
-        return self.object.posts.filter(Q(group__isnull=True) | Q(group__link__isnull=False), moderation='PS').distinct()
 
 
 class AutosaveView(View):
@@ -428,6 +422,9 @@ class PostUpdateView(LoginRequiredMixin, UpdateView):
         if self.object.author.tg_id != 'test_id' and publication_type == 'public':
             message = f'Новый пост для модерации с темой "{self.object.title}"'
             send_message_to_chat.delay(ADMIN_ID, message)
+        elif publication_type == 'group':
+            post.moderation = 'WT'
+            post.save()
         return redirect('posts:post_detail', post_identifier_slug=post.slug)
 
 
@@ -451,13 +448,8 @@ class PostDetailView(DetailView):
         return [self.template_name]
 
     def get_post_slug_from_redis(self, post_pk: int) -> str | bool:
-        """Получает слаг поста по его идентификатору из Redis.
-
-        ### Parameters:
-        - post_pk (`int`): Идентификатор поста.
-
-        ### Returns:
-        - str or None: Слаг поста или None, если пост не найден.
+        """
+        Получает слаг поста по его идентификатору из Redis.
         """
         posts_data = redis_client.get(KEY_POSTS)
         if posts_data:
@@ -466,25 +458,14 @@ class PostDetailView(DetailView):
         return None
 
     def get_slug_by_pk(self, id_slug_pair: list, post_pk: int) -> str:
-        """Получает слаг из пары идентификатора и слага поста.
-
-        ### Parameters:
-        - id_slug_pair (`list`): Список словарей, представляющих пары идентификатора и слага поста.
-        - post_pk (`int`): Идентификатор поста.
-
-        ### Returns:
-        - str or None: Слаг поста или None, если пост не найден.
+        """
+        Получает слаг из пары идентификатора и слага поста.
         """
         return next((item['slug'] for item in id_slug_pair if item['id'] == post_pk), None)
 
     def handle_group_access(self, group: Group):
-        """Загружает приватные группы в Редис, если их там нет, и делает проверку на отношение юзера к группе.
-
-        ### Parameters:
-        - group (`Group`): Объект группы.
-
-        ### Returns:
-        - None or HttpResponseRedirect: Если группа приватная и пользователь анонимный, то он перенаправляется.
+        """
+        Загружает приватные группы в Редис, если их там нет, и делает проверку на отношение юзера к группе.
         """
         if not group.link:
             if self.request.user.is_anonymous:
@@ -526,18 +507,10 @@ class PostDetailView(DetailView):
         context = self.get_context_data(object=self.object)
         return self.render_to_response(context)
 
-    def error_checking(self) -> HttpResponse | Http404:
-        """Возвращает ссылку на 403 шаблон или 404, если поста не существует."""
-        get_object_or_404(Post, slug=self.kwargs.get(self.slug_url_kwarg))
-        full_url = self.request.build_absolute_uri()
-        return render(self.request, 'core/403.html', {'full_url': full_url}, status=403)
-
     def get_queryset(self) -> QuerySet:
         queryset = super().get_queryset().select_related('author', 'group').prefetch_related('tags')
         user = self.request.user
-        if user.is_anonymous:
-            queryset = queryset.filter(moderation='PS')
-        else:
+        if user.is_authenticated:
             user_groups = user.groups_connections.values_list('group', flat=True)
             queryset = queryset.filter(
                 Q(group__in=user_groups, moderation__in=('PS', 'WT'))
@@ -545,8 +518,16 @@ class PostDetailView(DetailView):
                 | Q(group__isnull=True, moderation='PS')
                 | Q(group__link__isnull=False, moderation='PS')
             )
+        else:
+            queryset = queryset.filter(moderation='PS')
         self.tag_queryset = queryset
         return queryset
+
+    def error_checking(self) -> HttpResponse | Http404:
+        """Возвращает ссылку на 403 шаблон или 404, если поста не существует."""
+        get_object_or_404(Post, slug=self.kwargs.get(self.slug_url_kwarg))
+        full_url = self.request.build_absolute_uri()
+        return render(self.request, 'core/403.html', {'full_url': full_url}, status=403)
 
     def get_context_data(self, **kwargs: Any) -> Dict[str, Any]:
         context = super().get_context_data(**kwargs)
@@ -621,11 +602,8 @@ class PostDetailView(DetailView):
         return context
 
     def get_tags_and_posts(self):
-        """Получает теги и соответствующие им посты.
-
-        ### Returns:
-        `tuple`: Кортеж, содержащий строку с перечисленными тегами и генератор словарей постов по этим тегам.
-
+        """
+        Получает теги и соответствующие им посты.
         """
         user = self.request.user
         tags = self.object.tags.values_list('title', flat=True)
@@ -675,22 +653,10 @@ class PostDetailView(DetailView):
         return (seq[pos:pos + size] for pos in range(0, len(seq), size))
 
     def get_client_ip(self):
-        """Получает IP-адрес клиента.
-
-        ### Returns:
-        - `str`: IP-адрес клиента.
-
-        """
         x_forwarded_for = self.request.META.get('HTTP_X_FORWARDED_FOR')
         return x_forwarded_for.split(',')[0] if x_forwarded_for else self.request.META.get('REMOTE_ADDR')
 
     def get_ref_url(self):
-        """Получает URL-ссылку клиента.
-
-        ### Returns:
-        - `str` or `None`: URL-ссылка клиента или None, если отсутствует.
-
-        """
         return quote(self.request.META.get('HTTP_REFERER', '')) if self.request.META.get('HTTP_REFERER') else None
 
 

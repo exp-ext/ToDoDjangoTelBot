@@ -99,7 +99,7 @@ def ask_registration(update: Update, context: CallbackContext) -> None:
     if chat.type == 'private':
         button_list = [
             KeyboardButton('меню геофункций 📡', request_location=True),
-            KeyboardButton('авторизоваться на сайте 👩‍💻', request_contact=True),
+            KeyboardButton('ссылка для авторизации на сайте 👩‍💻', request_contact=True),
         ]
         reply_markup = ReplyKeyboardMarkup(
             build_menu(button_list, n_cols=2),

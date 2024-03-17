@@ -55,6 +55,7 @@ class PostURLTests(TestCase):
         )
         # Создание постов
         cls.post_group_private_ps = Post.objects.create(
+            id=1,
             title='private group PS',
             author=cls.author,
             text='Тестовый пост 1' * 3,
@@ -62,6 +63,7 @@ class PostURLTests(TestCase):
             group=cls.group_private
         )
         cls.post_group_private_wt = Post.objects.create(
+            id=2,
             title='private group WT',
             author=cls.author,
             text='Тестовый пост 2' * 3,
@@ -69,6 +71,7 @@ class PostURLTests(TestCase):
             group=cls.group_private
         )
         cls.post_public_group_ps = Post.objects.create(
+            id=3,
             title='public group PS',
             author=cls.author,
             text='Тестовый пост 3' * 3,
@@ -76,6 +79,7 @@ class PostURLTests(TestCase):
             group=cls.group_public
         )
         cls.post_public_group_wt = Post.objects.create(
+            id=4,
             title='public group WT',
             author=cls.author,
             text='Тестовый пост 4' * 3,
@@ -83,6 +87,7 @@ class PostURLTests(TestCase):
             group=cls.group_public
         )
         cls.post_without_group_ps = Post.objects.create(
+            id=5,
             title='without group PS',
             author=cls.author,
             text='Тестовый пост 5' * 3,
@@ -90,6 +95,7 @@ class PostURLTests(TestCase):
             group=None
         )
         cls.post_without_group_wt = Post.objects.create(
+            id=6,
             title='without group WT',
             author=cls.author,
             text='Тестовый пост 6' * 3,

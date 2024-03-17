@@ -5,7 +5,7 @@ from django.contrib.auth import get_user_model
 from django.utils.timezone import now
 from telbot.models import UserGptModels
 from telegram import (InlineKeyboardButton, InlineKeyboardMarkup,
-                      KeyboardButton, ReplyKeyboardMarkup, Update)
+                      KeyboardButton, ParseMode, ReplyKeyboardMarkup, Update)
 from telegram.ext import CallbackContext
 from users.views import Authentication, set_coordinates
 
@@ -95,8 +95,12 @@ def private_menu(update: Update, context: CallbackContext) -> None:
 def ask_registration(update: Update, context: CallbackContext) -> None:
     """Регистрация пользователя."""
     chat = update.effective_chat
-    first_name = update.message.from_user.first_name or 'мой друг'
+    first_name = update.message.from_user.first_name or 'Друг'
     if chat.type == 'private':
+        user = check_registration(update, context, {}, allow_unregistered=True, return_user=True)
+        if not user.is_blocked_bot:
+            return Authentication(update, context).register()
+
         button_list = [
             KeyboardButton('меню геофункций 📡', request_location=True),
             KeyboardButton('ссылка для авторизации на сайте 👩‍💻', request_contact=True),
@@ -105,17 +109,13 @@ def ask_registration(update: Update, context: CallbackContext) -> None:
             build_menu(button_list, n_cols=2),
             resize_keyboard=True
         )
-        menu_text = (
-            f'Приветствую Вас, {first_name}!\n'
-        )
-        message_id = context.bot.send_message(
-            chat.id,
-            menu_text,
-            reply_markup=reply_markup
-        ).message_id
-        delete_messages_by_time.apply_async(
-            args=[chat.id, message_id],
-            countdown=15
+        text = f'Привет, {first_name}!\nБлагодарим вас за пользование нашим сервисом. Надеемся, что вы останетесь довольны!'
+
+        context.bot.send_message(
+            chat_id=chat.id,
+            text=text,
+            reply_markup=reply_markup,
+            parse_mode=ParseMode.MARKDOWN
         )
         Authentication(update, context).register()
 

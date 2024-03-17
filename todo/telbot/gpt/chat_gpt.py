@@ -37,7 +37,7 @@ class GetAnswerGPT():
         self.message_tokens = None
         self.current_time = now()
         self.time_start = None
-        self.answer_text = GetAnswerGPT.ERROR_TEXT
+        self.answer_text = self.ERROR_TEXT
         self.answer_tokens = None
         self.event = asyncio.Event()
         self.request_massage = None

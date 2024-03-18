@@ -98,8 +98,6 @@ def ask_registration(update: Update, context: CallbackContext) -> None:
     first_name = update.message.from_user.first_name or 'Друг'
     if chat.type == 'private':
         user = check_registration(update, context, {}, allow_unregistered=True, return_user=True)
-        if not user.is_blocked_bot:
-            return Authentication(update, context).register()
 
         button_list = [
             KeyboardButton('меню геофункций 📡', request_location=True),
@@ -109,7 +107,10 @@ def ask_registration(update: Update, context: CallbackContext) -> None:
             build_menu(button_list, n_cols=2),
             resize_keyboard=True
         )
-        text = f'Привет, {first_name}!\nБлагодарим вас за пользование нашим сервисом. Надеемся, что вы останетесь довольны!'
+        if user.is_blocked_bot:
+            text = f'Привет, {first_name}!\nБлагодарим вас за пользование нашим сервисом. Надеемся, что вы останетесь довольны!'
+        else:
+            text = '~~~👋~~~'
 
         context.bot.send_message(
             chat_id=chat.id,

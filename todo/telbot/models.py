@@ -1,9 +1,7 @@
-from asgiref.sync import sync_to_async
 from core.models import Create
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.db import models
-from django.db.models.manager import BaseManager
 from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
 
@@ -14,8 +12,8 @@ class GptModels(models.Model):
     title = models.CharField(_('модель GPT'), max_length=28)
     default = models.BooleanField(_('доступна всем по умолчанию'), default=False)
     token = models.CharField(_('токен для запроса'), max_length=51)
-    context_window = models.IntegerField(_('окно токенов для передачи истории в запросе'))
-    max_request_token = models.IntegerField(_('максимальное количество токенов в запросе пользователя'))
+    context_window = models.IntegerField(_('окно количества токенов для передачи истории в запросе'))
+    max_request_token = models.IntegerField(_('максимальное количество токенов в запросе'))
     time_window = models.IntegerField(_('окно времени для передачи истории в запросе, мин'), default=30)
 
     class Meta:
@@ -65,12 +63,6 @@ class UserGptModels(models.Model):
                 self.approved_models.add(default_model)
 
 
-class AsyncManager(BaseManager.from_queryset(models.QuerySet)):
-    """
-    Менеджер модели, который добавляет поддержку асинхронных операций с базой данных.
-    """
-
-
 class HistoryAI(Create):
     """
     Модель для хранения истории вопросов и ответов AI.
@@ -97,13 +89,6 @@ class HistoryAI(Create):
 
     def __str__(self):
         return f'User: {self.user}, Question: {self.question}'
-
-    @sync_to_async
-    def save(self, *args, **kwargs):
-        """
-        Переопределение метода save() для поддержки асинхронного сохранения объекта в базе данных.
-        """
-        return super().save(*args, **kwargs)
 
 
 class ReminderAI(Create):
@@ -132,13 +117,6 @@ class ReminderAI(Create):
     def __str__(self):
         return f'User: {self.user}, Question: {self.question}'
 
-    @sync_to_async
-    def save(self, *args, **kwargs):
-        """
-        Переопределение метода save() для поддержки асинхронного сохранения объекта в базе данных.
-        """
-        return super().save(*args, **kwargs)
-
 
 class HistoryDALLE(Create):
     """
@@ -161,10 +139,3 @@ class HistoryDALLE(Create):
 
     def __str__(self):
         return f'User: {self.user}, Question: {self.question}'
-
-    @sync_to_async
-    def save(self, *args, **kwargs):
-        """
-        Переопределение метода save() для поддержки асинхронного сохранения объекта в базе данных.
-        """
-        return super().save(*args, **kwargs)

@@ -10,6 +10,24 @@ from .models import (GptModels, HistoryAI, HistoryDALLE, ReminderAI,
 User = get_user_model()
 
 
+User = get_user_model()
+
+
+@admin.register(GptModels)
+class GptModelsAdmin(admin.ModelAdmin):
+    pass
+
+
+class GptModelsInline(admin.StackedInline):
+    model = GptModels.approved_users.through
+    extra = 0
+
+
+@admin.register(UserGptModels)
+class GptModelsAdmin(admin.ModelAdmin):
+    inlines = (GptModelsInline,)
+
+
 @admin.register(HistoryAI)
 class HistoryAIAdmin(admin.ModelAdmin):
     list_display = ('user', 'room_group_name', 'created_at', 'question_tokens', 'answer_tokens')
@@ -94,18 +112,3 @@ class HistoryDALLEAdmin(admin.ModelAdmin):
         return mark_safe(
             f'<img src="{obj.answer.get("media")}" style="max-height: 800px;">'
         )
-
-
-@admin.register(GptModels)
-class GptModelsAdmin(admin.ModelAdmin):
-    pass
-
-
-class GptModelsInline(admin.StackedInline):
-    model = GptModels.approved_users.through
-    extra = 0
-
-
-@admin.register(UserGptModels)
-class GptModelsAdmin(admin.ModelAdmin):
-    inlines = (GptModelsInline,)

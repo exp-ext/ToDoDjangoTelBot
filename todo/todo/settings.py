@@ -383,7 +383,8 @@ else:
         'password': REDIS_PASSWORD
     }
 
-REDIS_CLIENT = redis.StrictRedis(**REDIS_CLIENT_DATA)
+pool = redis.ConnectionPool(**REDIS_CLIENT_DATA)
+REDIS_CLIENT = redis.Redis(connection_pool=pool)
 
 CHANNEL_LAYERS = {
     'default': {

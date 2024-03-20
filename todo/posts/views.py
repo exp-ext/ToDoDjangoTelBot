@@ -605,29 +605,21 @@ class PostDetailView(DetailView):
         """
         Получает теги и соответствующие им посты.
         """
-        user = self.request.user
         tags = self.object.tags.values_list('title', flat=True)
 
         query = self.tag_queryset.filter(
-            Q(group__isnull=True) | Q(group__link__isnull=False),
             tags__title__in=tags
         ).distinct().exclude(id=self.object.id)
 
-        if user.is_authenticated:
-            user_groups = user.groups_connections.values_list('group', flat=True)
-            query = self.tag_queryset.filter(
-                Q(group__isnull=True) | Q(group__link__isnull=False) | Q(group__in=user_groups),
-                tags__title__in=tags
-            ).distinct().exclude(id=self.object.id)
-
         posts_processed = []
         for post in query:
-            thumbnail = get_thumbnail(post.image, '960x339', crop='center', upscale=True)
-            posts_processed.append({
-                'image_url': thumbnail.url,
-                'slug': post.slug,
-                'short_description': post.short_description
-            })
+            if post.image:
+                thumbnail = get_thumbnail(post.image, '960x339', crop='center', upscale=True)
+                posts_processed.append({
+                    'image_url': thumbnail.url,
+                    'slug': post.slug,
+                    'short_description': post.short_description
+                })
         line_size = 1 if self.user_agent.is_mobile else 3
         return ', '.join(tags), query.count() > 0, self.chunker(posts_processed, line_size)
 

@@ -1,10 +1,8 @@
-from ai.gpt_exception import (LongQueryError, OpenAIJSONDecodeError,
-                              OpenAIResponseError, UnhandledError)
+from ai.gpt_exception import handle_exceptions
 from ai.gpt_query import GetAnswerGPT
 from asgiref.sync import sync_to_async
 from django.conf import settings
 from django.db.models import Model
-from openai import APIConnectionError
 from telbot.models import HistoryAI
 from telbot.service_message import send_message_to_chat
 from telegram import ParseMode, Update
@@ -28,19 +26,7 @@ class TelegramAnswerGPT(GetAnswerGPT):
         try:
             await self.get_answer_chat_gpt()
         except Exception as err:
-            user_error_text = (
-                'Что-то пошло не так 🤷🏼\n'
-                'Возможно большой наплыв запросов, которые я не успеваю обрабатывать 🤯'
-            )
-            error_messages = {
-                LongQueryError: lambda e: str(e),
-                OpenAIResponseError: 'Проблема с получением ответа от ИИ. Возможно она устала.',
-                APIConnectionError: 'Проблемы соединения. Вероятно ИИ вышла ненадолго.',
-                OpenAIJSONDecodeError: user_error_text,
-                UnhandledError: user_error_text,
-            }
-            self.return_text = str(error_messages.get(type(err)))
-
+            self.return_text, _ = await handle_exceptions(err)
             await self.handle_error(f'Ошибка в `GetAnswerGPT.answer_from_ai()`: {str(err)}')
         finally:
             await self.reply_to_user()

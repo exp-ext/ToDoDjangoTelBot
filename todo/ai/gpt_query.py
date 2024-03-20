@@ -7,7 +7,8 @@ import httpx
 import tiktoken_async
 from ai.gpt_exception import (InWorkError, LongQueryError,
                               OpenAIConnectionError, OpenAIJSONDecodeError,
-                              OpenAIResponseError, UnhandledError)
+                              OpenAIResponseError, UnhandledError,
+                              ValueChoicesError, handle_exceptions)
 from asgiref.sync import sync_to_async
 from channels.db import database_sync_to_async
 from django.conf import settings
@@ -64,29 +65,26 @@ class GetAnswerGPT():
 
     async def get_answer_chat_gpt(self) -> dict:
         """Основная логика."""
-
         await self.init_user_model()
         self.query_text_tokens, self.assist_prompt_tokens, _ = await asyncio.gather(
             self.num_tokens(self.query_text),
             self.num_tokens(self.assist_prompt),
             self.check_in_works(),
         )
-
         if self.check_long_query:
             raise LongQueryError(
                 f'{self.user.first_name if self.is_user_authenticated else "Дорогой друг" }, слишком большой текст запроса.\n'
                 'Попробуйте сформулировать его короче.'
             )
-
         try:
             if self.event:
                 asyncio.create_task(self.send_typing_periodically())
             await self.get_prompt()
             await self.httpx_request_to_openai()
-
         except Exception as err:
             traceback_str = traceback.format_exc()
-            raise UnhandledError(f'Не обработанная ошибка:\n\n{str(err)[:1024]}\n\nТрассировка:\n{traceback_str[-1024:]}')
+            _, type_err = await handle_exceptions(err)
+            raise type_err(f'\n\n{str(err)}\n\nТрассировка:\n{traceback_str[-1024:]}')
         finally:
             if self.is_user_authenticated:
                 asyncio.create_task(self.create_history_ai())
@@ -130,7 +128,7 @@ class GetAnswerGPT():
                     self.return_text_tokens = completion.get('usage', {}).get('completion_tokens')
                     self.query_text_tokens = completion.get('usage', {}).get('prompt_tokens')
                 else:
-                    raise ValueError(f"`GetAnswerGPT`, ответ не содержит полей 'choices': {json.dumps(completion, ensure_ascii=False, indent=4)}")
+                    raise ValueChoicesError(f"`GetAnswerGPT`, ответ не содержит полей 'choices': {json.dumps(completion, ensure_ascii=False, indent=4)}")
 
         except httpx.HTTPStatusError as http_err:
             raise OpenAIResponseError(f'`GetAnswerGPT`, ответ сервера был получен, но код состояния указывает на ошибку: {http_err}') from http_err

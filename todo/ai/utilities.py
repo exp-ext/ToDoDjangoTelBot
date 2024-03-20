@@ -1,7 +1,5 @@
 import markdown
-from ai.gpt_exception import (LongQueryError, OpenAIConnectionError,
-                              OpenAIJSONDecodeError, OpenAIResponseError,
-                              UnhandledError)
+from ai.gpt_exception import handle_exceptions
 from ai.gpt_query import GetAnswerGPT
 from channels.generic.websocket import AsyncWebsocketConsumer
 from django.conf import settings
@@ -28,19 +26,7 @@ class WSAnswerChatGPT(GetAnswerGPT):
         try:
             await self.get_answer_chat_gpt()
         except Exception as err:
-            user_error_text = (
-                'Что-то пошло не так 🤷🏼\n'
-                'Возможно большой наплыв запросов, которые я не успеваю обрабатывать 🤯'
-            )
-            error_messages = {
-                LongQueryError: lambda e: str(e),
-                OpenAIResponseError: 'Проблема с получением ответа от ИИ. Возможно она устала.',
-                OpenAIConnectionError: 'Проблемы соединения. Вероятно ИИ вышла ненадолго.',
-                OpenAIJSONDecodeError: user_error_text,
-                UnhandledError: user_error_text,
-            }
-            self.return_text = str(error_messages.get(type(err)))
-
+            self.return_text, _ = await handle_exceptions(err)
             await self.handle_error(f'Ошибка в `GetAnswerGPT.answer_from_ai()`: {str(err)}')
         finally:
             if self.user.is_anonymous and self.message_count == 1:

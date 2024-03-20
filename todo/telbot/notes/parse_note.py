@@ -1,8 +1,10 @@
 import asyncio
 import os
+import traceback
 from datetime import datetime
 
 import pytz
+from ai.gpt_exception import handle_exceptions
 from core.re_compile import DATE_PATTERN
 from dateparser.search import search_dates
 from django.db.models import Model
@@ -98,9 +100,15 @@ class TaskParse:
             await self.set_params(transform_message_from_ai)
 
         except ValueError as error:
-            raise ValueError(f'Не распарсил в `TaskParse`: {self.inbox_message}.Ошибка:\n {error}')
-        except Exception as error:
-            raise RuntimeError(f'Ошибка в процессе `TaskParse`: {error}') from error
+            raise ValueError(f'Не распарсил в `TaskParse`:\n{self.inbox_message}.\n{error}') from error
+        except Exception as err:
+            _, type_err = await handle_exceptions(err)
+            if hasattr(err, 'log_traceback') and err.log_traceback:
+                err.log_traceback = False
+            else:
+                traceback_str = traceback.format_exc()
+                add_err_trace = f'\n\nТрассировка:\n{traceback_str[-1024:]}'
+            raise type_err(f'Ошибка в процессе `TaskParse`:\n{err}{add_err_trace}') from err
 
     async def replace_date_in_message(self, string_date: str, parse_date: datetime):
         """

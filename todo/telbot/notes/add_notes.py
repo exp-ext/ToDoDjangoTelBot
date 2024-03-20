@@ -1,5 +1,4 @@
 import asyncio
-import traceback
 from datetime import timedelta
 
 from asgiref.sync import sync_to_async
@@ -71,8 +70,7 @@ class NoteManager:
 
         except Exception as err:
             await self.send_failure_message()
-            traceback_str = traceback.format_exc()
-            text = f'Ошибка при добавлении напоминания в `NoteManager`:\n{str(err)[:1024]}\n\nТрассировка:\n{traceback_str[-1024:]}'
+            text = f'Ошибка в процессе `NoteManager`:\n{str(err)[:1024]}'
             send_message_to_chat(ADMIN_ID, text)
 
     async def delete_messages(self):

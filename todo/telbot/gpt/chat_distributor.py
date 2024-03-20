@@ -9,7 +9,7 @@ from telegram import Update
 from telegram.ext import CallbackContext
 
 from ..checking import check_registration
-from .chat_gpt import GetAnswerGPT
+from .chat_gpt import TelegramAnswerGPT
 
 
 async def async_check_registration(update, context):
@@ -41,8 +41,8 @@ async def check_request_in_distributor(update, context):
         note_manager = NoteManager(update, context, user)
         await note_manager.add_notes()
     else:
-        get_answer = GetAnswerGPT(update, context, user)
-        await get_answer.get_answer_chat_gpt()
+        get_answer = TelegramAnswerGPT(update, context, user)
+        await get_answer.answer_from_ai()
 
 
 def get_answer_chat_gpt_public(update: Update, context: CallbackContext):
@@ -50,4 +50,5 @@ def get_answer_chat_gpt_public(update: Update, context: CallbackContext):
 
 
 def get_answer_chat_gpt_person(update: Update, context: CallbackContext):
-    asyncio.run(check_request_in_distributor(update, context))
+    if update.effective_chat.type == 'private':
+        asyncio.run(check_request_in_distributor(update, context))

@@ -20,7 +20,7 @@
         {% with request.resolver_match.view_name as view_name %}
           <ul class="navbar-nav mr-auto nav-pills">
             {% if request.user.is_anonymous %}
-              <li class="nav-item"> 
+              <li class="nav-item">
                 <a class="nav-link" href="{% url 'posts:index_posts' %}">
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-postcard-heart" viewBox="0 0 16 16">
                   <path d="M8 4.5a.5.5 0 0 0-1 0v7a.5.5 0 0 0 1 0v-7Zm3.5.878c1.482-1.42 4.795 1.392 0 4.622-4.795-3.23-1.482-6.043 0-4.622ZM2.5 5a.5.5 0 0 0 0 1h3a.5.5 0 0 0 0-1h-3Zm0 2a.5.5 0 0 0 0 1h3a.5.5 0 0 0 0-1h-3Zm0 2a.5.5 0 0 0 0 1h3a.5.5 0 0 0 0-1h-3Z"/>
@@ -98,7 +98,7 @@
                   контакты</a>
               </li>
               <li class="nav-item">
-                  <a class="nav-link link-light" id="redirectLink" href="javascript:void(0);">Войти через Telegram</a>
+                  <a class="nav-link link-light" id="redirectLink" href="javascript:void(0);">Войти с Telegram</a>
               </li>
               <li class="nav-item d-flex align-items-center ml-auto">
                 <p>&#160<p/>

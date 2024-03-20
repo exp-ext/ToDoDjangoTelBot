@@ -24,20 +24,56 @@
           <form id="createForm" class="py-2" method="post" enctype="multipart/form-data"
           action="{% if form.initial.is_edit %}
                     {% url 'posts:post_edit' post_identifier_pk=form.instance.id %}
-                  {% else %} 
+                  {% else %}
                     {% url 'posts:post_create' %} 
                   {% endif %}">
             {% csrf_token %}
             {{ form.media }}
-            {{ form.as_p }}
-            <div class="d-flex justify-content-end">              
-              <button type="submit" class="btn btn-primary">
-                {% if form.initial.is_edit %}
-                  Сохранить изменения
-                {% else %}
-                  Добавить
-                {% endif %}
-              </button>
+            <div class="form-group {% if form.title.errors %}has-error{% endif %}">
+                {% for error in form.title.errors %}
+                    <div class="alert alert-danger">{{ error }}</div>
+                {% endfor %}
+                {{ form.title }}
+            </div>
+            {{ form.group }}
+            <div class="form-group {% if form.text.errors %}has-error{% endif %}">
+                {% for error in form.text.errors %}
+                    <div class="alert alert-danger">{{ error }}</div>
+                {% endfor %}
+                {{ form.text }}
+            </div>
+            <div class="form-group {% if form.short_description.errors %}has-error{% endif %}">
+                {% for error in form.short_description.errors %}
+                    <div class="alert alert-danger">{{ error }}</div>
+                {% endfor %}
+                {{ form.short_description }}
+            </div>
+            <div id="add-image">
+                <input type="file" name="image" accept="image/*" id="id_image" />
+                <div class="image-grid" id="image-grid">
+                </div>
+            </div>
+            <div class="d-flex justify-content-end mt-2">
+              <div class="d-flex flex-column">
+                <div>
+                  <button type="submit" name="publication_type" value="group" class="btn btn-primary">
+                    {% if form.initial.is_edit %}
+                      Сохранить изменения с публикацией только в группе
+                    {% else %}
+                      Добавить заметку с публикацией только в группе
+                    {% endif %}
+                  </button>
+                </div>
+                <div>
+                  <button type="submit" name="publication_type" value="public" class="btn btn-primary my-2">
+                    {% if form.initial.is_edit %}
+                      Сохранить изменения с публичной публикацией
+                    {% else %}
+                      Добавить заметку с публичной публикацией
+                    {% endif %}
+                  </button>
+                </div>
+              </div>
             </div>
           </form>
       </div>
@@ -49,4 +85,5 @@
     var autosaveUrl = "{% url 'posts:autosave' %}";
   </script>
   <script src="{% static 'js/autosave.js' %}"></script>
+  <script src="{% static 'js/create-post.js' %}"></script>
 {% endblock %}

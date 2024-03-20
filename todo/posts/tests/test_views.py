@@ -43,13 +43,15 @@ class PostViewsTests(TestCase):
             chat_id='-453213215613',
             title='Тестовая группа',
             slug='test-slug-views',
-            description='Тестовое описание'
+            description='Тестовое описание',
+            link='slug-link'
         )
         cls.group_not_hit = Group.objects.create(
             chat_id='-84165156265465',
             title='Тестовая группа для 12-ого поста',
             slug='test-slug-views-not-hit',
-            description='Тестовое описание той самой группы'
+            description='Тестовое описание той самой группы',
+            link='slug-link'
         )
         connections = [
             {

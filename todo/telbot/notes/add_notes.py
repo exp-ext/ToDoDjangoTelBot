@@ -1,5 +1,4 @@
 import asyncio
-import traceback
 from datetime import timedelta
 
 from asgiref.sync import sync_to_async
@@ -7,6 +6,7 @@ from channels.db import database_sync_to_async
 from core.views import similarity
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.utils.timezone import now
 from tasks.models import Task
 from telbot.checking import check_registration
 from telbot.cleaner import remove_keyboard
@@ -57,7 +57,7 @@ class NoteManager:
 
             group = None if self.chat.type == 'private' else await self.get_group()
 
-            if not self.pars_params.server_datetime:
+            if not self.pars_params.server_datetime or self.pars_params.server_datetime - timedelta(minutes=self.pars_params.delta_time_min) <= now():
                 await self.send_failure_message()
                 return None
 
@@ -70,8 +70,7 @@ class NoteManager:
 
         except Exception as err:
             await self.send_failure_message()
-            traceback_str = traceback.format_exc()
-            text = f'Ошибка при добавлении напоминания в `NoteManager`:\n{str(err)[:1024]}\n\nТрассировка:\n{traceback_str[-1024:]}'
+            text = f'Ошибка в процессе `NoteManager`:\n{str(err)[:1024]}'
             send_message_to_chat(ADMIN_ID, text)
 
     async def delete_messages(self):
@@ -83,7 +82,10 @@ class NoteManager:
     @sync_to_async
     def send_failure_message(self):
         """Отправка сообщения при ошибке."""
-        reply_text = f'*{self.update.message.from_user.first_name}*, не удалось разобрать дату 🧐. Попробуйте снова 🙄.'
+        reply_text = (
+            f'*{self.update.message.from_user.first_name}*, не удалось разобрать дату или она в совокупности меньше текущей 🧐. Пожалуйста, попробуйте снова 🙄.'
+            '\nПожалуйста, придерживайтесь формата запроса: На <дата> в <время>, <тело>. Напомни за <минут/часов> до события.'
+        )
         send_service_message(self.chat.id, reply_text, 'Markdown', self.message_thread_id)
 
     @sync_to_async

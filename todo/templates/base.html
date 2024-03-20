@@ -38,7 +38,9 @@
     {% include 'includes/chat-popup.html' %}
   {% endif %}
   </main>
-  {% include 'includes/footer.html' %}  
+  {% block footer %}
+    {% include 'includes/footer.html' %}
+  {% endblock %}
   <link rel="stylesheet" href="{% static 'django_ckeditor_5/dist/styles.css' %}" type="text/css">
   <link rel="stylesheet" href="{% static 'css/highlightjs/xcode.min.css' %}" type="text/css">
   <link rel="stylesheet" href="{% static 'css/jquery/theme.min.css' %}" type="text/css">

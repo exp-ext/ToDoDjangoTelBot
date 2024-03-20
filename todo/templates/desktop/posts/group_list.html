@@ -4,7 +4,11 @@
 {% block head %}
   <meta name="description" content="{{ group.description }}"/>
   <meta name="keywords" content="Telegram, заметки, группа">
-  <meta name="robots" content="index, follow">
+  {% if group_public %}
+    <meta name="robots" content="index, follow">
+  {% else %}
+    <meta name="robots" content="noindex">
+  {% endif %}
   <link rel="canonical" href="https://www.yourtodo.ru{% url 'posts:group_list' group.slug %}" />
   <meta property="og:site_name" content="YourToDo.ru"/>
   <meta property="og:title" content="{{ group.title }}"/>

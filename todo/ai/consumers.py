@@ -26,7 +26,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         )
 
     async def receive(self, text_data):
-        from ai.utils import AnswerChatGPT
+        from ai.utilities import WSAnswerChatGPT
         text_data_json = json.loads(text_data)
         message = text_data_json['message']
         user = self.scope['user']
@@ -36,13 +36,13 @@ class ChatConsumer(AsyncWebsocketConsumer):
             'channel_layer': self.channel_layer,
             'room_group_name': self.room_group_name,
             'user': user,
-            'message': message,
+            'query_text': message,
             'message_count': self.message_count,
         }
 
         # Отправка запроса ИИ
-        answer_gpt_instance = AnswerChatGPT(**send_eva)
-        asyncio.create_task(answer_gpt_instance.get_answer_from_ai())
+        answer_gpt_instance = WSAnswerChatGPT(**send_eva)
+        asyncio.create_task(answer_gpt_instance.answer_from_ai())
 
         # Отправка сообщения в комнату
         await self.channel_layer.group_send(

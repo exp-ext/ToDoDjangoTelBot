@@ -72,8 +72,11 @@ class AnswerChatGPT():
         finally:
             if not self.user.is_authenticated and self.message_count == 1:
                 welcome_text = (
-                    'Дорогой друг! '
-                    'После регистрации и авторизации для тебя будет доступен режим диалога с ИИ Ева, а не просто ответ на вопрос как ниже.'
+                    'С большой радостью приветствуем тебя, дорогой друг! 🌟 '
+                    'Завершив процесс регистрации и авторизации, ты получишь доступ к уникальной возможности: '
+                    'вести диалог с ИИ Ева. Это гораздо больше, чем простые ответы на вопросы — это целый новый мир, '
+                    'где ты можешь общаться, учиться и исследовать. Ваш диалог будет тщательно сохранён, '
+                    'что позволит легко продолжить общение даже при переходе между страницами сайта. '
                 )
                 await self.send_chat_message(welcome_text)
 
@@ -105,29 +108,36 @@ class AnswerChatGPT():
         data = {
             "model": self.model.title,
             "messages": self.prompt,
-            "temperature": 0.1
+            "temperature": 0.3
         }
-        async with httpx.AsyncClient(transport=transport) as client:
-            response = await client.post(
-                "https://api.openai.com/v1/chat/completions",
-                headers=headers,
-                json=data,
-                timeout=60 * self.MAX_TYPING_TIME,
-            )
-            completion = json.loads(response.content)
-            try:
-                self.answer_text = completion.get('choices')[0]['message']['content']
-                self.answer_tokens = completion.get('usage')['completion_tokens']
-                self.message_tokens = completion.get('usage')['prompt_tokens']
-            except httpx.HTTPStatusError as http_err:
-                raise RuntimeError(f'Ответ сервера был получен, но код состояния указывает на ошибку: {http_err}') from http_err
-            except httpx.RequestError as req_err:
-                raise RuntimeError(f'Проблемы соединения: {req_err}') from req_err
-            except KeyError as key_err:
-                self.answer_text = 'Я отказываюсь отвечать на этот вопрос...'
-                raise ValueError(f'Отсутствие ожидаемых ключей в ответе: {key_err}') from key_err
-            except Exception as error:
-                raise RuntimeError(f'Необработанная ошибка в `GetAnswerGPT.httpx_request_to_openai()`: {error}') from error
+        try:
+            async with httpx.AsyncClient(transport=transport) as client:
+                response = await client.post(
+                    "https://api.openai.com/v1/chat/completions",
+                    headers=headers,
+                    json=data,
+                    timeout=60 * self.MAX_TYPING_TIME,
+                )
+                response.raise_for_status()
+                completion = response.json()
+                choices = completion.get('choices')
+                if choices and len(choices) > 0:
+                    first_choice = choices[0]
+                    self.answer_text = first_choice['message']['content']
+                    self.answer_tokens = completion.get('usage', {}).get('completion_tokens')
+                    self.message_tokens = completion.get('usage', {}).get('prompt_tokens')
+                else:
+                    await self.handle_error(json.dumps(completion, ensure_ascii=False, indent=4))
+                    raise ValueError("`AnswerChatGPT`, ответ не содержит полей 'choices'")
+
+        except httpx.HTTPStatusError as http_err:
+            raise RuntimeError(f'`AnswerChatGPT`, ответ сервера был получен, но код состояния указывает на ошибку: {http_err}') from http_err
+        except httpx.RequestError as req_err:
+            raise RuntimeError(f'`AnswerChatGPT`, проблемы соединения: {req_err}') from req_err
+        except json.JSONDecodeError:
+            raise RuntimeError('`AnswerChatGPT`, ошибка при десериализации JSON.')
+        except Exception as error:
+            raise RuntimeError(f'Необработанная ошибка в `AnswerChatGPT.httpx_request_to_openai()`: {error}') from error
 
     async def send_chat_message(self, message):
         await self.channel_layer.group_send(

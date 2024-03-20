@@ -27,11 +27,8 @@ class UserAdmin(admin.ModelAdmin):
         'username',
         'first_name',
         'last_name',
-        'role',
         'favorite_group',
-        'is_active',
-        'is_staff',
-        'is_superuser',
+        'is_blocked_bot',
     )
     fieldsets = (
         ('Данные пользователя', {'fields': ('tg_id', 'username', 'first_name', 'last_name')}),
@@ -46,6 +43,7 @@ class UserAdmin(admin.ModelAdmin):
         ('is_staff', admin.BooleanFieldListFilter),
         ('last_login', admin.DateFieldListFilter),
     )
+    list_editable = ('is_blocked_bot',)
     readonly_fields = ('preview',)
     empty_value_display = '-пусто-'
 

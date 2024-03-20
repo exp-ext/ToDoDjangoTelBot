@@ -50,23 +50,38 @@ class ValueChoicesError(OpenAIRequestError):
     pass
 
 
-async def handle_exceptions(err: Exception, need_traceback: bool = False) -> tuple[str, type, str]:
-    traceback_str = ''
-    traceback_err = traceback.format_exc()
+async def handle_exceptions(err: Exception, include_traceback: bool = False) -> tuple[str, type, str]:
+    """
+    Обработчик исключений для запросов к OpenAI.
+
+    ### Args:
+    - err (`Exception`): Объект исключения.
+    - include_traceback (`bool`, optional): Флаг для включения трассировки из пространства текущего вызова.
+
+    ### Returns:
+    - tuple[`str`, `type`, `str`]: Кортеж с текстом ошибки, типом ошибки и трассировкой.
+
+    """
     user_error_text = 'Что-то пошло не так 🤷🏼\nВозможно большой наплыв запросов, которые я не успеваю обрабатывать 🤯'
     error_messages = {
-        InWorkError: lambda e: 'Я ещё думаю над вашим вопросом.',
-        LongQueryError: lambda e: str(e),
-        ValueChoicesError: lambda e: user_error_text,
-        OpenAIResponseError: lambda e: 'Проблема с получением ответа от ИИ. Возможно она устала.',
-        OpenAIConnectionError: lambda e: 'Проблемы соединения. Вероятно ИИ вышла ненадолго.',
-        OpenAIJSONDecodeError: lambda e: user_error_text,
-        UnhandledError: lambda e: user_error_text,
+        InWorkError: 'Я ещё думаю над вашим вопросом.',
+        LongQueryError: str(err),
+        ValueChoicesError: user_error_text,
+        OpenAIResponseError: 'Проблема с получением ответа от ИИ. Возможно она устала.',
+        OpenAIConnectionError: 'Проблемы соединения. Вероятно ИИ вышла ненадолго.',
+        OpenAIJSONDecodeError: user_error_text,
+        UnhandledError: user_error_text,
     }
-    error_message = error_messages.get(type(err), lambda e: "Неизвестная ошибка.")(err)
-    if hasattr(err, 'log_traceback') and err.log_traceback:
-        err.log_traceback = need_traceback
-        traceback_str = f'\n\nТрассировка:\n{traceback_err[-1024:]}'
-    elif need_traceback:
-        traceback_str = f'\n\nТрассировка:\n{traceback_err[-1024:]}'
-    return error_message, type(err), traceback_str
+
+    error_message = error_messages.get(type(err), "Неизвестная ошибка.")
+    if isinstance(error_message, str):
+        formatted_error_message = error_message
+    else:
+        formatted_error_message = error_message(err)
+
+    include_traceback = include_traceback or (hasattr(err, 'log_traceback') and err.log_traceback)
+    traceback_str = ''
+    if include_traceback:
+        traceback_str = f'\n\nТрассировка:\n{traceback.format_exc()[-1024:]}'
+
+    return formatted_error_message, type(err), traceback_str

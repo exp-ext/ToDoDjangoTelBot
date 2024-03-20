@@ -1,5 +1,3 @@
-import traceback
-
 from ai.gpt_exception import handle_exceptions
 from ai.gpt_query import GetAnswerGPT
 from channels.db import database_sync_to_async

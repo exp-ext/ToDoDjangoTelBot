@@ -1,3 +1,6 @@
+import traceback
+
+
 class LogTracebackExceptionError(Exception):
     """Абстракция для логирования traceback."""
     def __init__(self, message, log_traceback=True):
@@ -47,17 +50,9 @@ class ValueChoicesError(OpenAIRequestError):
     pass
 
 
-async def handle_exceptions(err):
-    """
-    Обработчик исключений.
-
-    ### Args:
-    - err (`Exception`): Исключение.
-
-    ### Returns:
-    - `tuple`: Сообщение об ошибке и тип исключения.
-
-    """
+async def handle_exceptions(err: Exception, need_traceback: bool = False) -> tuple[str, type, str]:
+    traceback_str = ''
+    traceback_err = traceback.format_exc()
     user_error_text = 'Что-то пошло не так 🤷🏼\nВозможно большой наплыв запросов, которые я не успеваю обрабатывать 🤯'
     error_messages = {
         InWorkError: lambda e: 'Я ещё думаю над вашим вопросом.',
@@ -69,4 +64,9 @@ async def handle_exceptions(err):
         UnhandledError: lambda e: user_error_text,
     }
     error_message = error_messages.get(type(err), lambda e: "Неизвестная ошибка.")(err)
-    return error_message, type(err)
+    if hasattr(err, 'log_traceback') and err.log_traceback:
+        err.log_traceback = need_traceback
+        traceback_str = f'\n\nТрассировка:\n{traceback_err[-1024:]}'
+    elif need_traceback:
+        traceback_str = f'\n\nТрассировка:\n{traceback_err[-1024:]}'
+    return error_message, type(err), traceback_str

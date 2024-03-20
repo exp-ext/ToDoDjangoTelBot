@@ -1,6 +1,5 @@
 import asyncio
 import os
-import traceback
 from datetime import datetime
 
 import pytz
@@ -102,13 +101,8 @@ class TaskParse:
         except ValueError as error:
             raise ValueError(f'Не распарсил в `TaskParse`:\n{self.inbox_message}.\n{error}') from error
         except Exception as err:
-            _, type_err = await handle_exceptions(err)
-            if hasattr(err, 'log_traceback') and err.log_traceback:
-                err.log_traceback = False
-            else:
-                traceback_str = traceback.format_exc()
-                add_err_trace = f'\n\nТрассировка:\n{traceback_str[-1024:]}'
-            raise type_err(f'Ошибка в процессе `TaskParse`:\n{err}{add_err_trace}') from err
+            _, type_err, traceback_str = await handle_exceptions(err, True)
+            raise type_err(f'Ошибка в процессе `TaskParse`:\n{err}{traceback_str}') from err
 
     async def replace_date_in_message(self, string_date: str, parse_date: datetime):
         """

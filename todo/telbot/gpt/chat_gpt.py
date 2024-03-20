@@ -26,7 +26,7 @@ class TelegramAnswerGPT(GetAnswerGPT):
         try:
             await self.get_answer_chat_gpt()
         except Exception as err:
-            self.return_text, _ = await handle_exceptions(err)
+            self.return_text, *_ = await handle_exceptions(err)
             await self.handle_error(f'Ошибка в `GetAnswerGPT.answer_from_ai()`: {str(err)}')
         finally:
             await self.reply_to_user()

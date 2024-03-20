@@ -20,13 +20,8 @@ class ReminderGPT(GetAnswerGPT):
         try:
             await self.get_answer_chat_gpt()
         except Exception as err:
-            _, type_err = await handle_exceptions(err)
-            if hasattr(err, 'log_traceback') and err.log_traceback:
-                err.log_traceback = False
-            else:
-                traceback_str = traceback.format_exc()
-                add_err_trace = f'\n\nТрассировка:\n{traceback_str[-1024:]}'
-            raise type_err(f'Ошибка в процессе `ReminderGPT`: {err}{add_err_trace}') from err
+            _, type_err, traceback_str = await handle_exceptions(err, True)
+            raise type_err(f'Ошибка в процессе `ReminderGPT`: {err}{traceback_str}') from err
         return self.return_text
 
     async def get_prompt(self) -> None:

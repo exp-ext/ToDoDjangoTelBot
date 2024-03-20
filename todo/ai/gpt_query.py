@@ -1,6 +1,5 @@
 import asyncio
 import json
-import traceback
 from datetime import datetime, timedelta
 
 import httpx
@@ -81,13 +80,12 @@ class GetAnswerGPT():
                 asyncio.create_task(self.send_typing_periodically())
             await self.get_prompt()
             await self.httpx_request_to_openai()
-        except Exception as err:
-            traceback_str = traceback.format_exc()
-            _, type_err = await handle_exceptions(err)
-            raise type_err(f'\n\n{str(err)}\n\nТрассировка:\n{traceback_str[-1024:]}')
-        finally:
             if self.is_user_authenticated:
                 asyncio.create_task(self.create_history_ai())
+        except Exception as err:
+            _, type_err, traceback_str = await handle_exceptions(err, True)
+            raise type_err(f'\n\n{str(err)}{traceback_str}')
+        finally:
             await self.del_mess_in_redis()
 
     async def send_typing_periodically(self) -> None:

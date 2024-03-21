@@ -146,7 +146,7 @@
   margin: 0;
   list-style: none;
   overflow-y: auto;
-  overflow-x: hidden;
+  overflow-x: auto;
   flex-grow: 1;
   background: #444;
   max-height: 80vh;
@@ -209,11 +209,12 @@
   border-right: 10px solid transparent;
   right: -10px;
 }
-.floating-chat .chat .messages .pre {
-  max-width: 100%;
-  overflow-x: auto;
-  margin: 0;
-  padding: 0.5em;
+.floating-chat .chat .messages pre {
+  white-space: pre !important;
+  overflow-x: auto !important;
+  word-wrap: normal !important;
+  border-radius: 5px !important;
+  padding: 10px !important;
 }
 .floating-chat .chat .messages li.self {
   animation: show-chat-even 0.15s 1 ease-in;

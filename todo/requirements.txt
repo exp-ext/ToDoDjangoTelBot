@@ -50,6 +50,7 @@ langdetect~=1.0.9
 # ChatGPT
 openai
 httpx
+socksio
 httpx-socks
 requests
 

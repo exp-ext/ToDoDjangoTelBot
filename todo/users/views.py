@@ -146,8 +146,8 @@ class Authentication:
         else:
             preview_text = ""
         auth_link = (
-            f'Для авторизации на [сайте](https://{settings.DOMAINPREFIX}.{settings.DOMAIN}) пройдите по ссылке:\n〰\n'
-            f'✔️ [https://{settings.DOMAINPREFIX}.{settings.DOMAIN}/auth/](https://{settings.DOMAINPREFIX}.{settings.DOMAIN}/auth/login/tg/{self.tg_user.id}/{validation_key}/)\n〰'
+            f'Для авторизации на [сайте](https://{settings.DOMAINPREFIX}.{settings.DOMAIN}) пройдите по следующей ссылке:\n{"〰" * 12}\n'
+            f'✔️ [https://{settings.DOMAINPREFIX}.{settings.DOMAIN}/auth/](https://{settings.DOMAINPREFIX}.{settings.DOMAIN}/auth/login/tg/{self.tg_user.id}/{validation_key}/)\n{"〰" * 12}'
         )
         return preview_text + auth_link
 

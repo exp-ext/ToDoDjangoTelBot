@@ -1,9 +1,13 @@
+import httpx
 import markdown
-from ai.gpt_exception import handle_exceptions
+from ai.gpt_exception import (OpenAIConnectionError, OpenAIResponseError,
+                              UnhandledError, handle_exceptions)
 from ai.gpt_query import GetAnswerGPT
 from channels.generic.websocket import AsyncWebsocketConsumer
 from django.conf import settings
 from django.db.models import Model
+from httpx_socks import AsyncProxyTransport
+from openai import AsyncOpenAI
 from telbot.loader import bot
 from telbot.models import HistoryAI
 
@@ -39,8 +43,6 @@ class WSAnswerChatGPT(GetAnswerGPT):
                 )
                 await self.send_chat_message(welcome_text)
 
-            await self.send_chat_message(self.return_text)
-
     async def send_chat_message(self, message):
         await self.channel_layer.group_send(
             self.room_group_name,
@@ -51,6 +53,50 @@ class WSAnswerChatGPT(GetAnswerGPT):
             }
         )
 
+    async def httpx_request_to_openai(self) -> None:
+        """Делает запрос в OpenAI и выключает typing."""
+        try:
+            proxy_transport = AsyncProxyTransport.from_url(settings.SOCKS5)
+            async with httpx.AsyncClient(transport=proxy_transport) as transport:
+                client = AsyncOpenAI(
+                    api_key=self.model.token,
+                    http_client=transport,
+                )
+                stream = await client.chat.completions.create(
+                    model=self.model.title,
+                    messages=self.all_prompt,
+                    stream=True,
+                )
+                first_chunk = True
+                async for chunk in stream:
+                    self.return_text += chunk.choices[0].delta.content or ""
+                    await self.send_chunk_to_websocket(self.return_text, is_start=first_chunk, is_end=False)
+                    if first_chunk:
+                        first_chunk = False
+                await self.send_chunk_to_websocket("", is_end=True)
+                self.return_text_tokens = await self.num_tokens(self.return_text, 0)
+
+        except httpx.HTTPStatusError as http_err:
+            raise OpenAIResponseError(f'`WSAnswerChatGPT`, ответ сервера был получен, но код состояния указывает на ошибку: {http_err}') from http_err
+        except httpx.RequestError as req_err:
+            raise OpenAIConnectionError(f'`WSAnswerChatGPT`, проблемы соединения: {req_err}') from req_err
+        except Exception as error:
+            raise UnhandledError(f'Необработанная ошибка в `WSAnswerChatGPT.httpx_request_to_openai()`: {error}') from error
+
+    async def send_chunk_to_websocket(self, chunk, is_start=False, is_end=False):
+        """Отправка части текста ответа через веб-сокет с указанием на статус части потока."""
+        await self.channel_layer.group_send(
+            self.room_group_name,
+            {
+                'type': 'chat.message',
+                'message': chunk,
+                'username': 'Eva',
+                'is_stream': True,
+                'is_start': is_start,
+                'is_end': is_end,
+            }
+        )
+
     async def handle_error(self, err):
         """Логирование ошибок."""
         error_message = f"Ошибка в блоке Сайт-ChatGPT:\n{err}"
@@ -58,6 +104,8 @@ class WSAnswerChatGPT(GetAnswerGPT):
 
     def init_model_prompt(self):
         return (
-            'You are named Eva, an experienced senior software developer with a strong background in team leadership, '
-            'mentoring all developers, and delivering high-quality software solutions to clients. Your primary language is Russian.'
+            """
+            Your name is Eva and are an experienced senior software developer with a strong background in team leadership, mentoring all developers, and delivering high-quality software solutions to clients.
+            Your primary language is Russian. When formatting the text, please use only Markdown format.
+            """
         )

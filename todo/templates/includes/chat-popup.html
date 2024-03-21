@@ -1,7 +1,8 @@
 {% load static %}
 {% block head %}
-  <link rel='stylesheet' href='https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css'>
+  <link rel="stylesheet" href="{% static 'css/bootstrap/font-awesome.min.css' %}">
   <link rel="stylesheet" href="{% static 'css/chat-popup.css' %}">
+  <script src="{% static 'js/marked/marked.min.js' %}" type="text/javascript" defer></script>
 {% endblock %}
 {% csrf_token %}
 <div class="floating-chat">
@@ -10,7 +11,7 @@
       <div class="header">
         <span class="title eva">
           Eva assistant
-          <span class="typing-indicator" style="display: none;"><span>t</span><span>y</span><span>p</span><span>i</span><span>n</span><span>g</span></span>
+          <span class="typing-indicator" style="display: none;"><span>t</span><span>h</span><span>i</span><span>n</span><span>k</span><span>s</span></span>
         </span>
         <button>
           <i class="fa fa-times" aria-hidden="true" style="font-size: 16px;"></i>

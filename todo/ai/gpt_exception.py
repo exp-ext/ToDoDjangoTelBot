@@ -67,8 +67,8 @@ async def handle_exceptions(err: Exception, include_traceback: bool = False) -> 
         InWorkError: 'Я ещё думаю над вашим вопросом.',
         LongQueryError: str(err),
         ValueChoicesError: user_error_text,
-        OpenAIResponseError: 'Проблема с получением ответа от ИИ. Возможно она устала.',
-        OpenAIConnectionError: 'Проблемы соединения. Вероятно ИИ вышла ненадолго.',
+        OpenAIResponseError: 'Проблема в получении ответа от искусственного интеллекта. Вероятно, он временно недоступен.',
+        OpenAIConnectionError: 'Проблема с подключением... Похоже, искусственный интеллект на мгновение отключился.',
         OpenAIJSONDecodeError: user_error_text,
         UnhandledError: user_error_text,
     }

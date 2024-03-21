@@ -53,7 +53,7 @@ class GetAnswerGPT():
         self.assist_prompt_tokens = 0       # количество токенов в промпте ассистента в head модели
         self.all_prompt = []                # общий промпт для запроса
         self.current_time = now()           # текущее время для окна истории
-        self.return_text = None             # текст полученный в ответе от модели
+        self.return_text = ''               # текст полученный в ответе от модели
         self.return_text_tokens = None      # количество токенов в ответе
         self.event = asyncio.Event() if chat_id else None  # typing в чат пользователя
         self.user_models = None             # разрешенные GPT модели пользователя
@@ -66,8 +66,8 @@ class GetAnswerGPT():
         """Основная логика."""
         await self.init_user_model()
         self.query_text_tokens, self.assist_prompt_tokens, _ = await asyncio.gather(
-            self.num_tokens(self.query_text),
-            self.num_tokens(self.assist_prompt),
+            self.num_tokens(self.query_text, 4),
+            self.num_tokens(self.assist_prompt, 7),
             self.check_in_works(),
         )
         if self.check_long_query:
@@ -151,13 +151,18 @@ class GetAnswerGPT():
         )
         await sync_to_async(self.history_instance.save)()
 
-    async def num_tokens(self, text: str) -> int:
-        """Считает количество токенов."""
+    async def num_tokens(self, text: str, corr_token: int = 0) -> int:
+        """Считает количество токенов.
+        ## Args:
+        - text (`str`): текс для которого возвращается количество
+        - corr_token (`int`): количество токенов для ролей и разделителей
+
+        """
         try:
             encoding = await tiktoken_async.encoding_for_model(self.model.title)
         except KeyError:
             encoding = await tiktoken_async.get_encoding("cl100k_base")
-        return len(encoding.encode(text))
+        return len(encoding.encode(text)) + corr_token
 
     async def add_to_prompt(self, role: str, content: str) -> None:
         """Добавляет элемент в список all_prompt."""
@@ -176,11 +181,11 @@ class GetAnswerGPT():
             ).values(
                 'question', 'question_tokens', 'answer', 'answer_tokens'
             ))
-        # +11 - токены для ролей и разделителей: 'system' - 7 'user' - 4
-        token_counter = self.query_text_tokens + self.assist_prompt_tokens + 11
+        token_counter = self.query_text_tokens + self.assist_prompt_tokens
         for item in history:
             question_tokens = item.get('question_tokens', 0)
             answer_tokens = item.get('answer_tokens', 0)
+            # +11 - токены для ролей и разделителей: 'system' - 7 'user' - 4
             token_counter += question_tokens + answer_tokens + 11
 
             if token_counter >= self.model.context_window:

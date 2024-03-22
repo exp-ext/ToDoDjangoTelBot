@@ -1,5 +1,6 @@
 from difflib import SequenceMatcher
 
+import markdown
 from django.contrib.auth import get_user_model
 from django.core.paginator import Paginator
 from django.db.models import Model
@@ -99,3 +100,17 @@ def get_status_in_group(group: QuerySet[Group], user_id: int) -> bool:
         return result.status
     except Exception:
         return 'error'
+
+
+def convert_markdown(text: str) -> str:
+    """
+    Конвертирует теги Markdown в HTML-теги
+
+    ### Args:
+    - text (str): Входной текст для конвертации.
+
+    ### Return:
+    - (str): Текст с замененными тегами
+    """
+
+    return markdown.markdown(text, extensions=['fenced_code', 'extra', 'codehilite', 'toc'])

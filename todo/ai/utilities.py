@@ -1,8 +1,8 @@
 import httpx
-import markdown
 from ai.gpt_exception import (OpenAIConnectionError, OpenAIResponseError,
                               UnhandledError, handle_exceptions)
 from ai.gpt_query import GetAnswerGPT
+from asgiref.sync import sync_to_async
 from channels.generic.websocket import AsyncWebsocketConsumer
 from django.conf import settings
 from django.db.models import Model
@@ -109,6 +109,18 @@ class WSAnswerChatGPT(GetAnswerGPT):
         error_message = f"Ошибка в блоке Сайт-ChatGPT:\n{err}"
         bot.send_message(ADMIN_ID, error_message)
 
+    async def create_history_ai(self):
+        """Создаём запись в БД."""
+        history_instance = self.history_model(
+            user=self.user if self.user.is_authenticated else None,
+            room_group_name=self.room_group_name,
+            question=self.query_text,
+            question_tokens=self.query_text_tokens,
+            answer=self.return_text,
+            answer_tokens=self.return_text_tokens
+        )
+        await sync_to_async(history_instance.save)()
+
     def init_model_prompt(self):
         return (
             """
@@ -116,17 +128,3 @@ class WSAnswerChatGPT(GetAnswerGPT):
             Your primary language is Russian. When formatting the text, please use only Markdown format.
             """
         )
-
-
-def convert_markdown(text: str) -> str:
-    """
-    Конвертирует теги Markdown в HTML-теги
-
-    ### Args:
-    - text (str): Входной текст для конвертации.
-
-    ### Return:
-    - (str): Текст с замененными тегами
-    """
-
-    return markdown.markdown(text, extensions=['fenced_code', 'extra', 'codehilite', 'toc'])

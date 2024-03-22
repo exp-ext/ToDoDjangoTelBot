@@ -80,8 +80,7 @@ class GetAnswerGPT():
                 asyncio.create_task(self.send_typing_periodically())
             await self.get_prompt()
             await self.httpx_request_to_openai()
-            if self.is_user_authenticated:
-                asyncio.create_task(self.create_history_ai())
+            asyncio.create_task(self.create_history_ai())
         except Exception as err:
             _, type_err, traceback_str = await handle_exceptions(err, True)
             raise type_err(f'\n\n{str(err)}{traceback_str}')
@@ -142,14 +141,14 @@ class GetAnswerGPT():
 
     async def create_history_ai(self):
         """Создаём запись истории в БД для моделей поддерживающих асинхронное сохранение."""
-        self.history_instance = self.history_model(
+        history_instance = self.history_model(
             user=self.user,
             question=self.query_text,
             question_tokens=self.query_text_tokens,
             answer=self.return_text,
             answer_tokens=self.return_text_tokens
         )
-        await sync_to_async(self.history_instance.save)()
+        await sync_to_async(history_instance.save)()
 
     async def num_tokens(self, text: str, corr_token: int = 0) -> int:
         """Считает количество токенов.

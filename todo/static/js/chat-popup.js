@@ -27,7 +27,7 @@ $(document).ready(function () {
     const messageHTML = marked.parse(data.message);
     if (data.is_stream) {
       if (data.is_start) {
-        messageElement = $(`<li class="${messageType} stream-message"></li>`).data('is_streaming', true);
+        messageElement = $(`<li class="${messageType} stream-message _text"></li>`).data('is_streaming', true);
         messagesContainer.append(messageElement);
       } else {
         messageElement = messagesContainer.find('.stream-message').last();
@@ -40,11 +40,15 @@ $(document).ready(function () {
         }
       }
     } else {
-      messageElement = $(`<li class="${messageType}"></li>`).html(messageHTML);
+      messageElement = $(`<li class="${messageType} _text"></li>`).html(messageHTML);
       messagesContainer.append(messageElement);
     }
     messagesContainer.scrollTop(messagesContainer.prop("scrollHeight"));
     updateTypingIndicator();
+    if (data.message) {
+        messageElement.html(messageHTML);
+        hljs.highlightAll();
+      }
   };
 
   socket.onclose = function(event) {
@@ -63,7 +67,7 @@ $(document).ready(function () {
 
   function openElement() {
     let messages = element.find('.messages');
-    const textInput = element.find('.text-box');
+    const textInput = element.find('.text-box');    
     element.find('>i').hide();
     element.addClass('expand');
     element.find('.chat').addClass('enter');
@@ -80,19 +84,23 @@ $(document).ready(function () {
         success: function (response) {
           chatIsEmpty = false;
           roomName = response.room_name
-          for (var i = 0; i < response.history.length; i++) {
-            var message = response.history[i];
+          for (let i = 0; i < response.history.length; i++) {
+            let message = response.history[i];
+            let messageHTML;
             if (message.question) {
-              messages.append('<li class="self">' + message.question + '</li>');
+              messageHTML = marked.parse(message.question);
+              messages.append('<li class="self _text">' + messageHTML + '</li>');
             }
             if (message.answer) {
-              messages.append('<li class="other">' + message.answer + '</li>');
+              messageHTML = marked.parse(message.answer);
+              messages.append('<li class="other _text">' + messageHTML + '</li>');
             }
           }
           messages.scrollTop(messages.prop("scrollHeight"));
+          hljs.highlightAll();
         },
         error: function () {
-          console.error('Ошибка при получении последних сообщений');
+          console.error('Ошибка при получении последних сообщений');          
         }
       });
     }

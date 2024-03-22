@@ -14,6 +14,8 @@
   justify-content: center;
   color: var(--text-color);
   position: fixed;
+  max-width: 56px;
+  max-height: 56px;
   width: 56px;
   height: 56px;
   border-radius: var(--border-radius-circle);
@@ -51,6 +53,7 @@
   position: fixed;
   z-index: 9999;
   resize: both;
+  direction: rtl;
   overflow: auto;
 }
 .floating-chat button {
@@ -78,6 +81,7 @@
   border-top: 1px solid #e3e6eb;
   border-right: 1px solid #e3e6eb;
   overflow-y: auto;
+  direction: ltr;
 }
 .floating-chat .chat.enter {
   opacity: 1;
@@ -195,16 +199,6 @@
   margin-right: 45px;
   color: #000;
 }
-.floating-chat .chat .messages li.other span {
-  position: absolute;
-  right: -45px;
-  width: 25px;
-  height: 25px;
-  border-radius: 25px;
-  background: #fff;
-  text-align: center;
-  line-height: 25px;
-}
 .floating-chat .chat .messages li.other:after {
   border-right: 10px solid transparent;
   right: -10px;
@@ -224,16 +218,6 @@
   margin-left: 45px;
   color: #000;
 }
-.floating-chat .chat .messages li.self span {
-  position: absolute;
-  left: -45px;
-  width: 25px;
-  height: 25px;
-  border-radius: 25px;
-  background: #fff;
-  text-align: center;
-  line-height: 25px;
-}
 .floating-chat .chat .messages li.self:after {
   border-left: 10px solid transparent;
   left: -10px;
@@ -245,6 +229,9 @@
   100% {
     margin-left: 0;
   }
+}
+.floating-chat .chat .messages ._text li {
+  all: revert;
 }
 .floating-chat .chat .chat_list {
   flex-shrink: 0;

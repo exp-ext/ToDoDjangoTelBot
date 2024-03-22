@@ -54,7 +54,7 @@ class WSAnswerChatGPT(GetAnswerGPT):
             self.room_group_name,
             {
                 'type': 'chat.message',
-                'message': markdown.markdown(message, extensions=['fenced_code']),
+                'message': message,
                 'username': 'Eva',
             }
         )
@@ -116,3 +116,17 @@ class WSAnswerChatGPT(GetAnswerGPT):
             Your primary language is Russian. When formatting the text, please use only Markdown format.
             """
         )
+
+
+def convert_markdown(text: str) -> str:
+    """
+    Конвертирует теги Markdown в HTML-теги
+
+    ### Args:
+    - text (str): Входной текст для конвертации.
+
+    ### Return:
+    - (str): Текст с замененными тегами
+    """
+
+    return markdown.markdown(text, extensions=['fenced_code', 'extra', 'codehilite', 'toc'])

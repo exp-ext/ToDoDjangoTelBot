@@ -19,13 +19,6 @@ $(document).ready(function () {
     }
   }
 
-  marked.setOptions({
-    highlight: function(code, lang) {
-      const language = hljs.getLanguage(lang) ? lang : 'plaintext';
-      return `<pre class="code-block">${hljs.highlight(code, { language }).value}</pre>`;
-    }
-  });
-
   socket.onmessage = function(event) {
     const data = JSON.parse(event.data);
     const messagesContainer = $('.messages');

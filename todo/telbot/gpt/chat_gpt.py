@@ -19,7 +19,13 @@ class TelegramAnswerGPT(GetAnswerGPT):
         history_model = HistoryAI
         self.chat_id = update.effective_chat.id
         self.message_id = update.message.message_id
-        super().__init__(query_text, assist_prompt, user, history_model, self.chat_id, 0.3)
+        creativity_controls = {
+            'temperature': 0.4,
+            'top_p': 1,
+            'frequency_penalty': 0,
+            'presence_penalty': 0,
+        }
+        super().__init__(query_text, assist_prompt, user, history_model, self.chat_id, creativity_controls)
 
     async def answer_from_ai(self) -> dict:
         """Основная логика."""

@@ -1,6 +1,7 @@
 import traceback
 
 import telegram
+from core.re_compile import NUMBER_BYTE_OFFSET
 from django.conf import settings
 from telegram import ParseMode, Update
 from telegram.ext import CallbackContext, ConversationHandler
@@ -42,6 +43,26 @@ def cancel(update: Update, _: CallbackContext):
     return ConversationHandler.END
 
 
+def find_byte_offset(message):
+    """
+    Ищет в сообщении числовое значение после 'byte offset'.
+    Возвращает найденное значение как целое число или None, если совпадение не найдено.
+    """
+    match = NUMBER_BYTE_OFFSET.search(message)
+    if match:
+        return int(match.group(1))
+    return None
+
+
+def insert_marker_at_byte_offset(text, offset, marker="!!!->"):
+    """
+    Возвращает текст с маркером на позиции `offset`.
+    """
+    byte_text = text.encode('utf-8')
+    modified_byte_text = byte_text[:offset] + marker.encode('utf-8') + byte_text[offset:]
+    return modified_byte_text.decode('utf-8')
+
+
 @app.task(ignore_result=True)
 def send_message_to_chat(tg_id: int, message: str, reply_to_message_id: int = None, parse_mode: ParseMode = None) -> None:
     """Отправляет сообщение через Telegram бота.
@@ -72,9 +93,11 @@ def send_message_to_chat(tg_id: int, message: str, reply_to_message_id: int = No
             text=message,
             reply_to_message_id=reply_to_message_id,
         )
+        offset = find_byte_offset(str(err))
+        message = insert_marker_at_byte_offset(message, offset)
         bot.send_message(
             chat_id=ADMIN_ID,
-            text=f'Ошибка в `send_message_to_chat` BadRequest: {str(err)[:1024]}\n Message: {message}',
+            text=f'Ошибка в `send_message_to_chat` BadRequest: {str(err)}\n Message:\n\n {message}',
         )
     except Exception as err:
         traceback_str = traceback.format_exc()

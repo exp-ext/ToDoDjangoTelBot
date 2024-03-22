@@ -73,7 +73,7 @@ async def handle_exceptions(err: Exception, include_traceback: bool = False) -> 
         UnhandledError: user_error_text,
     }
 
-    error_message = error_messages.get(type(err), "Неизвестная ошибка.")
+    error_message = error_messages.get(type(err), user_error_text)
     if isinstance(error_message, str):
         formatted_error_message = error_message
     else:

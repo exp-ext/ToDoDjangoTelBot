@@ -12,7 +12,11 @@ class ReminderGPT(GetAnswerGPT):
         assist_prompt = self.init_model_prompt
         history_model = ReminderAI
         self.chat_id = chat_id
-        super().__init__(query_text, assist_prompt, user, history_model, self.chat_id, 0.1)
+        creativity_controls = {
+            'temperature': 0.1,
+            'top_p': 0.5,
+        }
+        super().__init__(query_text, assist_prompt, user, history_model, self.chat_id, creativity_controls)
 
     async def transform(self) -> None:
         try:

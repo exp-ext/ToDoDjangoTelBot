@@ -20,7 +20,13 @@ class WSAnswerChatGPT(GetAnswerGPT):
     def __init__(self, channel_layer: AsyncWebsocketConsumer, room_group_name: str, user: Model, query_text: str, message_count: int) -> None:
         assist_prompt = self.init_model_prompt()
         history_model = HistoryAI
-        super().__init__(query_text, assist_prompt, user, history_model)
+        creativity_controls = {
+            'temperature': 0.7,
+            'top_p': 0.9,
+            'frequency_penalty': 0,
+            'presence_penalty': 0,
+        }
+        super().__init__(query_text, assist_prompt, user, history_model, creativity_controls=creativity_controls)
         self.channel_layer = channel_layer
         self.room_group_name = room_group_name
         self.message_count = message_count
@@ -30,7 +36,7 @@ class WSAnswerChatGPT(GetAnswerGPT):
         try:
             await self.get_answer_chat_gpt()
         except Exception as err:
-            self.return_text, *_ = await handle_exceptions(err)
+            self.return_text, *_ = await handle_exceptions(err, True)
             await self.handle_error(f'Ошибка в `GetAnswerGPT.answer_from_ai()`: {str(err)}')
         finally:
             if self.user.is_anonymous and self.message_count == 1:
@@ -66,6 +72,7 @@ class WSAnswerChatGPT(GetAnswerGPT):
                     model=self.model.title,
                     messages=self.all_prompt,
                     stream=True,
+                    **self.creativity_controls
                 )
                 first_chunk = True
                 async for chunk in stream:

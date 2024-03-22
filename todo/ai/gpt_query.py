@@ -39,7 +39,7 @@ class GetAnswerGPT():
     """
     MAX_TYPING_TIME = 3
 
-    def __init__(self, query_text: str, assist_prompt: str, user: 'Model', history_model: 'Model', chat_id: int = None, temperature: float = 0.5) -> None:
+    def __init__(self, query_text: str, assist_prompt: str, user: 'Model', history_model: 'Model', chat_id: int = None, creativity_controls: dict = {}) -> None:
         # Инициализация свойств класса
         self.user = user                    # модель пользователя пославшего запрос
         self.is_user_authenticated = self.user.is_authenticated  # гость или аутентифицированный пользователь
@@ -48,7 +48,7 @@ class GetAnswerGPT():
         self.assist_prompt = assist_prompt  # промпт для ассистента в head модели
         self.query_text_tokens = None       # количество токенов в запросе
         self.chat_id = chat_id              # id чата в котором инициировать typing
-        self.temperature = temperature      # уровень энтропии при ответе от GPT модели
+        self.creativity_controls = creativity_controls      # параметры которые контролируют креативность и разнообразие текста
         # Дополнительные свойства
         self.assist_prompt_tokens = 0       # количество токенов в промпте ассистента в head модели
         self.all_prompt = []                # общий промпт для запроса
@@ -107,8 +107,8 @@ class GetAnswerGPT():
         data = {
             "model": self.model.title,
             "messages": self.all_prompt,
-            "temperature": self.temperature
         }
+        data.update(self.creativity_controls)
         try:
             async with httpx.AsyncClient(transport=transport) as client:
                 response = await client.post(

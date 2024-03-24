@@ -1,4 +1,5 @@
 import httpx
+import openai
 from ai.gpt_exception import (OpenAIConnectionError, OpenAIResponseError,
                               UnhandledError, handle_exceptions)
 from ai.gpt_query import GetAnswerGPT
@@ -83,9 +84,9 @@ class WSAnswerChatGPT(GetAnswerGPT):
                 await self.send_chunk_to_websocket("", is_end=True)
                 self.return_text_tokens = await self.num_tokens(self.return_text, 0)
 
-        except httpx.HTTPStatusError as http_err:
+        except openai.APIStatusError as http_err:
             raise OpenAIResponseError(f'`WSAnswerChatGPT`, ответ сервера был получен, но код состояния указывает на ошибку: {http_err}') from http_err
-        except httpx.RequestError as req_err:
+        except openai.APIConnectionError as req_err:
             raise OpenAIConnectionError(f'`WSAnswerChatGPT`, проблемы соединения: {req_err}') from req_err
         except Exception as error:
             raise UnhandledError(f'Необработанная ошибка в `WSAnswerChatGPT.httpx_request_to_openai()`: {error}') from error

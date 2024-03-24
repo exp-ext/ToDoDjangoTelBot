@@ -1,13 +1,14 @@
 import asyncio
-import json
+import pprint
 from datetime import datetime, timedelta
 
 import httpx
+import openai
 import tiktoken_async
 from ai.gpt_exception import (InWorkError, LongQueryError,
-                              OpenAIConnectionError, OpenAIJSONDecodeError,
-                              OpenAIResponseError, UnhandledError,
-                              ValueChoicesError, handle_exceptions)
+                              OpenAIConnectionError, OpenAIResponseError,
+                              UnhandledError, ValueChoicesError,
+                              handle_exceptions)
 from asgiref.sync import sync_to_async
 from channels.db import database_sync_to_async
 from django.conf import settings
@@ -15,6 +16,7 @@ from django.contrib.auth import get_user_model
 from django.db.models import Model
 from django.utils.timezone import now
 from httpx_socks import AsyncProxyTransport
+from openai import AsyncOpenAI
 from telbot.loader import bot
 from telbot.models import GptModels, UserGptModels
 from telegram import ChatAction
@@ -98,43 +100,33 @@ class GetAnswerGPT():
 
     async def httpx_request_to_openai(self) -> None:
         """Делает запрос в OpenAI и выключает typing."""
-        transport = AsyncProxyTransport.from_url(settings.SOCKS5)
-        headers = {
-            "Content-Type": "application/json",
-            "Authorization": f"Bearer {self.model.token}"
-        }
-        data = {
-            "model": self.model.title,
-            "messages": self.all_prompt,
-        }
-        data.update(self.creativity_controls)
         try:
-            async with httpx.AsyncClient(transport=transport) as client:
-                response = await client.post(
-                    "https://api.openai.com/v1/chat/completions",
-                    headers=headers,
-                    json=data,
-                    timeout=60 * self.MAX_TYPING_TIME,
+            proxy_transport = AsyncProxyTransport.from_url(settings.SOCKS5)
+            async with httpx.AsyncClient(transport=proxy_transport) as transport:
+                client = AsyncOpenAI(
+                    api_key=self.model.token,
+                    timeout=self.MAX_TYPING_TIME * 60,
+                    http_client=transport,
                 )
-                response.raise_for_status()
-                completion = response.json()
-                choices = completion.get('choices')
-                if choices and len(choices) > 0:
-                    first_choice = choices[0]
-                    self.return_text = first_choice['message']['content']
-                    self.return_text_tokens = completion.get('usage', {}).get('completion_tokens')
-                    self.query_text_tokens = completion.get('usage', {}).get('prompt_tokens')
-                else:
-                    raise ValueChoicesError(f"`GetAnswerGPT`, ответ не содержит полей 'choices': {json.dumps(completion, ensure_ascii=False, indent=4)}")
+                completion = await client.chat.completions.create(
+                    model=self.model.title,
+                    messages=self.all_prompt,
+                    **self.creativity_controls
+                )
+            if hasattr(completion, 'choices'):
+                self.return_text = completion.choices[0].message.content
+                self.return_text_tokens = completion.usage.completion_tokens
+                self.query_text_tokens = completion.usage.prompt_tokens
+            else:
+                formatted_dict = pprint.pformat(completion.__dict__, indent=4)
+                raise ValueChoicesError(f"`GetAnswerGPT`, ответ не содержит полей 'choices':\n{formatted_dict}")
 
-        except httpx.HTTPStatusError as http_err:
-            raise OpenAIResponseError(f'`GetAnswerGPT`, ответ сервера был получен, но код состояния указывает на ошибку: {http_err}') from http_err
-        except httpx.RequestError as req_err:
-            raise OpenAIConnectionError(f'`GetAnswerGPT`, проблемы соединения: {req_err}') from req_err
-        except json.JSONDecodeError:
-            raise OpenAIJSONDecodeError('`GetAnswerGPT`, ошибка при десериализации JSON.')
+        except openai.APIStatusError as http_err:
+            raise OpenAIResponseError(f'`WSAnswerChatGPT`, ответ сервера был получен, но код состояния указывает на ошибку: {http_err}') from http_err
+        except openai.APIConnectionError as req_err:
+            raise OpenAIConnectionError(f'`WSAnswerChatGPT`, проблемы соединения: {req_err}') from req_err
         except Exception as error:
-            raise UnhandledError(f'Необработанная ошибка в `GetAnswerGPT.httpx_request_to_openai()`: {error}') from error
+            raise UnhandledError(f'Необработанная ошибка в `WSAnswerChatGPT.httpx_request_to_openai()`: {error}') from error
         finally:
             if self.event:
                 self.event.set()

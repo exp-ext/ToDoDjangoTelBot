@@ -12,8 +12,7 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.serializers.json import DjangoJSONEncoder
-from django.db.models import (Case, Count, IntegerField, OuterRef, Q, Subquery,
-                              Value, When)
+from django.db.models import Case, Count, IntegerField, Q, Value, When
 from django.db.models.query import QuerySet
 from django.http import (Http404, HttpRequest, HttpResponse,
                          HttpResponsePermanentRedirect, HttpResponseRedirect,
@@ -512,11 +511,9 @@ class PostDetailView(DetailView):
     def filter_queryset_based_on_user(self, queryset):
         user = self.request.user
         if user.is_authenticated:
-            user_groups_subquery = user.groups_connections.filter(
-                user_id=OuterRef('pk')
-            ).values_list('group', flat=True)
+            user_groups = user.groups_connections.values_list('group', flat=True)
             queryset = queryset.filter(
-                Q(group__in=Subquery(user_groups_subquery), moderation__in=('PS', 'WT'))
+                Q(group__in=user_groups, moderation__in=('PS', 'WT'))
                 | Q(author=user, moderation__in=('PS', 'WT'))
                 | Q(group__isnull=True, moderation='PS')
                 | Q(group__link__isnull=False, moderation='PS')

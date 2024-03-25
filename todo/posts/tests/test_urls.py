@@ -199,17 +199,17 @@ class PostURLTests(TestCase):
             [self.authorized_somebody_in_public_group, self.post_detail_public_group_wt, code_ok],
 
             [self.authorized_somebody_in_public_group, self.post_detail_without_group_ps, code_ok],
-            [self.authorized_somebody_in_public_group, self.post_detail_without_group_wt, code_forbidden],  # тут править логику во views
+            [self.authorized_somebody_in_public_group, self.post_detail_without_group_wt, code_forbidden],
 
             # проверка доступности постов для участника приватной группы
             [self.authorized_somebody_in_private_group, self.post_detail_group_private_ps, code_ok],
             [self.authorized_somebody_in_private_group, self.post_detail_group_private_wt, code_ok],
 
             [self.authorized_somebody_in_private_group, self.post_detail_public_group_ps, code_ok],
-            [self.authorized_somebody_in_private_group, self.post_detail_public_group_wt, code_forbidden],  # тут править логику во views
+            [self.authorized_somebody_in_private_group, self.post_detail_public_group_wt, code_forbidden],
 
             [self.authorized_somebody_in_private_group, self.post_detail_without_group_ps, code_ok],
-            [self.authorized_somebody_in_private_group, self.post_detail_without_group_wt, code_forbidden],  # тут править логику во views
+            [self.authorized_somebody_in_private_group, self.post_detail_without_group_wt, code_forbidden],
 
             # остальные проверки
             [self.guest_client, '/unexisting_page/', code_not_found],

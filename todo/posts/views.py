@@ -12,13 +12,15 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.serializers.json import DjangoJSONEncoder
-from django.db.models import Case, Count, IntegerField, Q, Value, When
+from django.db.models import (Case, Count, IntegerField, OuterRef, Q, Subquery,
+                              Value, When)
 from django.db.models.query import QuerySet
 from django.http import (Http404, HttpRequest, HttpResponse,
                          HttpResponsePermanentRedirect, HttpResponseRedirect,
                          JsonResponse)
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, reverse_lazy
+from django.utils.functional import cached_property
 from django.views import View
 from django.views.generic import CreateView, ListView, UpdateView
 from django.views.generic.detail import DetailView
@@ -447,53 +449,49 @@ class PostDetailView(DetailView):
             return ['mobile/posts/post_detail.html']
         return [self.template_name]
 
-    def get_post_slug_from_redis(self, post_pk: int) -> str | bool:
-        """
-        Получает слаг поста по его идентификатору из Redis.
-        """
-        posts_data = redis_client.get(KEY_POSTS)
-        if posts_data:
-            data_list = json.loads(posts_data.decode('utf-8'))
-            return self.get_slug_by_pk(data_list, post_pk)
-        return None
+    @cached_property
+    def user_agent(self):
+        return get_user_agent(self.request)
 
-    def get_slug_by_pk(self, id_slug_pair: list, post_pk: int) -> str:
-        """
-        Получает слаг из пары идентификатора и слага поста.
-        """
-        return next((item['slug'] for item in id_slug_pair if item['id'] == post_pk), None)
+    @property
+    def cached_tags(self):
+        if not hasattr(self, '_cached_tags'):
+            self._cached_tags = self.object.tags.values_list('title', flat=True)
+        return self._cached_tags
 
-    def handle_group_access(self, group: Group):
-        """
-        Загружает приватные группы в Редис, если их там нет, и делает проверку на отношение юзера к группе.
-        """
-        if not group.link:
-            if self.request.user.is_anonymous:
-                return self.error_checking()
-
-            group_id = group.id
-            if not redis_client.exists(KEY_PRIVATE_GROUPS):
-                private_groups = Group.objects.filter(link__isnull=True).values_list('id', flat=True)
-                redis_client.sadd(KEY_PRIVATE_GROUPS, *private_groups)
-
-            if redis_client.sismember(KEY_PRIVATE_GROUPS, group_id):
-                if not GroupConnections.objects.filter(user=self.request.user, group__id=group_id).exists():
-                    return self.error_checking()
-        return None
+    def get_post_slug_from_redis(self, post_pk: int) -> str | None:
+        post_slug = redis_client.hget(KEY_POSTS, post_pk)
+        if post_slug:
+            return post_slug.decode('utf-8')
+        if not redis_client.exists(KEY_POSTS):
+            id_slug_pair = Post.objects.values_list('id', 'slug')
+            with redis_client.pipeline() as pipe:
+                for post_id, slug in id_slug_pair:
+                    pipe.hset(KEY_POSTS, post_id, slug)
+                pipe.execute()
+        return redis_client.hget(KEY_POSTS, post_pk).decode('utf-8') if redis_client.hexists(KEY_POSTS, post_pk) else None
 
     def get(self, request, *args, **kwargs):
-        post_pk = int(self.kwargs.get('post_identifier_pk')) if 'post_identifier_pk' in self.kwargs else None
+        post_pk = kwargs.get('post_identifier_pk')
         if post_pk:
+            post_pk = int(post_pk)
             post_slug = self.get_post_slug_from_redis(post_pk)
-
             if not post_slug:
-                id_slug_pair = list(Post.objects.values('id', 'slug'))
-                redis_client.set(KEY_POSTS, json.dumps(id_slug_pair))
-                post_slug = self.get_slug_by_pk(id_slug_pair, post_pk)
-
+                if not Post.objects.filter(pk=post_pk).exists():
+                    return redirect('posts:index_posts')
+                if not redis_client.exists(KEY_POSTS):
+                    id_slug_pair = Post.objects.values_list('id', 'slug')
+                    with redis_client.pipeline() as pipe:
+                        for post_id, slug in id_slug_pair:
+                            pipe.hset(KEY_POSTS, post_id, slug)
+                        pipe.execute()
+                post_slug = redis_client.hget(KEY_POSTS, post_pk)
+                if post_slug:
+                    post_slug = post_slug.decode('utf-8')
+                else:
+                    return redirect('posts:index_posts')
             if post_slug:
                 return HttpResponsePermanentRedirect(reverse('posts:post_detail', args=(post_slug,)))
-            return redirect('posts:index_posts')
         try:
             self.object = self.get_object()
         except Http404:
@@ -507,13 +505,18 @@ class PostDetailView(DetailView):
         context = self.get_context_data(object=self.object)
         return self.render_to_response(context)
 
-    def get_queryset(self) -> QuerySet:
-        queryset = super().get_queryset().select_related('author', 'group').prefetch_related('tags')
+    def get_queryset(self):
+        queryset = super().get_queryset().select_related('author', 'group')
+        return self.filter_queryset_based_on_user(queryset)
+
+    def filter_queryset_based_on_user(self, queryset):
         user = self.request.user
         if user.is_authenticated:
-            user_groups = user.groups_connections.values_list('group', flat=True)
+            user_groups_subquery = user.groups_connections.filter(
+                user_id=OuterRef('pk')
+            ).values_list('group', flat=True)
             queryset = queryset.filter(
-                Q(group__in=user_groups, moderation__in=('PS', 'WT'))
+                Q(group__in=Subquery(user_groups_subquery), moderation__in=('PS', 'WT'))
                 | Q(author=user, moderation__in=('PS', 'WT'))
                 | Q(group__isnull=True, moderation='PS')
                 | Q(group__link__isnull=False, moderation='PS')
@@ -523,64 +526,18 @@ class PostDetailView(DetailView):
         self.tag_queryset = queryset
         return queryset
 
-    def error_checking(self) -> HttpResponse | Http404:
-        """Возвращает ссылку на 403 шаблон или 404, если поста не существует."""
-        get_object_or_404(Post, slug=self.kwargs.get(self.slug_url_kwarg))
-        full_url = self.request.build_absolute_uri()
-        return render(self.request, 'core/403.html', {'full_url': full_url}, status=403)
-
     def get_context_data(self, **kwargs: Any) -> Dict[str, Any]:
         context = super().get_context_data(**kwargs)
-        post = kwargs.get('object')
-
-        self.user_agent = get_user_agent(self.request)
-        ip = self.get_client_ip()
-        ref_url = self.get_ref_url()
+        post = context['post']
 
         random_banner = None
         if not self.user_agent.is_mobile:
             random_banner = PartnerBanner.objects.order_by('?').first()
-
         my_banner = MyBanner.objects.order_by('?').first()
 
-        redis_key_post_ips = f'ips_post_{post.id}'
-        redis_key_post_counter = f'counter_post_{post.id}'
-        redis_key_agent_posts = 'list_agent_posts'
-
-        try:
-            check_ip = redis_client.sismember(redis_key_post_ips, ip)
-        except Exception:
-            check_ip = False
-            ip = ip or '127.0.0.1'
-
-        if not check_ip:
-            if redis_client.get(redis_key_post_counter):
-                counter = redis_client.incr(redis_key_post_counter)
-            else:
-                counter = post.view_count.count()
-                redis_client.set(redis_key_post_counter, counter)
-
-            agent_data = {
-                'post_id': post.id,
-                'browser': self.user_agent.browser.family,
-                'os': self.user_agent.os.family,
-                'is_bot': self.user_agent.is_bot,
-                'is_mobile': self.user_agent.is_mobile,
-                'is_pc': self.user_agent.is_pc,
-                'is_tablet': self.user_agent.is_tablet,
-                'is_touch_capable': self.user_agent.is_touch_capable,
-                'ip': ip,
-                'ref_url': ref_url
-            }
-            serialized_agent_data = json.dumps(agent_data)
-
-            redis_client.sadd(redis_key_post_ips, ip)
-            redis_client.lpush(redis_key_agent_posts, serialized_agent_data)
-        else:
-            counter = redis_client.get(redis_key_post_counter).decode('utf-8')
+        counter = self.increment_view_counter_and_log_user_agent(post, self.user_agent)
 
         root_contents = post.contents.filter(depth=1).first()
-
         contents = PostContents.dump_bulk(root_contents) if root_contents else None
 
         tags, tag_posts_present, tag_posts_chunked = self.get_tags_and_posts()
@@ -601,14 +558,54 @@ class PostDetailView(DetailView):
         })
         return context
 
+    def increment_view_counter_and_log_user_agent(self, post, user_agent_data):
+        """
+        Увеличивает счетчик просмотров и регистрирует данные о пользовательском агенте.
+        """
+        redis_key_post_ips = f'ips_post_{post.id}'
+        redis_key_post_counter = f'counter_post_{post.id}'
+        redis_key_agent_posts = 'list_agent_posts'
+
+        ip = self.get_client_ip()
+        ref_url = self.get_ref_url()
+
+        pipeline = redis_client.pipeline()
+        pipeline.sismember(redis_key_post_ips, ip)
+        pipeline.get(redis_key_post_counter)
+        check_ip_result, current_counter = pipeline.execute()
+
+        if current_counter is None:
+            current_counter = post.view_count.count()
+            redis_client.set(redis_key_post_counter, current_counter)
+
+        if not check_ip_result:
+            pipeline.sadd(redis_key_post_ips, ip)
+            pipeline.incr(redis_key_post_counter)
+            serialized_agent_data = json.dumps({
+                'post_id': post.id,
+                'browser': user_agent_data.browser.family,
+                'os': user_agent_data.os.family,
+                'is_bot': user_agent_data.is_bot,
+                'is_mobile': user_agent_data.is_mobile,
+                'is_pc': user_agent_data.is_pc,
+                'is_tablet': user_agent_data.is_tablet,
+                'is_touch_capable': user_agent_data.is_touch_capable,
+                'ip': ip,
+                'ref_url': ref_url
+            })
+            pipeline.lpush(redis_key_agent_posts, serialized_agent_data)
+            pipeline.execute()
+            current_counter = int(current_counter) + 1
+        else:
+            current_counter = int(current_counter)
+        return current_counter
+
     def get_tags_and_posts(self):
         """
         Получает теги и соответствующие им посты.
         """
-        tags = self.object.tags.values_list('title', flat=True)
-
         query = self.tag_queryset.filter(
-            tags__title__in=tags
+            tags__title__in=self.cached_tags
         ).distinct().exclude(id=self.object.id)
 
         posts_processed = []
@@ -621,7 +618,7 @@ class PostDetailView(DetailView):
                     'short_description': post.short_description
                 })
         line_size = 1 if self.user_agent.is_mobile else 3
-        return ', '.join(tags), query.count() > 0, self.chunker(posts_processed, line_size)
+        return ', '.join(self.cached_tags), query.count() > 0, self.chunker(posts_processed, line_size)
 
     @staticmethod
     def chunker(seq, size):
@@ -644,12 +641,43 @@ class PostDetailView(DetailView):
         """
         return (seq[pos:pos + size] for pos in range(0, len(seq), size))
 
+    def error_checking(self) -> HttpResponse | Http404:
+        """Возвращает ссылку на 403 шаблон или 404, если поста не существует."""
+        get_object_or_404(Post, slug=self.kwargs.get(self.slug_url_kwarg))
+        full_url = self.request.build_absolute_uri()
+        return render(self.request, 'core/403.html', {'full_url': full_url}, status=403)
+
+    def handle_group_access(self, group: Group):
+        """
+        Загружает приватные группы в Редис, если их там нет, и делает проверку на отношение юзера к группе.
+        """
+        if not group.link:
+            if self.request.user.is_anonymous:
+                return self.error_checking()
+
+            group_id = group.id
+            if not redis_client.exists(KEY_PRIVATE_GROUPS):
+                private_groups = Group.objects.filter(link__isnull=True).values_list('id', flat=True)
+                redis_client.sadd(KEY_PRIVATE_GROUPS, *private_groups)
+
+            if redis_client.sismember(KEY_PRIVATE_GROUPS, group_id):
+                if not GroupConnections.objects.filter(user=self.request.user, group__id=group_id).exists():
+                    return self.error_checking()
+        return None
+
     def get_client_ip(self):
         x_forwarded_for = self.request.META.get('HTTP_X_FORWARDED_FOR')
-        return x_forwarded_for.split(',')[0] if x_forwarded_for else self.request.META.get('REMOTE_ADDR')
+        if x_forwarded_for:
+            ip = x_forwarded_for.split(',')[0]
+        else:
+            ip = self.request.META.get('REMOTE_ADDR')
+        return ip
 
     def get_ref_url(self):
-        return quote(self.request.META.get('HTTP_REFERER', '')) if self.request.META.get('HTTP_REFERER') else None
+        ref_url = self.request.META.get('HTTP_REFERER')
+        if ref_url:
+            return quote(ref_url)
+        return None
 
 
 class AddCommentView(LoginRequiredMixin, FormView):

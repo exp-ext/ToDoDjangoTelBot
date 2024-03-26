@@ -27,7 +27,7 @@ class ReminderGPT(GetAnswerGPT):
 
     async def get_prompt(self) -> None:
         self.all_prompt = [
-            {'role': 'system', 'content': self.init_model_prompt},
+            {'role': 'system', 'content': self.assist_prompt},
             {'role': 'user', 'content': self.query_text}
         ]
 

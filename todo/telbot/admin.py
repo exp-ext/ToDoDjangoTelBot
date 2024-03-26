@@ -5,12 +5,14 @@ from django.db.models.functions import Concat
 from django.utils.safestring import mark_safe
 
 from .models import (GptModels, HistoryAI, HistoryDALLE, ReminderAI,
-                     UserGptModels)
+                     UserGptModels, UserPrompt)
 
 User = get_user_model()
 
 
-User = get_user_model()
+@admin.register(UserPrompt)
+class UserPromptAdmin(admin.ModelAdmin):
+    pass
 
 
 @admin.register(GptModels)
@@ -25,6 +27,11 @@ class GptModelsInline(admin.StackedInline):
 
 @admin.register(UserGptModels)
 class GptModelsAdmin(admin.ModelAdmin):
+    fieldsets = (
+        ('Основные данные', {'fields': ('user',)}),
+        ('ИИ', {'fields': ('active_model', 'active_prompt')}),
+        ('Время начала окна', {'fields': ('time_start',)}),
+    )
     inlines = (GptModelsInline,)
 
 

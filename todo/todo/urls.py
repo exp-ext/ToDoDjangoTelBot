@@ -13,6 +13,7 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+from ai.views import UserModelsProfile
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
@@ -49,6 +50,7 @@ urlpatterns = [
     path('bot/', include(('telbot.urls', 'telbot'))),
     path('tasks/', include(('tasks.urls', 'tasks'), namespace='tasks')),
     path('profile/<str:username>/', accounts_profile, name='accounts_profile'),
+    path('profile/<str:username>/models/', UserModelsProfile.as_view(), name='models_profile'),
     path('posts/', include(('posts.urls', 'posts'), namespace='posts')),
     path('ckeditor5/', include('django_ckeditor_5.urls'), name='ck_editor_5_upload_file'),
     path('health/live/', views.health, name='health'),

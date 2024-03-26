@@ -25,7 +25,7 @@
                 <div class="form-group row my-3 p-3"> 
 
                   <div class="card-body text-center">
-                      {% thumbnail user.image "300x300" crop="center" upscale=True as im %}
+                      {% thumbnail user.image "200x200" crop="center" upscale=True as im %}
                         <img class="border shadow" src="{{ im.url }}" width="{{ im.width }}" height="{{ im.height }}">
                       {% endthumbnail %}                      
                   </div>

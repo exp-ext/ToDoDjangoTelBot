@@ -54,32 +54,40 @@ def find_byte_offset(message):
     return None
 
 
-def insert_marker_at_byte_offset(text, offset, marker="!!!->"):
+def delete_at_byte_offset(text, offset):
     """
-    Возвращает текст с маркером на позиции `offset`.
+    Удаляет текст на позиции `offset`.
     """
     byte_text = text.encode('utf-8')
-    modified_byte_text = byte_text[:offset] + marker.encode('utf-8') + byte_text[offset:]
+    modified_byte_text = byte_text[:offset] + byte_text[offset + 1:]
     return modified_byte_text.decode('utf-8')
 
 
 @app.task(ignore_result=True)
-def send_message_to_chat(tg_id: int, message: str, reply_to_message_id: int = None, parse_mode: ParseMode = None) -> None:
-    """Отправляет сообщение через Telegram бота.
-
-    Эта функция отправляет сообщение пользователю или группе в Telegram. В случае, если отправка
-    сообщения вызывает исключение telegram.error.BadRequest, функция пытается отправить сообщение
-    без форматирования Markdown. Любые другие исключения перенаправляются на указанный ADMIN_ID.
+def send_message_to_chat(tg_id: int, message: str, reply_to_message_id: int = None, parse_mode: ParseMode = None, retry_count: int = 3) -> None:
+    """
+    Отправляет сообщение через Telegram бота с возможностью исправления и повторной отправки при ошибке.
 
     ### Args:
-    - tg_id (`int`): Telegram ID пользователя или группы для отправки сообщения.
-    - message (`str`): Текст сообщения для отправки.
-    - reply_to_message_id (`int`, optional): ID сообщения, на которое должен быть дан ответ. По умолчанию None.
-    - parse_mode (`ParseMode`, optional): Указывает, какое форматирование использовать. По умолчанию None.
+    - tg_id (`int`): Идентификатор чата в Telegram.
+    - message (`str`): Текст сообщения.
+    - reply_to_message_id (`int`, optional): Идентификатор сообщения, на которое нужно ответить.
+    - parse_mode (`ParseMode`, optional): Режим парсинга сообщения.
+    - retry_count (`int`, optional): Количество попыток отправки при ошибке.
 
-    ### Returns:
-    - None: Функция не возвращает значение.
     """
+    if retry_count < 1:
+        bot.send_message(
+            chat_id=tg_id,
+            text=message,
+            reply_to_message_id=reply_to_message_id,
+        )
+        bot.send_message(
+            chat_id=ADMIN_ID,
+            text=f'Ошибка в `send_message_to_chat` BadRequest\n\nMessage:\n{message}',
+        )
+        return
+
     try:
         bot.send_message(
             chat_id=tg_id,
@@ -88,20 +96,15 @@ def send_message_to_chat(tg_id: int, message: str, reply_to_message_id: int = No
             reply_to_message_id=reply_to_message_id,
         )
     except telegram.error.BadRequest as err:
-        bot.send_message(
-            chat_id=tg_id,
-            text=message,
-            reply_to_message_id=reply_to_message_id,
-        )
-        offset = find_byte_offset(str(err))
-        message = insert_marker_at_byte_offset(message, offset)
-        bot.send_message(
-            chat_id=ADMIN_ID,
-            text=f'Ошибка в `send_message_to_chat` BadRequest: {str(err)}\n Message:\n\n {message}',
-        )
+        error_message = str(err)
+        offset = find_byte_offset(error_message)
+        if offset is not None:
+            message = delete_at_byte_offset(message, offset)
+            send_message_to_chat(tg_id, message, reply_to_message_id, parse_mode, retry_count - 1)
+
     except Exception as err:
         traceback_str = traceback.format_exc()
         bot.send_message(
             chat_id=ADMIN_ID,
-            text=f'Не обработанная ошибка в `send_message_to_chat`: {str(err)}\n\nТрассировка:\n{traceback_str[-1024:]}'
+            text=f'Необработанная ошибка в `send_message_to_chat`: {str(err)}\n\nТрассировка:\n{traceback_str[-1024:]}'
         )

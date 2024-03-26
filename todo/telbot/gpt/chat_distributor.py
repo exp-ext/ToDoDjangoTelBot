@@ -17,11 +17,10 @@ async def async_check_registration(update, context):
     allow_unregistered = True
     return_user = True
     loop = asyncio.get_running_loop()
-    select_related = ['approved_models']
     prefetch_related = ['tasks', 'locations', 'groups_connections__group', 'history_ai']
     return await loop.run_in_executor(
         None,
-        partial(check_registration, update, context, answers_for_check, allow_unregistered, return_user, select_related, prefetch_related)
+        partial(check_registration, update, context, answers_for_check, allow_unregistered, return_user, prefetch_related=prefetch_related)
     )
 
 

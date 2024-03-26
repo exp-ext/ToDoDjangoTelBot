@@ -9,14 +9,13 @@ class ReminderGPT(GetAnswerGPT):
 
     def __init__(self, text: str, user: 'Model', chat_id: int) -> None:
         query_text = text
-        assist_prompt = self.init_model_prompt
         history_model = ReminderAI
         self.chat_id = chat_id
         creativity_controls = {
             'temperature': 0.1,
             'top_p': 0.5,
         }
-        super().__init__(query_text, assist_prompt, user, history_model, self.chat_id, creativity_controls)
+        super().__init__(query_text, user, history_model, self.chat_id, creativity_controls)
 
     async def transform(self) -> None:
         try:
@@ -37,7 +36,7 @@ class ReminderGPT(GetAnswerGPT):
         self.model = GptModels.objects.filter(default=True).first()
 
     @property
-    def init_model_prompt(self) -> str:
+    def assist_prompt(self) -> str:
         return """
             ЧатGPT, я прошу Вас преобразовать следующий текст в формат:
             «дата {числовой формат} время {числовой формат}

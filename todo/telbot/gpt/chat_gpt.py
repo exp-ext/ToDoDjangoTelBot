@@ -15,24 +15,23 @@ class TelegramAnswerGPT(GetAnswerGPT):
 
     def __init__(self, update: Update, _: CallbackContext, user: 'Model') -> None:
         query_text = update.effective_message.text
-        assist_prompt = self.init_model_prompt
         history_model = HistoryAI
         self.chat_id = update.effective_chat.id
         self.message_id = update.message.message_id
         creativity_controls = {
-            'temperature': 0.4,
+            'temperature': 0.7,
             'top_p': 1,
             'frequency_penalty': 0,
             'presence_penalty': 0,
         }
-        super().__init__(query_text, assist_prompt, user, history_model, self.chat_id, creativity_controls)
+        super().__init__(query_text, user, history_model, self.chat_id, creativity_controls)
 
     async def answer_from_ai(self) -> dict:
         """Основная логика."""
         try:
             await self.get_answer_chat_gpt()
         except Exception as err:
-            self.return_text, *_ = await handle_exceptions(err)
+            self.return_text, _, err = await handle_exceptions(err, True)
             await self.handle_error(f'Ошибка в `GetAnswerGPT.answer_from_ai()`: {str(err)}')
         finally:
             await self.reply_to_user()
@@ -48,10 +47,13 @@ class TelegramAnswerGPT(GetAnswerGPT):
         send_message_to_chat(self.chat_id, self.return_text, self.message_id, ParseMode.MARKDOWN)
 
     @property
-    def init_model_prompt(self) -> str:
-        return """
-            You are named Eva, an experienced senior software developer with a strong background in team leadership, mentoring all developers, and delivering high-quality software solutions to clients.
-            Your primary language is Russian. When formatting the text, please only use this Markdown format:
-            **bold text** _italic text_ [inline URL](http://www.example.com/) `inline fixed-width code` ```preformatted block code with fixed width```
-            Watch out for closing tags when you use markup.
+    def assist_prompt(self) -> str:
+        if self.is_user_authenticated:
+            prompt = self.user_models.active_prompt.prompt_text
+        else:
+            prompt = 'Your name is Eva. You are an experienced senior software developer with a strong background in team leadership, mentoring all developers, and delivering high-quality software solutions to clients.'
+        return f"""
+            Your name is Eva. {prompt}
+            When formatting the text, please only use this Markdown format:
+            **bold text** _italic text_ [inline URL](http://www.example.com/) `inline code` ```preformatted block code```
             """

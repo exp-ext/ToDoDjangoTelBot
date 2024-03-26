@@ -1,0 +1,66 @@
+{% load static %}
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "{% static 'js/three/three.module.js' %}",
+    "three/addons/": "https://unpkg.com/three@0.153.0/examples/jsm/",
+    "OrbitControls": "{% static 'js/three/OrbitControls.js' %}",
+    "EffectComposer": "{% static 'js/three/EffectComposer.js' %}"
+  }
+}
+</script>
+
+<link rel="stylesheet" href="{% static 'css/waves.css' %}">
+
+<script type="x-shader/x-vertex" id="vertexshader">
+  uniform float uTime;
+  varying vec2 vUv;
+  varying float vOrder;    
+  #define PI 3.14159265359
+  void main() {    
+    vec4 modelPosition = modelMatrix * vec4(position, 1.0);
+    vec2 dist = vec2(modelPosition.x,modelPosition.z);
+    float radius = sin(uTime*.5);
+    float elevation = 0.7 * sin(-PI * length(dist) * 3. + uTime * 2.7);
+    modelPosition.y += elevation*.1;
+    vec4 viewPosition = viewMatrix * modelPosition;
+    gl_Position = projectionMatrix * viewPosition;
+   vUv = uv;
+  }
+</script>
+
+<script type="x-shader/x-fragment" id="fragment-dot">
+ varying vec2 vUv;
+ void main() {
+   float strength =  1.- step(.5,(step(.15, mod(vUv.y * 15.15,1.)) + step(.15, mod(vUv.x * 15.15,1.))));
+   vec3 color = vec3(0.2, 0.5, 1.0);
+   gl_FragColor = vec4(strength * color, strength);
+
+ }
+</script>
+
+<script type="x-shader/x-fragment" id="fragment-line">
+  varying vec2 vUv;
+  uniform vec3 uColor;
+ void main() {
+   float strength = 1.-step(.1, mod(vUv.y * 15.1,1.));
+   // vec3 color = vec3(0.97, 0.00, 1.00);
+   vec3 color = uColor;
+   gl_FragColor = vec4(strength * color, strength);
+
+ }
+</script>
+
+<script type="x-shader/x-fragment" id="fragment-grid">
+  varying vec2 vUv;
+ void main() {
+   float strength = 1. - step(.1, mod(vUv.y * 15.1,1.)) * step(.1, mod(vUv.x * 15.1,1.));
+   vec3 color = vec3(0.3, 0.8, 1.00);
+   gl_FragColor = vec4(strength * color,strength);
+ }
+</script>
+
+{% block javascript %}
+  <script type="module" src="{% static 'js/waves.js' %}"></script>
+{% endblock %}

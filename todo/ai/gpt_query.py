@@ -41,13 +41,12 @@ class GetAnswerGPT():
     """
     MAX_TYPING_TIME = 3
 
-    def __init__(self, query_text: str, assist_prompt: str, user: 'Model', history_model: 'Model', chat_id: int = None, creativity_controls: dict = {}) -> None:
+    def __init__(self, query_text: str, user: 'Model', history_model: 'Model', chat_id: int = None, creativity_controls: dict = {}) -> None:
         # Инициализация свойств класса
         self.user = user                    # модель пользователя пославшего запрос
         self.is_user_authenticated = self.user.is_authenticated  # гость или аутентифицированный пользователь
         self.history_model = history_model  # модель для хранения истории
         self.query_text = query_text        # текст запроса пользователя
-        self.assist_prompt = assist_prompt  # промпт для ассистента в head модели
         self.query_text_tokens = None       # количество токенов в запросе
         self.chat_id = chat_id              # id чата в котором инициировать typing
         self.creativity_controls = creativity_controls      # параметры которые контролируют креативность и разнообразие текста
@@ -191,7 +190,8 @@ class GetAnswerGPT():
     def init_user_model(self):
         """Инициация активной модели юзера и начального времени истории в prompt для запроса."""
         if self.is_user_authenticated:
-            self.user_models, created = UserGptModels.objects.get_or_create(user=self.user, defaults={'time_start': self.current_time})
+            queryset = UserGptModels.objects.select_related('active_model', 'active_prompt').all()
+            self.user_models, created = queryset.get_or_create(user=self.user, defaults={'time_start': self.current_time})
             self.model = self.user_models.active_model
             if not created and self.model:
                 time_window = timedelta(minutes=self.model.time_window)
@@ -213,3 +213,7 @@ class GetAnswerGPT():
     def del_mess_in_redis(self) -> None:
         """Удаляет входящее сообщение из Redis."""
         redis_client.lrem(f'gpt_user:{self.user.id}', 1, self.query_text.encode('utf-8'))
+
+    @property
+    def assist_prompt(self):
+        return 'Your name is Eva.'
